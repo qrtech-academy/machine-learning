@@ -7,5 +7,6 @@ Lecture material:
 * [L04](./L04/README.md): Neural networks (part II).
 * [L05](./L05/README.md): Dense layer.
 * [L06](./L06/README.md): Convolutional neural networks (part I).
+* [L07](./L07/README.md): Convolutional neural networks (part II).
 
 ---
