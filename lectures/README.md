@@ -10,5 +10,6 @@ Lecture material:
 * [L07](./L07/README.md): Convolutional neural networks (part II).
 * [L08](./L08/README.md): Convolutional neural networks (part III).
 * [L09](./L09/README.md): Convolutional neural networks (part IV).
+* [L10](./L10/README.md): Course review.
 
 ---
