@@ -33,20 +33,21 @@ After completing the course, participants should be able to:
 ci/          Scripts for code formatting and compilation
 info/        Course information and schedule
 lectures/    Lecture plans, literature, and exercises
+Makefile     Entry point for `make build`, `make format`, and `make format-check`
 ```
 
 ---
 
 ## Code Formatting
-`ci/format.sh` formats C/C++ code with `clang-format` and Python code with `black`:
+The root `Makefile` formats C/C++ code with `clang-format` and Python code with `black`:
 
 ```bash
-ci/format.sh          # Format all files.
-ci/format.sh --check  # Check formatting without modifying files.
+make format        # Format all files.
+make format-check  # Check formatting without modifying files.
 ```
 
-`clang-format` and `black` need to be installed and available on `PATH` before running the
-script.
+`clang-format` and `black` need to be installed and available on `PATH` before running these
+targets.
 
 `clang-format` is installed via `apt` on WSL:
 
@@ -64,13 +65,13 @@ pip install -r requirements.txt
 ---
 
 ## Compilation
-`ci/build.sh` builds every lecture demo that has a `Makefile`:
+The root `Makefile` builds every lecture demo that has a `Makefile`:
 
 ```bash
-ci/build.sh
+make build
 ```
 
 A C++17-capable compiler (e.g. `g++`) needs to be installed and available on `PATH` before running
-the script.
+this target.
 
 ---
