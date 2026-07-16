@@ -23,7 +23,7 @@ Erik Pihl ([erik.axel.pihl@gmail.com](mailto:erik.axel.pihl@gmail.com))
 | 7  | L07 | Convolutional neural networks (part II) |
 | 8  | L08 | Convolutional neural networks (part III) |
 | 9  | L09 | Convolutional neural networks (part IV) |
-| 10 | L10 | Convolutional neural networks (part V) |
+| 10 | L10 | Course review |
 
 ---
 
