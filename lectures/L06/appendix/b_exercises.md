@@ -311,21 +311,21 @@ Removing the outermost row and column (padding) leaves a 4×4 matrix matching th
 Finally, we update the kernel and bias using the learning rate `LR`:
 
 ```
-kernel = kernel − LR * kernelGradient
-bias   = bias   − LR * biasGradient
+kernel = kernel + LR * kernelGradient
+bias   = bias   + LR * biasGradient
 ```
 
 **Updated kernel:**
 
 ```
-0.17 0.36
-0.50 0.70
+0.23 0.44
+0.70 0.90
 ```
 
 **Updated bias:**
 
 ```
-0.4
+0.6
 ```
 
 ---

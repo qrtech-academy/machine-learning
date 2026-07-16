@@ -75,7 +75,7 @@ In the header file `ml/lin_reg/interface.hpp`, add a namespace named `ml::lin_re
 In this namespace, implement an interface named `Interface` with the following public methods:
 * **`~Interface()`:**
     * The interface's destructor. 
-    * Should be marked `default` and `noexcept`.
+    * Should be marked `default`, `virtual`, and `noexcept`.
 * **`predict()`:**
     * Should perform a prediction. 
     * Should take a single floating-point argument named `input`.
