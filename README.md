@@ -9,7 +9,9 @@ The course covers the fundamentals of machine learning, focusing on:
 
 The course is split into two parts, with a natural break point in between:
 * **Part I** (L01-L05): Linear regression and neural network fundamentals, culminating in a from-scratch dense-layer implementation.
-* **Part II** (L06-L10): Convolutional neural networks — convolutional, pooling, and flatten layers.
+* **Part II** (L06-L09): Convolutional neural networks — convolutional, pooling, and flatten layers,
+  followed by a full-course review (L10) that ties linear regression, neural networks, and CNNs
+  together.
 
 See [info/README.md](./info/README.md) for the full week-by-week schedule.
 
