@@ -37,3 +37,5 @@ run:
 # Clean the target.
 clean:
 	@rm -f $(TARGET)
+
+.PHONY: default build run clean

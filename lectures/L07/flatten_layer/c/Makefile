@@ -32,3 +32,5 @@ run:
 # Clean the application.
 clean:
 	@rm -f $(TARGET)
+
+.PHONY: default build run clean
