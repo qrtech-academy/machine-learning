@@ -1,4 +1,4 @@
-# Appendix A - Creating a Simple Flatten Layer in C++
+# Appendix C - Creating a Simple Flatten Layer in C++
 
 ### Task description
 A struct named `ml::FlattenLayer` should be added to

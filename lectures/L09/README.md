@@ -1,38 +1,36 @@
 # L09 - Convolutional Neural Networks (Part IV)
 
 ## Agenda
-* Implementing a flatten layer in software.
+* Implementing a real, working max pooling layer, `ml::conv_layer::MaxPool`, in the polymorphic
+`cnn_work` pipeline: replacing the `MaxPoolStub`.
 
 ---
 
 ## Objectives
-* Be able to implement a simple flatten layer in software.
+* Have created a concrete subclass `MaxPool` that inherits `ml::conv_layer::Interface`.
+* Have implemented `feedforward()`, `backpropagate()`, and `optimize()` for `MaxPool`.
 
 ---
 
 ## Instructions
-* Open the file [flatten_demo.cpp](./flatten_layer/cpp/flatten_demo.cpp). 
-A struct named `ml::FlattenLayer` is to be added to this file to implement a simple flatten layer. \
-See [appendix A](./appendix/a_flatten_layer.md) for more information.
-* As a reference, see the corresponding implementation in Python [here](./flatten_layer/python/flatten_demo.py). \
-Test-run the program with the command `python3 flatten_demo.py` in the terminal, in the corresponding directory.
-* If you're interested, a somewhat more developed implementation exists in C [here](./flatten_layer/c/source/flatten_demo.c).
-    * This implementation demonstrates encapsulation, since the struct `flatten_layer_t` is only implemented in the source file 
-    [flatten_layer.c](./flatten_layer/c/source/ml/flatten_layer.c). 
-    * The corresponding header file [flatten_layer.h](./flatten_layer/c/include/ml/flatten_layer.h) only contains functions 
-    for using the flatten layer.
-    * The struct's member variables are therefore kept private, in the same way the `private` keyword is used in C++. 
-    * This also demonstrates how matrices can be implemented in C via the struct [matrix_t](./flatten_layer/c/include/ml/matrix.h).
+* Use your code from L08 ([cnn_work](../L08/cnn_work)): keep working in the same project.
+* Open [max_pool.hpp](../L08/cnn_work/include/ml/conv_layer/max_pool.hpp) and
+[max_pool.cpp](../L08/cnn_work/source/ml/conv_layer/max_pool.cpp) (currently placeholders) and
+implement the class `ml::conv_layer::MaxPool`, satisfying the same
+[`conv_layer::Interface`](../L08/cnn_work/include/ml/conv_layer/interface.hpp) as `Conv`. See
+[appendix A](./appendix/a_max_pool_layer.md) for the full spec, including how to wire it into
+`factory.cpp` in place of `MaxPoolStub`.
 
 ---
 
 ## Evaluation
-* Why is a flatten layer needed between the convolutional/pooling layers and the dense layer?
-* What does the flatten layer's `backpropagate()` do, and how does that computation differ from `feedforward()`?
+* How does your `ml::conv_layer::MaxPool` implementation know which positions the gradients should be propagated back to during backpropagation?
+* What differences exist between a max pooling layer and a conv or dense layer, in terms of trainable parameters?
+* Why can `Conv` and `MaxPool` share a single interface (`conv_layer::Interface`) despite one having trainable parameters and the other not?
 
 ---
 
 ## Next Lecture
-* Course review: putting linear regression, neural networks, and CNNs together.
+* Implementing the flatten layer, and wiring the complete CNN together as the course's capstone.
 
 ---
