@@ -1,4 +1,4 @@
-# Appendix C - Constraints on Resource-Constrained Targets
+# Appendix D - Constraints on Resource-Constrained Targets
 
 ## Overview
 Everything built during this course has run on a general-purpose computer, where memory is
@@ -25,8 +25,8 @@ Total: 13 doubles * 8 bytes             =  104 bytes
 ```
 
 That's negligible on any target. But course-sized examples are intentionally tiny. A single hidden
-layer sized for 28×28 pixel images (784 inputs) with 128 nodes — a very ordinary size for a first
-hidden layer — tells a different story:
+layer sized for 28×28 pixel images (784 inputs) with 128 nodes (a very ordinary size for a first
+hidden layer) tells a different story:
 
 ```
 Weights: 128 * 784 = 100,352
@@ -41,7 +41,7 @@ As int8   (1 byte each):  100,480 bytes  ≈ 98.125 KB
 That's **one layer**. Many microcontrollers have on the order of tens of KB of RAM; mid-range parts
 often have a few hundred KB; only higher-end parts reach into the multiple-MB range. The `double`
 version of this single layer already exceeds what a lot of embedded targets have available for
-their *entire* program — and a real network has several layers. This is why embedded ML almost
+their *entire* program; and a real network has several layers. This is why embedded ML almost
 always trains at full precision on a workstation and then **quantizes** the trained weights down to
 a smaller type before deployment (see below), rather than training or storing at `double` precision
 on the target itself.
@@ -49,7 +49,7 @@ on the target itself.
 ---
 
 ## 2. Precision: Floating-Point vs. Fixed-Point
-Many microcontrollers — especially smaller Cortex-M0/M0+ parts or 8/16-bit MCUs — have no hardware
+Many microcontrollers (especially smaller Cortex-M0/M0+ parts or 8/16-bit MCUs) have no hardware
 FPU. Floating-point operations on those targets are emulated in software, which can be an order of
 magnitude or more slower than an integer add or multiply.
 
@@ -77,7 +77,7 @@ double toDouble(const Fixed16_16 value) noexcept
 }
 ```
 
-Addition of two fixed-point values is just integer addition — no special handling needed, since
+Addition of two fixed-point values is just integer addition: no special handling needed, since
 both operands are scaled by the same factor. Multiplication needs more care: multiplying two
 Q16.16 values naively overflows a 32-bit integer almost immediately (two values scaled by 2^16
 multiply to a result scaled by 2^32), so the multiply has to happen in a wider type before scaling
@@ -94,14 +94,14 @@ Fixed16_16 fixedMultiply(const Fixed16_16 a, const Fixed16_16 b) noexcept
 
 The trade-off: fixed-point trades dynamic range and some precision (Q16.16 can represent roughly
 ±32,767 with a resolution of about 0.0000153) for arithmetic that's fast and deterministic on
-targets without an FPU — no software floating-point emulation involved.
+targets without an FPU: no software floating-point emulation involved.
 
 ---
 
 ## 3. Quantization
 Even on targets *with* an FPU, storing weights as 8-bit integers instead of 32-bit floats cuts
 memory 4x, and many embedded cores can execute int8 operations faster than float32 ones. The
-common approach — **post-training quantization** — trains the network at full precision as done
+common approach, **post-training quantization**, trains the network at full precision as done
 throughout this course, then converts the trained weights to a smaller integer type for
 deployment, typically alongside a per-layer scale factor (conceptually similar to the fixed-point
 conversion above, but chosen per-tensor rather than a single fixed format for the whole network). A
@@ -112,9 +112,9 @@ full quantization pipeline is out of scope for this course, but it's worth recog
 
 ## 4. Real-Time and Latency Constraints
 A conv layer performs on the order of `inputSize² × kernelSize²` multiply-adds per feedforward
-pass. On a laptop that's negligible; inside a control loop with a hard deadline — e.g. a motor
+pass. On a laptop that's negligible; inside a control loop with a hard deadline, e.g. a motor
 controller running at 1 kHz, giving the entire loop (sensor read, inference, actuation) a 1 ms
-budget — it can dominate the loop's execution time. For embedded systems, the *worst-case*
+budget, it can dominate the loop's execution time. For embedded systems, the *worst-case*
 execution time matters far more than the average case: a network that's usually fast but
 occasionally spikes in latency can violate a real-time deadline in exactly the way that doesn't
 show up during casual testing.
@@ -134,7 +134,7 @@ predictable memory use.
 
 ## Exercise
 
-### Part 1 — Memory Footprint
+### Part 1 - Memory Footprint
 Using the layer sizes from the network you built in **L04–L05** (or any other layer configuration
 of your choice):
 1. Compute the total number of trainable values (weights + biases) across all layers.
@@ -143,10 +143,10 @@ of your choice):
 3. Compare your numbers against the MNIST-sized example above (785 KB / 392.5 KB / 98.125 KB). Which
    of the three precisions would plausibly fit into a microcontroller with 64 KB of RAM? With 512 KB?
 
-### Part 2 — Fixed-Point Conversion
+### Part 2 - Fixed-Point Conversion
 Take the `predict()` method from **L01**'s `ml::lin_reg::Fixed` class (`y = k * x + m`):
 1. Add `toFixed()`, `toDouble()`, and `fixedMultiply()` as shown above (an addition helper isn't
-   needed — plain integer `+` already works for Q16.16 values).
+   needed: plain integer `+` already works for Q16.16 values).
 2. Implement a free function `Fixed16_16 predictFixed(Fixed16_16 weight, Fixed16_16 bias, Fixed16_16 input)`
    that computes the same prediction as `predict()`, but entirely in Q16.16 fixed-point using
    `fixedMultiply()` for the multiplication.
@@ -154,7 +154,7 @@ Take the `predict()` method from **L01**'s `ml::lin_reg::Fixed` class (`y = k * 
    `predict()` (floating-point) and `predictFixed()` (fixed-point), convert the fixed-point result
    back with `toDouble()`, and print both side by side.
 4. Confirm the two results agree to within roughly 0.0001 for each test case. If they don't,
-   double-check the `>>` shift in `fixedMultiply()` — it's the step most likely to be off by a
+   double-check the `>>` shift in `fixedMultiply()`: it's the step most likely to be off by a
    factor of `kOne`.
 
 ---

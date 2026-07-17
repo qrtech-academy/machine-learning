@@ -1,4 +1,4 @@
-# Appendix A - Creating a Simple Max Pooling Layer in C++
+# Appendix B - Creating a Simple Max Pooling Layer in C++
 
 ### Task description
 A struct named `ml::MaxPoolLayer` should be added to

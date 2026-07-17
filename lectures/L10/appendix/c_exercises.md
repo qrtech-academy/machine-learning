@@ -1,10 +1,10 @@
-# Appendix B - Exercises
+# Appendix C - Exercises
 These exercises are for self-assessment, reviewing the whole course:
 * **Part 1** tests whether you can recognize a layer type from its algorithm alone.
 * **Part 2** tests implementation-level understanding: shapes, parameter counts, and what has to be remembered for backpropagation.
 * **Part 3** is a short set of exam-style conceptual questions.
 
-Try to answer everything yourself first. Solutions are provided in [appendix D](./d_solutions.md).
+Try to answer everything yourself first. Solutions are provided in [appendix E](./e_solutions.md).
 
 ---
 
@@ -121,6 +121,6 @@ For each statement, decide if it's true or false, and briefly justify your answe
 
 ---
 
-Solutions for all three parts are in [appendix D](./d_solutions.md).
+Solutions for all three parts are in [appendix E](./e_solutions.md).
 
 ---

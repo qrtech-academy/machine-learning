@@ -101,7 +101,7 @@ single value is picked out of each block:
 * **Average pooling:** the average of the block.
 
 **Feedforward:** the largest value in each pooling block is passed forward. The most prominent
-features in each region are preserved, at the cost of detail — much like when an image is
+features in each region are preserved, at the cost of detail; much like when an image is
 downsampled: it looks largely the same, but if you enlarge it again, you can see that detail has been lost.
 
 **Backpropagation:** the gradients are only sent back to the positions that actually held the
@@ -138,7 +138,9 @@ Backpropagation follows the same chain in reverse:
 * The pooling layer routes the gradients to the correct positions.
 * The conv layer finally adjusts the weights for the patterns that actually contributed to the prediction.
 
-See the [cnn_demo](../cnn_demo) directory for a complete, working implementation of everything
-described above, and [appendix B](./b_exercises.md) for a worked hand-training example.
+You'll see this whole pipeline wired together for the first time in L08's
+[cnn_work](../../L08/cnn_work) (running on stub layers at first; the real implementations are
+built into it across L08-L10), and [appendix B](./b_exercises.md) has a worked hand-training
+example.
 
 ---
