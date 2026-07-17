@@ -33,7 +33,6 @@ After completing the course, participants should be able to:
 ci/          Scripts for code formatting and compilation
 info/        Course information and schedule
 lectures/    Lecture plans, literature, and exercises
-Makefile     Entry point for `make build`, `make format`, and `make format-check`
 ```
 
 ---
