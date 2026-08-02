@@ -10,20 +10,20 @@ Erik Pihl ([erik.axel.pihl@gmail.com](mailto:erik.axel.pihl@gmail.com))
 ### Part I – Linear Regression & Neural Networks
 | Week | Lecture | Topic |
 |------|---------|-------|
-| 1  | L01 | Linear regression (part I) |
-| 2  | L02 | Linear regression (part II) |
-| 3  | L03 | Neural networks (part I) |
-| 4  | L04 | Neural networks (part II) |
-| 5  | L05 | Dense layer |
+| 33 | L01 | Linear regression (part I) |
+| 35 | L02 | Linear regression (part II) |
+| 37 | L03 | Neural networks (part I) |
+| 39 | L04 | Neural networks (part II) |
+| 41 | L05 | Dense layer |
 
 ### Part II – Convolutional Neural Networks
 | Week | Lecture | Topic |
 |------|---------|-------|
-| 6  | L06 | Convolutional neural networks (part I) |
-| 7  | L07 | Convolutional neural networks (part II) |
-| 8  | L08 | Convolutional neural networks (part III) |
-| 9  | L09 | Convolutional neural networks (part IV) |
-| 10 | L10 | Course review |
+| 8  | L06 | Convolutional neural networks (part I) |
+| 10 | L07 | Convolutional neural networks (part II) |
+| 12 | L08 | Convolutional neural networks (part III) |
+| 14 | L09 | Convolutional neural networks (part IV) |
+| 16 | L10 | Course review |
 
 ---
 
