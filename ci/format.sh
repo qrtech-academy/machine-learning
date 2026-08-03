@@ -42,7 +42,8 @@ check_black() {
 }
 
 ################################################################################
-# Find C/C++ files and store them in the given array.
+# Find C/C++ files and store them in the given array. The libs directory is skipped, since it
+# holds submodules that carry their own formatting configuration.
 # Globals:
 #   None
 # Arguments:
@@ -50,11 +51,13 @@ check_black() {
 ################################################################################
 select_files() {
     local -n out=$1
-    mapfile -t out < <(find * \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" \) -print)
+    mapfile -t out < <(find * -path "libs/*" -prune -o \
+        \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" \) -print)
 }
 
 ################################################################################
-# Find Python files and store them in the given array.
+# Find Python files and store them in the given array. The libs directory is skipped, since it
+# holds submodules that carry their own formatting configuration.
 # Globals:
 #   None
 # Arguments:
@@ -62,7 +65,7 @@ select_files() {
 ################################################################################
 select_python_files() {
     local -n out=$1
-    mapfile -t out < <(find * -name "*.py" -print)
+    mapfile -t out < <(find * -path "libs/*" -prune -o -name "*.py" -print)
 }
 
 ################################################################################

@@ -2,6 +2,10 @@
 build:
 	@bash ci/build.sh
 
+# Build and run every lecture test suite that has a solution to run against.
+test:
+	@bash ci/test.sh
+
 # Format all C/C++ files (clang-format) and Python files (black) in place.
 format:
 	@bash ci/format.sh
@@ -10,4 +14,4 @@ format:
 format-check:
 	@bash ci/format.sh --check
 
-.PHONY: build format format-check
+.PHONY: build test format format-check
