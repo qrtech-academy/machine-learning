@@ -280,7 +280,7 @@ $$y_3 = \sigma(-0.25 + 0.895 * 0.65 + 0 * 0.8) = \sigma(0.332) = 0.332$$
 
 $$Y = y_3 \approx 0.332, \quad \delta_3 = 0 - 0.332 = -0.332$$
 
-The deviation decreased from -0.5 to -0.332, so the error got smaller. The node that produced $y_2 = 0$, however, remained completely unchanged since the derivative of ReLU is zero where the input is $\leq 0$ — an example of the so-called "dying ReLU" problem. If this kept happening over several consecutive epochs, that node could never be relearned. To counteract this, **Leaky ReLU** could be used instead of ReLU, since it allows a weak signal (and therefore a non-zero derivative) even when the input is negative.
+The deviation decreased from -0.5 to -0.332, so the error got smaller. The node that produced $y_2 = 0$, however, remained completely unchanged since the derivative of ReLU is zero where the input is $\leq 0$, an example of the so-called "dying ReLU" problem. If this kept happening over several consecutive epochs, that node could never be relearned. To counteract this, **Leaky ReLU** could be used instead of ReLU, since it allows a weak signal (and therefore a non-zero derivative) even when the input is negative.
 
 ---
 
@@ -292,10 +292,10 @@ of it.
 ---
 
 ### 1. Directory structure
-Set up the following directory structure:
+Set up the following structure in this lecture's [exercises](./exercises/) directory:
 
 ```
-ml/
+exercises/
 ├── include/
 │   └── ml/
 │       ├── dense_layer/
@@ -304,6 +304,7 @@ ml/
 │       └── types.hpp
 ├── source/
 │   └── main.cpp
+├── test/                <- already here, see section 4
 └── Makefile
 ```
 
@@ -317,10 +318,10 @@ The hidden layer and output layer of a future neural network will be represented
 you'll implement a simple stub class `ml::dense_layer::Stub` as a placeholder.
 
 **The interface (`ml/dense_layer/interface.hpp`):**
-In the namespace `ml::dense_layer`, implement an interface named `Interface`. All methods (except the destructor) should be declared pure virtual (`= 0`).
+In the namespace `ml::dense_layer`, implement an interface named `Interface`. All methods 
+(except the destructor) should be declared pure virtual (`= 0`).
 
-* **`~Interface()`:** should be set to `default` and marked `virtual` and `noexcept`.
-
+* **`~Interface()`:** should be set to `default` and marked `virtual` and `noexcept`.  
 Getters, all `const`, `noexcept`, and `[[nodiscard]]`:
 
 | Method | Returns |
@@ -331,33 +332,144 @@ Getters, all `const`, `noexcept`, and `[[nodiscard]]`:
 | `error()` | Reference to the layer's error (read-only floating-point vector). |
 | `weights()` | Reference to the layer's weights (read-only, two-dimensional floating-point vector). |
 
-Computation methods, all `noexcept` and without a return value (`void`). On invalid input (wrong dimensions or an invalid learning rate), an error message should be printed and `std::terminate()` called:
-
-* **`feedforward(input)`:** performs feedforward. `input`: read-only floating-point vector of input data.
-* **`backpropagate(output)`** (output layer): computes error from reference values. `output`: read-only floating-point vector of reference values.
-* **`backpropagate(nextLayer)`** (hidden layer): computes error from the next layer. `nextLayer`: reference to the next layer (`const Interface&`).
-* **`optimize(input, learningRate)`:** updates bias and weights. `input`: read-only floating-point vector. `learningRate`: floating-point number.
+Computation methods, all `noexcept` and returning `bool`. Each returns `false` on invalid input 
+(wrong dimensions or an invalid learning rate) and `true` otherwise, so the caller can decide what 
+to do about the failure. As in **L01** and **L02**, `std::terminate()` is reserved for the 
+constructor, which has no way to return a failure code to the caller:
+* **`feedforward(input)`:** performs feedforward. 
+    * `input`: read-only floating-point vector of input data.
+* **`backpropagate(output)`** (output layer): computes error from reference values.
+    * `output`: read-only floating-point vector of reference values.
+* **`backpropagate(nextLayer)`** (hidden layer): computes error from the next layer. 
+    * `nextLayer`: reference to the next layer (`const Interface&`).
+* **`optimize(input, learningRate)`:** updates bias and weights. 
+    * `input`: read-only floating-point vector.
+    * `learningRate`: floating-point number.
 
 **The stub class (`ml/dense_layer/stub.hpp`):**
-In the namespace `ml::dense_layer`, implement a subclass named `Stub` that inherits `Interface` via public inheritance. The class should be marked `final`. The stub doesn't perform any real computation — it exists solely so other code can be compiled and test-run against a real `dense_layer::Interface` before a concrete `Dense` implementation exists (see **L05**).
+In the namespace `ml::dense_layer`, implement a subclass named `Stub` that inherits `Interface`
+via public inheritance. The class should be marked `final`. The stub doesn't perform any real
+computation; it exists solely so other code can be compiled, test-run, and unit tested against a
+real `dense_layer::Interface` before a concrete `Dense` implementation exists (see **L05**). The
+network you build in **L04** is tested entirely against this stub, so it's worth getting right.
 
-* **`Stub()`:** takes `nodeCount` and `weightCount` (unsigned integers). Initializes the output vector to a fixed value (e.g. `0.5`), and the other vectors (error, bias, weights) to zeros. Should be marked `explicit` and `noexcept`.
-* **`~Stub()`:** should be marked `default`, `noexcept`, and `override`.
-* Other getters: should be marked `override` (retaining the interface's `const` and `noexcept`, but **not** `[[nodiscard]]`).
-* **`feedforward()`**, both overloads of **`backpropagate()`**, and **`optimize()`**: only perform range checks and call `std::terminate()` on mismatch. Should be marked `override` and `noexcept`.
+* **`Stub()`:**
+    * The class's only implemented constructor.
+    * Should take the following arguments:
+        * `nodeCount`: number of nodes in the layer (unsigned integer).
+        * `weightCount`: number of weights per node (unsigned integer).
+        * `outputValue`: value every output element is set to (floating-point number).
+          Default value: `0.5`.
+    * Initializes every element of the output vector to `outputValue`, and the error and weight
+      vectors to zeros.
+    * Should print an error message and call `std::terminate()` if either `nodeCount` or
+      `weightCount` is zero:
+        * As in **L01** and **L02**, the constructor is the one place that terminates, since it
+          has no way to return a failure code.
+        * It also guarantees at least one node and one weight, which is what makes it safe for
+          `weightCount()` to read the width of the first row of the weight matrix.
+    * `outputValue` is an argument rather than a hard-coded constant so that two stubs can be told
+      apart. A network whose layers all report the same output can't show whether a prediction
+      came from the output layer or from the hidden one; giving each layer its own value makes
+      that visible.
+    * Should be marked `explicit` and `noexcept`.
+* **`~Stub()`:**
+    * Destructor overriding the interface's destructor.
+    * Should be marked `default`, `noexcept`, and `override`.
+* **Getters** (`nodeCount()`, `weightCount()`, `output()`, `error()`, `weights()`):
+    * Override the corresponding methods in the interface.
+    * Should be marked `override`, retaining the interface's `const` and `noexcept`, but **not**
+      `[[nodiscard]]`.
+* **`feedforward()`**, both overloads of **`backpropagate()`**, and **`optimize()`**:
+    * Perform range checks only:
+        * Return `false` when the dimensions don't match, or, for `optimize()`, when the learning
+          rate lies outside `(0.0, 1.0)`.
+        * Return `true` otherwise.
+    * Deliberately compute nothing:
+        * The output stays at `outputValue` regardless of what's fed in.
+        * The error stays at zero.
+    * Should be marked `override` and `noexcept`.
+* **`setOutput()`:**
+    * Sets every element of the output vector to the given value.
+    * Should take a single argument:
+        * `outputValue`: value to set every output element to (floating-point number).
+    * Returns nothing, and should be marked `noexcept`.
+    * **Not** part of `Interface`. It exists on the stub alone.
+    * It's what lets a test drive the output of a whole network in **L04**:
+        * The network stores its layers by reference, so calling `setOutput()` on the layer a
+          network was built with changes what that network predicts.
+        * That reveals whether the network reads its output layer live or kept a stale copy of
+          it. Keeping a stale copy is exactly what the note in **L04** about not needing a
+          separate storage variable is there to prevent.
+* **`feedforwardCount()`** and **`clearFeedforwardCount()`:**
+    * `feedforwardCount()` returns the number of times `feedforward()` has been called on this
+      layer, counting **every** call, not just the ones that passed the range check:
+        * Increment the counter (`myFeedforwardCount`) at the very top of `feedforward()`, before
+          the input size is checked, so a rejected call raises it just as an accepted one does.
+        * The tally records how often the layer was *asked* to feed forward, not how often it
+          agreed to.
+        * Should be marked `[[nodiscard]]`, `const`, and `noexcept`.
+    * `clearFeedforwardCount()` resets that tally to zero.
+        * Returns nothing, and should be marked `noexcept`.
+    * Neither is part of `Interface`.
+    * `train()` in **L04** performs one feedforward per training set per epoch, so this is what
+      lets a test pin down the training loop:
+        * Nothing else can: a loop that runs a single pass instead of every epoch still lines up
+          dimensionally and still returns `true`, so without a count it's indistinguishable from
+          a correct one.
 
-For this class, the default constructor and the copy and move constructors (and corresponding operators) should be deleted.
+For this class, the default constructor and the copy and move constructors (and corresponding
+operators) should be deleted.
 
-Add appropriate private member variables to store the number of nodes, the number of weights per node, output, error, bias, and weights.
+Add private member variables for the output, the error, the weights, and the feedforward count.
+
+The number of nodes and the number of weights per node don't need member variables of their own.
+Both are readable from the vectors you already have: `nodeCount()` is the size of the output
+vector, and `weightCount()` is the width of the weight matrix.
+
+The bias doesn't need one at all. It isn't part of `Interface`, and this stub never optimizes
+anything, so there'd be nothing to put in it and no way to read it back out.
+
+**Note!** Leaving it out is a stub-only simplification. The real `Dense` layer you write in **L05**
+does need a bias vector: it's a trainable parameter, adjusted alongside the weights on every call
+to `optimize()`.
 
 ---
 
 ### 3. A quick compile check
-There's no network to run yet — that's next lecture, once `neural_network::Shallow` exists to make
+There's no network to run yet, that's next lecture, once `neural_network::Shallow` exists to make
 use of this interface. For now, just confirm your `Interface`/`Stub` pair compiles: in `main.cpp`,
 create a `ml::dense_layer::Stub` with a few nodes and weights, and print its `nodeCount()`,
 `weightCount()`, and `output()` to the terminal. You should see `nodeCount()`/`weightCount()`
-match what you constructed it with, and every value in `output()` equal to whatever fixed value you
-chose (e.g. `0.5`).
+match what you constructed it with, and every value in `output()` equal to the default
+`outputValue` of `0.5`.
+
+Create a second stub with an explicit `outputValue`, and check that its `output()` reports that
+value instead. Also feed both stubs a vector of the wrong size and check that `feedforward()`
+returns `false` rather than terminating.
+
+---
+
+### 4. Running the tests
+A test suite for the stub is available in [exercises/test](./exercises/test/). It's already in
+place next to the code you just wrote. Build and run it from the exercises directory:
+
+```bash
+make -C test
+```
+
+The test framework is checked out as a submodule at the root of this repository. If `libs/test` is
+empty, fetch it once with `git submodule update --init`.
+
+All 14 test cases should pass. **L03 starts a new `ml` codebase**, so this suite replaces nothing
+and stands on its own.
+
+Testing a class that computes nothing may look pointless, but the range checks are the only real
+logic the stub has, and the network you write in **L04** is tested entirely against them. A stub
+whose `feedforward()` accepted an input of any size would let every L04 test pass without proving
+anything.
+
+See the [test suite's README](./exercises/test/README.md) for more information, including which of
+these tests carry over unchanged to your real `Dense` layer in **L05**.
 
 ---

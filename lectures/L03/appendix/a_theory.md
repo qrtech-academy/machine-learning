@@ -1,6 +1,6 @@
 # Appendix A - Theory
-This appendix covers neural network theory — feedforward, backpropagation, optimization, and
-activation functions — followed by the architecture of the dense layer interface you'll build this
+This appendix covers neural network theory (feedforward, backpropagation, optimization, and
+activation functions) followed by the architecture of the dense layer interface you'll build this
 lecture and the next.
 
 ---
@@ -10,7 +10,7 @@ lecture and the next.
 ### Introduction
 * Through machine learning, a given machine can become capable of learning rules without having been explicitly programmed to do so.
 * **Deep learning** is a subfield of machine learning and involves techniques that vaguely resemble how our brains work. The name stems from the fact that the technique was originally inspired by how our brains function. In practice, though, brains and neural networks work very differently.
-* Deep learning uses so-called **neural networks** containing several steps, or layers, between input and output — often hundreds — which allows relevant information to be extracted from the input while irrelevant information is discarded. This makes deep learning well suited to images and similar data containing a large amount of information, most of which is usually insignificant.
+* Deep learning uses so-called **neural networks** containing several steps, or layers, between input and output, often hundreds, which allows relevant information to be extracted from the input while irrelevant information is discarded. This makes deep learning well suited to images and similar data containing a large amount of information, most of which is usually insignificant.
 * The more layers used in a neural network, the deeper the model. Information can be thought of as passing through and being processed by different filters that distill the information. In each layer, a certain type of irrelevant data is filtered out while relevant data is retained. Step by step, the input changes from its original form and increasingly contains information about the output.
 
 ![](./images/ann_theory.png)
@@ -157,7 +157,7 @@ ml::dense_layer::Interface   (Interface for a dense layer)
 
 Next lecture, this interface will be used by a `neural_network::Shallow` class to build a small
 working (if not yet properly trained) network. The lecture after that (**L05**) replaces `Stub`
-with a real, trainable implementation — the interface stays the same throughout, so nothing that
+with a real, trainable implementation; the interface stays the same throughout, so nothing that
 depends on it needs to change when that happens.
 
 ---
@@ -184,8 +184,8 @@ depends on it needs to change when that happens.
 * Feedforward always sets the output to a fixed value (e.g. `0.5`).
 * Backpropagation and optimization do nothing.
 
-The stub exists so that other code — namely the `Shallow` network class you'll build next
-lecture — can be written, compiled, and test-run against a real `dense_layer::Interface` before a
+The stub exists so that other code, namely the `Shallow` network class you'll build next
+lecture, can be written, compiled, and test-run against a real `dense_layer::Interface` before a
 correct implementation exists. A correct implementation follows in **L05**.
 
 ---
