@@ -4,7 +4,7 @@ These exercises are for self-assessment, reviewing the whole course:
 * **Part 2** tests implementation-level understanding: shapes, parameter counts, and what has to be remembered for backpropagation.
 * **Part 3** is a short set of exam-style conceptual questions.
 
-Try to answer everything yourself first. Solutions are provided in [appendix E](./e_solutions.md).
+Everything you need to answer them is in the earlier appendices and the lecture material.
 
 ---
 
@@ -118,9 +118,5 @@ For each statement, decide if it's true or false, and briefly justify your answe
 8. Every layer type in this course implements the same three methods: `feedforward()`,
    `backpropagate()`, and `optimize()`. What does `optimize()` do for a layer type that has no
    trainable parameters, such as a max pooling or flatten layer?
-
----
-
-Solutions for all three parts are in [appendix E](./e_solutions.md).
 
 ---

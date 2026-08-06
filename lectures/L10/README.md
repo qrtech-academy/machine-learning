@@ -36,7 +36,7 @@ and how they connect in the full `cnn_demo` pipeline (the finished reference cop
 lecture's material).
 * Work through [appendix C](./appendix/c_exercises.md) for self-assessment: recognizing layer types
 from their algorithms, implementation/shape/parameter-count questions, and a set of exam-style
-questions covering the whole course. Solutions are in [appendix E](./appendix/e_solutions.md).
+questions covering the whole course.
 * To wrap up the course, read [appendix D](./appendix/d_embedded_constraints.md) for a discussion of
 what changes when a network like the one you've built during this course has to run on a
 resource-constrained target, and complete the memory-footprint and fixed-point exercises there.

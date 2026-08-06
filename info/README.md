@@ -75,9 +75,6 @@ Topics include:
 * Concrete `Dense` subclass replacing the stub
 * Activation functions
 * `feedforward()`, `backpropagate()`, `optimize()`
-* Overfitting and generalization (train/test error gap)
-* Momentum-based optimizer
-* Recognizing and debugging numerical instability
 
 ### L06 – Convolutional Neural Networks (Part I)
 Why CNNs, and the convolutional layer.
