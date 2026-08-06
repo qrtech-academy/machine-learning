@@ -380,6 +380,6 @@ int main()
 }
 ```
 
-The model above builds on the randomized-order version from earlier in this appendix with precision calculation and early stopping. Linear regression is a special case of a single-node neural network; the next step is to see how these same ideas — weights, biases, error-driven adjustment — extend to full neural networks with multiple layers, starting in L03.
+The model above builds on the randomized-order version from earlier in this appendix with precision calculation and early stopping. Linear regression is a special case of a single-node neural network; the next step is to see how these same ideas (weights, biases, error-driven adjustment) extend to full neural networks with multiple layers, starting in L03.
 
 ---
