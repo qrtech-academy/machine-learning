@@ -29,6 +29,7 @@
 
 ### After the lecture
 * Complete the exercises in [appendix B](./appendix/b_exercises.md).
+* Verify your implementation with the [test suite](./appendix/exercises/test/README.md).
 * Solutions will be available a few days after the lecture.
 
 ---

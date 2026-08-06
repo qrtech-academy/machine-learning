@@ -27,10 +27,11 @@ Then perform prediction for input consisting of all integers in the range [-5, 5
 You'll implement an interface and an accompanying class for a linear regression model in C++.
 
 ### 1. Directory structure
-Create a new directory named `ml` with the following directory structure:
+You'll write your code in this lecture's [exercises](./exercises/) directory. Build up the
+following structure inside it:
 
 ```
-ml/
+exercises/
 ├── include/
 │   └── ml/
 │       ├── lin_reg/
@@ -42,8 +43,11 @@ ml/
 │   │   └── lin_reg/
 │   │       └── fixed.cpp
 │   └── main.cpp
+├── test/                <- already here, see section 14
 └── Makefile
 ```
+
+The `test` directory is already in place; [section 14](#14-running-the-tests) covers running it.
 
 --- 
 
@@ -107,7 +111,7 @@ The class should have the following public methods:
     * Trains the model with the arguments:
         * `epochCount`: number of epochs to train (unsigned integer).
         * `learningRate`: learning rate as a floating-point number. Default value: `0.01` (1 %).
-    * Returns `true` after training is complete.
+    * Returns `false` if `epochCount` is 0, or if `learningRate` is outside the range `(0.0, 1.0)`. Otherwise returns `true` once training is complete.
     * Should be marked `noexcept`.
 
 The class should have the following private method:
@@ -136,6 +140,11 @@ Add the following private member variables to `Fixed`:
     * Reference to the training data's output points.
     * Initialized via the constructor.
     * Should be marked `const`.
+* **`mySetCount`:**
+    * The number of complete training sets, i.e. `std::min(trainInput.size(), trainOutput.size())` (`std::min` is available in `<algorithm>`).
+    * Training data holding more inputs than outputs, or the other way around, has no complete set beyond the shorter of the two vectors, so the surplus values are unusable.
+    * Initialized via the constructor.
+    * Should be an unsigned integer (`std::size_t`, from `<cstddef>`) and marked `const`.
 * **`myBias`:** 
     * The model's bias value (the m-value in `y = kx + m`).
     * Should be a floating-point type.
@@ -147,8 +156,10 @@ Add the following private member variables to `Fixed`:
 
 ### 9. Constructor
 Implement the constructor in `source/ml/lin_reg/fixed.cpp`:
-* Initialize all member variables. 
-* `myBias` and `myWeight` can be set to `0.5`.
+* Initialize all member variables.
+* Set `mySetCount` to the number of complete training sets, i.e. the smaller of the two vectors' sizes.
+* `myBias` and `myWeight` must both be initialized to `0.0`, so that the model predicts `0` for every input until it has been trained.
+* Print an error message to `stderr` and call `std::terminate()` (from `<exception>`) if `mySetCount` is 0. A model without training data can never be trained, and since the constructor can't return a failure code, there's no way to report the problem to the caller.
 
 ---
 
@@ -169,25 +180,29 @@ where:
 
 ### 11. Training
 Implement the method `train()` in `source/ml/lin_reg/fixed.cpp`:
-* Print an error message and call `std::terminate()` (from `<exception>`) if training sets are missing, `epochCount == 0`, or `learningRate` is outside the range `(0.0, 1.0)`.
+* Return `false` immediately if `epochCount` is 0, or if `learningRate` is outside the range `(0.0, 1.0)`:
+    * A learning rate of `0.0` or less can never improve the model.
+    * A learning rate of `1.0` or more corrects by at least the full error each step, which makes training oscillate or diverge instead of converging.
+* Missing training data is already handled by the constructor, so `train()` doesn't need to check for it.
 * Train the model for the given number of epochs.
-* During each epoch, iterate through all training sets. Perform optimization by calling the method `optimize()` with the current training set (obtained from the vectors, e.g. via index).
+* During each epoch, iterate through all `mySetCount` training sets. Perform optimization by calling the method `optimize()` with the current training set (obtained from the vectors, e.g. via index).
 * Return `true` after training is complete.
 
 ---
 
 ### 12. Optimization
 Implement the method `optimize()` in `source/ml/lin_reg/fixed.cpp`:
-* Compute a prediction with the given input: `prediction = myWeight * input + myBias`.
-* Compute the error as the difference between the reference value and the prediction: `error = output - prediction`.
-* If `input == 0`: set `myBias = output` directly and skip the remaining updates, since `y = m` when `x = 0`.
-* Otherwise, adjust the model's parameters based on the error:
-    * `myBias   = myBias   + error * learningRate`
-    * `myWeight = myWeight + error * learningRate * input`
+* If `input == 0`: set `myBias = output` directly and return, leaving `myWeight` untouched. Since `y = k * 0 + m = m`, the reference value *is* the bias, and no value of `k` changes a prediction made with an input of zero.
+* Otherwise:
+    * Compute a prediction with the given input: `prediction = myWeight * input + myBias`.
+    * Compute the error as the difference between the reference value and the prediction: `error = output - prediction`.
+    * Adjust the model's parameters based on the error:
+        * `myBias   = myBias   + error * learningRate`
+        * `myWeight = myWeight + error * learningRate * input`
 
 ---
 
-### 13. Compiling and testing
+### 13. Compiling and running
 Compile the program and make sure you get the following output:
 
 ```
@@ -199,6 +214,30 @@ Input: 3, predicted output: 8
 Input: 4, predicted output: 10
 --------------------------------------------------------------------------------
 ```
+
+---
+
+### 14. Running the tests
+A ready-made test suite for the model is available in [exercises/test](./exercises/test/). It
+checks the behaviour specified above: the initial parameter values, the argument validation in
+`train()`, the parameter updates made by `optimize()`, and a handful of complete training runs.
+
+There's nothing to copy: `test` already sits alongside the code you just wrote. Build and run it
+from the exercises directory:
+
+```bash
+make -C test
+```
+
+The test framework is checked out as a submodule at the root of this repository. If `libs/test` is
+empty, fetch it once with `git submodule update --init`.
+
+All 15 test cases should pass. When one fails, the output names the assertion that failed, the two
+values involved, and the file and line it came from. Use it to find the part of the specification
+your implementation doesn't match yet.
+
+See the [test suite's README](./exercises/test/README.md) for more information, including the one
+piece of behaviour it deliberately doesn't cover.
 
 ---
 
@@ -232,13 +271,15 @@ void predict(const ml::lin_reg::Interface& linReg, const ml::Matrix1d& inputData
     }
 
     // Perform prediction with each input set, print the result in the terminal.
-    std::printf("--------------------------------------------------------------------------------\n");
+    std::printf(
+        "--------------------------------------------------------------------------------\n");
     for (const auto& input : inputData)
     {
         const auto prediction = linReg.predict(input);
         std::printf("Input: %g, predicted output: %g\n", input, prediction);
     }
-    std::printf("--------------------------------------------------------------------------------\n\n");
+    std::printf(
+        "--------------------------------------------------------------------------------\n\n");
 }
 } // namespace
 

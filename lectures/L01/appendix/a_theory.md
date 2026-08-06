@@ -146,7 +146,7 @@ For the earlier ventilation control example, we could instead create training se
 ---
 
 ### Why machine learning?
-Mimicking human intelligence with a traditional program would require an enormous number of conditional statements to cover every conceivable decision and combination of conditions, which isn't practically feasible. This approach is called *symbolic AI* and was the dominant paradigm in artificial intelligence before machine learning became widespread. It worked well for complex but well-defined tasks (e.g. chess), but was inadequate for less well-defined tasks such as computer vision, speech recognition, and language translation, where the input can vary widely. Machine learning solves this by letting the machine find the rules itself through training on large amounts of data — see the figure above for a comparison.
+Mimicking human intelligence with a traditional program would require an enormous number of conditional statements to cover every conceivable decision and combination of conditions, which isn't practically feasible. This approach is called *symbolic AI* and was the dominant paradigm in artificial intelligence before machine learning became widespread. It worked well for complex but well-defined tasks (e.g. chess), but was inadequate for less well-defined tasks such as computer vision, speech recognition, and language translation, where the input can vary widely. Machine learning solves this by letting the machine find the rules itself through training on large amounts of data. See the figure above for a comparison.
 
 ---
 
@@ -166,7 +166,7 @@ In machine learning, the terms **weight** and **bias** are often used instead of
 
 This is especially true for neural networks, where a so-called node holds a bias (m-value) and one or more weights (k-values). In practice it's the same thing; the node's inputs x are multiplied by weights k, and the sum k * x of these together with the bias m makes up the node's output y.
 
-**Note!** Nodes in neural networks are somewhat more complex than that — the output usually needs to exceed a threshold value for the node to activate. Neural networks are covered later in the course.
+**Note!** Nodes in neural networks are somewhat more complex than that: the output usually needs to exceed a threshold value for the node to activate. Neural networks are covered later in the course.
 
 ---
 
@@ -211,7 +211,7 @@ The model's m-value should be increased by the adjustment amount Δe:
 
 $$m = m + \Delta e$$
 
-The model's k-value should be increased by the adjustment amount Δe multiplied by the current input x. This means that when x equals zero — when only the m-value determines output y — the k-value isn't adjusted on deviation, only the m-value. At the same time, the higher the x-value, the more the k-value is adjusted for the given input x:
+The model's k-value should be increased by the adjustment amount Δe multiplied by the current input x. This means that when x equals zero (when only the m-value determines output y), the k-value isn't adjusted on deviation, only the m-value. At the same time, the higher the x-value, the more the k-value is adjusted for the given input x:
 
 $$k = k + \Delta e * x$$
 
