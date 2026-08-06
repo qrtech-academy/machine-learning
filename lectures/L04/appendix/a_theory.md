@@ -10,8 +10,8 @@ maps onto the theory from L03.
 
 ### Overview
 Last lecture you built a `dense_layer::Interface` and a placeholder implementation of it,
-`dense_layer::Stub`. This lecture adds the piece that actually uses them — a small neural network
-class, `neural_network::Shallow` — completing the structure:
+`dense_layer::Stub`. This lecture adds the piece that actually uses them: a small neural network
+class, `neural_network::Shallow`, completing the structure:
 
 ```
 ml::dense_layer::Interface   (built last lecture)
@@ -42,7 +42,7 @@ input → myHiddenLayer.feedforward(input)
        myOutputLayer.output()  →  prediction
 ```
 
-`Shallow` doesn't own the layers — it receives them as references via the constructor. This makes it easy to swap out layers without changing the network class, which is exactly what happens in **L05** when the stub is replaced with a real implementation.
+`Shallow` doesn't own the layers; it receives them as references via the constructor. This makes it easy to swap out layers without changing the network class, which is exactly what happens in **L05** when the stub is replaced with a real implementation.
 
 ---
 
@@ -95,7 +95,7 @@ predict(input)
 ---
 
 ### Step 2 – Backpropagation
-Compute the error backward — always start with the output layer.
+Compute the error backward: always start with the output layer.
 
 **The output layer** compares its output against the reference value:
 ```
@@ -135,12 +135,12 @@ These three steps map directly onto the theory from **L03** (see [appendix A](..
 ---
 
 ### Input Validation
-Check that training is possible before the training loop starts. Print an error message and call `std::terminate()` (from `<exception>`) immediately if any of the following conditions hold:
+Check that training is possible before the training loop starts. Print an error message and return `false` immediately if any of the following conditions hold:
 
 | Condition | Explanation |
 |---|---|
 | `myTrainSetCount == 0` | Training can't be carried out without training data. |
 | `epochCount == 0` | Training must run for at least one epoch. |
-| `learningRate <= 0.0 \|\| learningRate >= 1.0` | Invalid learning rate — must be in the range `(0.0, 1.0)`. |
+| `learningRate <= 0.0 \|\| learningRate >= 1.0` | Invalid learning rate: must be in the range `(0.0, 1.0)`. |
 
 ---
