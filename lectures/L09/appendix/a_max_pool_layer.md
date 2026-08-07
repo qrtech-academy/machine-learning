@@ -100,3 +100,30 @@ implementation does, since it's always derivable from the two matrices you alrea
    `predict()`'s output still won't be meaningful yet. That's next lecture.
 
 ---
+
+## Running the tests
+The test suite is available in [exercises/test](./exercises/test/). It's cumulative: it carries
+L08's conv layer tests over unchanged and adds unit tests for `MaxPool`.
+
+Build and run it from that directory:
+
+```bash
+make -C exercises/test
+```
+
+There's nothing to copy: `ML_DIR` already points back at the `cnn_work` codebase you started in
+L08. All 44 test cases should pass.
+
+Because the pooling layer randomizes nothing, its expected values are written out in full rather
+than recomputed the way the conv layer's are - and the main worked case is the hand-training
+example from [L06's appendix B](../../L06/appendix/b_exercises.md), the same pooling and gradient
+routing you did on paper.
+
+The test worth knowing about before you start is `FeedforwardHandlesNegativeValues`. It feeds an
+all-negative image, which catches starting the search for the max at `0.0` instead of at the
+block's first value. Every non-negative input passes either way, so it's an easy bug to ship - and
+it bites for real once the conv layer in front is using `Tanh`.
+
+See the [test suite's README](./exercises/test/README.md) for more information.
+
+---
