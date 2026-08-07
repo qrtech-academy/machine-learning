@@ -107,6 +107,16 @@ padding back off the input gradients, but you're free to structure this however 
 * **`output()`**: returns `myOutput`.
 * **`inputGradients()`**: returns `myInputGradients`.
 
+Add two more accessors, which are **not** part of `conv_layer::Interface`:
+* **`kernel()`**: returns `myKernel` (`const Matrix2d&`).
+* **`bias()`**: returns `myBias` (`double`).
+
+These two exist for the test suite. Because the constructor randomizes the bias and the kernel,
+nothing the layer computes can be predicted from the constructor arguments alone; the tests read
+these back and redo the arithmetic by hand to check the layer got the same answer. They're declared
+on `Conv` rather than on the interface because the max pooling layer implements that same interface
+in L09 and has neither a kernel nor a bias to report.
+
 ---
 
 ## Wiring It In
@@ -119,5 +129,28 @@ padding back off the input gradients, but you're free to structure this however 
 3. Run `make`. The conv layer in `cnn_work` is now real; though the rest of the pipeline (max
    pooling, flatten) is still stubbed, so `predict()`'s output won't be meaningful yet. That
    happens once every layer is real, at the end of L10.
+
+---
+
+## Running the tests
+A test suite for `Conv` is available in [exercises/test](./exercises/test/). It's the first suite of
+part II and covers this lecture's layer only; L09 and L10 add their own.
+
+Build and run it from that directory:
+
+```bash
+make -C exercises/test
+```
+
+You don't need to copy anything: unlike L01 - L05, the suite's `ML_DIR` already points at
+`cnn_work`, where you're writing the code. All 22 test cases should pass.
+
+Until `Conv` exists the build fails with `'Conv' in namespace 'ml::conv_layer' does not name a
+type` - the suite is the specification, so it doesn't compile until the class does. Note also that
+the tests construct `Conv` directly, so they pass whether or not you've done the `factory.cpp`
+wiring step above; run `cnn_work` itself to check that.
+
+See the [test suite's README](./exercises/test/README.md) for more information, including why the
+layer needs `kernel()` and `bias()` at all.
 
 ---
