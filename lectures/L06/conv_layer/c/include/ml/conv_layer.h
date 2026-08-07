@@ -51,6 +51,38 @@ const matrix_t* conv_layer_output(const conv_layer_t* self);
 const matrix_t* conv_layer_input_gradients(const conv_layer_t* self);
 
 /**
+ * @brief Get convolutional layer kernel.
+ *
+ * @param[in] self Pointer to the convolutional layer.
+ *
+ * @return Pointer to matrix holding the convolutional layer kernel.
+ */
+const matrix_t* conv_layer_kernel(const conv_layer_t* self);
+
+/**
+ * @brief Get convolutional layer bias.
+ *
+ * @param[in] self Pointer to the convolutional layer.
+ *
+ * @return The bias value, or 0.0 if the layer is invalid.
+ */
+double conv_layer_bias(const conv_layer_t* self);
+
+/**
+ * @brief Set the convolutional layer kernel and bias.
+ *
+ *        The kernel and bias are randomized when the layer is created. Use this function to set
+ *        them to known values, e.g. to reproduce a worked example by hand.
+ *
+ * @param[in] self Pointer to the convolutional layer.
+ * @param[in] kernel Matrix holding the new kernel. Must match the layer's kernel size.
+ * @param[in] bias The new bias value.
+ *
+ * @return True on success, false on failure.
+ */
+bool conv_layer_set_parameters(conv_layer_t* self, const matrix_t* kernel, double bias);
+
+/**
  * @brief Run feedforward operation.
  *
  * @param[in] self Pointer to the convolutional layer.

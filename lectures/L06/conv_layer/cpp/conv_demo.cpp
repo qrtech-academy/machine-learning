@@ -3,7 +3,7 @@
  */
 #include <cstdio>
 #include <cstdlib>
-#include <ctime>
+#include <exception>
 #include <vector>
 
 namespace
@@ -88,11 +88,42 @@ void printMatrix(const Matrix2d& matrix) noexcept
 }
 
 /**
+ * @brief Print a computed matrix next to the expected one from appendix B.
+ *
+ * @param[in] label Text describing what's being printed.
+ * @param[in] computed The matrix holding the computed values.
+ * @param[in] expected The matrix holding the expected values.
+ */
+void printComparison(const char* label, const Matrix2d& computed, const Matrix2d& expected) noexcept
+{
+    std::printf("%s:\n", label);
+    std::printf("\t%-*s  expected (appendix B):\n", static_cast<int>(computed.size() * 8U),
+                "computed:");
+
+    // Print the two matrices side by side, row by row.
+    for (std::size_t i{}; i < computed.size(); ++i)
+    {
+        std::printf("\t");
+        for (const auto& num : computed[i])
+        {
+            std::printf("%7.2f ", num);
+        }
+        std::printf("  ");
+        for (const auto& num : expected[i])
+        {
+            std::printf("%7.2f ", num);
+        }
+        std::printf("\n");
+    }
+    std::printf("\n");
+}
+
+/**
  * @brief Generate a random starting value between 0.0 and 1.0.
  *
  * @return Random floating-point value in the range [0.0, 1.0].
  */
-double randomStartVal() noexcept
+[[nodiscard]] double randomStartVal() noexcept
 {
     constexpr auto max = static_cast<double>(RAND_MAX);
     return std::rand() / max;
@@ -105,7 +136,10 @@ double randomStartVal() noexcept
  *
  * @return Output after ReLU activation.
  */
-constexpr double reluOutput(const double input) noexcept { return 0.0 < input ? input : 0.0; }
+[[nodiscard]] constexpr double reluOutput(const double input) noexcept
+{
+    return 0.0 < input ? input : 0.0;
+}
 
 /**
  * @brief ReLU activation function (derivative).
@@ -114,7 +148,10 @@ constexpr double reluOutput(const double input) noexcept { return 0.0 < input ? 
  *
  * @return Derivative of ReLU at input.
  */
-constexpr double reluDelta(const double input) noexcept { return 0.0 < input ? 1.0 : 0.0; }
+[[nodiscard]] constexpr double reluDelta(const double input) noexcept
+{
+    return 0.0 < input ? 1.0 : 0.0;
+}
 
 namespace ml
 {
@@ -164,7 +201,15 @@ struct ConvLayer final
      * @return True on success, false on failure.
      */
 
-    /** @todo Define member variables here! Keep them public and skip the 'my' prefix. */
+    /** @todo Define member variables here! Keep them public and skip the 'my' prefix.
+     *
+     * We need:
+     *     - Padded input.
+     *     - Input gradients, both padded and unpadded.
+     *     - Output and preactivation output.
+     *     - Kernel and kernel gradients.
+     *     - Bias value and bias gradient.
+     */
 
 private:
     /**
@@ -191,37 +236,65 @@ int main()
 //        implementation is finished.
 #ifdef CONV_LAYER_IMPLEMENTED
 
-    // Example 4x4 input matrix (could represent an image or feature map).
+    // Input image from appendix B, resembling the digit 0 made up of ones.
     const Matrix2d input{{1, 1, 1, 1}, {1, 0, 0, 1}, {1, 0, 0, 1}, {1, 1, 1, 1}};
 
-    // Example output gradients (target output for demonstration).
-    const Matrix2d outputGradients{{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}};
+    // Gradients the max pooling layer sends back in appendix B.
+    const Matrix2d outputGradients{{0, 10, 20, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}, {0, 30, 0, 40}};
 
-    // Initialize the random generator with the current time as seed.
-    std::srand(std::time(nullptr));
+    // The results appendix B works out by hand, used to check the computed ones.
+    const Matrix2d expectedOutput{
+        {1.3, 1.9, 1.9, 1.9}, {1.7, 1.7, 1.1, 1.9}, {1.7, 1.3, 0.5, 1.7}, {1.7, 2.1, 1.9, 2.3}};
+    const Matrix2d expectedInputGradients{
+        {6, 20, 16, 0}, {0, 0, 0, 0}, {6, 12, 8, 16}, {18, 24, 24, 32}};
+    const Matrix2d expectedKernel{{0.23, 0.44}, {0.70, 0.90}};
+    constexpr double expectedBias{0.6};
+    constexpr double learningRate{0.001};
 
     // Create a convolutional layer: 4x4 input, 2x2 kernel.
     constexpr std::size_t inputSize{4U};
     constexpr std::size_t kernelSize{2U};
     ml::ConvLayer convLayer{inputSize, kernelSize};
 
+    // Use appendix B's kernel and bias instead of the randomized ones, so the results below are
+    // the same on every run and can be compared against the hand-worked numbers.
+    convLayer.kernel = Matrix2d{{0.2, 0.4}, {0.6, 0.8}};
+    convLayer.bias   = 0.5;
+
     // Show the input matrix.
     std::printf("Convolution input data (2D):\n");
     printMatrix(input);
 
     // Perform feedforward (convolution).
-    convLayer.feedforward(input);
-    std::printf("Convolution output (2D):\n");
-    printMatrix(convLayer.output);
+    if (!convLayer.feedforward(input))
+    {
+        std::printf("Feedforward failed, aborting program!\n");
+        return -1;
+    }
+    printComparison("Convolution output (2D)", convLayer.output, expectedOutput);
 
     // Show the output gradients.
     std::printf("Convolution output gradients (2D):\n");
     printMatrix(outputGradients);
 
     // Perform backpropagation.
-    convLayer.backpropagate(outputGradients);
-    std::printf("Input gradients after backpropagation (2D):\n");
-    printMatrix(convLayer.inputGradients);
+    if (!convLayer.backpropagate(outputGradients))
+    {
+        std::printf("Backpropagation failed, aborting program!\n");
+        return -1;
+    }
+    printComparison("Input gradients after backpropagation (2D)", convLayer.inputGradients,
+                    expectedInputGradients);
+
+    // Perform optimization, which adjusts the kernel and bias using the computed gradients.
+    if (!convLayer.optimize(learningRate))
+    {
+        std::printf("Optimization failed, aborting program!\n");
+        return -1;
+    }
+    printComparison("Kernel after optimization (2D)", convLayer.kernel, expectedKernel);
+    std::printf("Bias after optimization:\n");
+    std::printf("\tcomputed: %.2f, expected (appendix B): %.2f\n\n", convLayer.bias, expectedBias);
     return 0;
 
 //! @todo Remove this header guard (and/or uncomment the compiler flags in the makefile) once the

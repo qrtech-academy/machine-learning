@@ -19,10 +19,10 @@
 ## Instructions
 * Read [appendix A](./appendix/a_theory.md) for information about why regular neural networks
 aren't well suited to image classification, and how convolutional neural networks are structured.
-* Work through the feedforward pass of the hand-training example in [appendix B](./appendix/b_exercises.md)
-together during the lecture. Backpropagation and optimization for the same example continue in
-[appendix C](./appendix/c_backprop_exercises.md) as self-study.
-* Start [appendix D](./appendix/d_conv_layer.md): open
+* Work through the hand-training example in [appendix B](./appendix/b_exercises.md): the feedforward
+pass together during the lecture, then backpropagation and optimization for the same example as
+self-study.
+* Start [appendix C](./appendix/c_conv_layer.md): open
 [conv_demo.cpp](./conv_layer/cpp/conv_demo.cpp) and begin implementing the struct `ml::ConvLayer`.
 You don't need to finish it this lecture; you'll finish it in L07.
 

@@ -1,4 +1,4 @@
-# Appendix D - Creating a Simple Conv Layer in C++
+# Appendix C - Creating a Simple Conv Layer in C++
 
 ## Task description
 A struct named `ml::ConvLayer` should be added to [conv_demo.cpp](../conv_layer/cpp/conv_demo.cpp) to implement a simple conv layer. To keep things as simple as possible, we implement a struct and skip get/set methods, deletion of copy and move constructors, and so on.
@@ -15,6 +15,15 @@ below is a 4×4 matrix, matching the 4×4 `input`: your `feedforward()` and `bac
 pad/unpad internally (see the private methods sketched at the bottom of the struct) to make that
 size match up.
 
+The demo runs the *same* numbers you worked through by hand in
+[appendix B](./b_exercises.md): the same input image, the same kernel and bias, and the same
+gradients coming back from the max pooling layer. It prints each result next to the value appendix B
+arrives at, so you can check your implementation against your own hand calculations rather than
+guessing whether the output looks reasonable.
+
+That's also why the kernel and bias are assigned right after the layer is created: the constructor
+randomizes them, and the demo overwrites them so every run prints the same numbers.
+
 Study the code in the `main()` function. Your implementation should be written so this code works:
 
 ```cpp
@@ -23,23 +32,33 @@ constexpr std::size_t inputSize{4U};
 constexpr std::size_t kernelSize{2U};
 ml::ConvLayer convLayer{inputSize, kernelSize};
 
-// Example 4x4 input matrix (could represent an image or feature map).
+// Use appendix B's kernel and bias instead of the randomized ones.
+convLayer.kernel = Matrix2d{{0.2, 0.4}, {0.6, 0.8}};
+convLayer.bias   = 0.5;
+
+// Input image from appendix B, resembling the digit 0 made up of ones.
 const Matrix2d input{{1, 1, 1, 1},
                      {1, 0, 0, 1},
                      {1, 0, 0, 1},
                      {1, 1, 1, 1}};
 
-// Perform feedforward (convolution).
+// Perform feedforward (convolution). Expect the conv output from appendix B.
 convLayer.feedforward(input);
 
-// Example output gradients (target output for demonstration).
-const Matrix2d outputGradients{{1, 1, 1, 1},
-                               {1, 1, 1, 1},
-                               {1, 1, 1, 1},
-                               {1, 1, 1, 1}};
+// Gradients the max pooling layer sends back in appendix B.
+const Matrix2d outputGradients{{0, 10, 20, 0},
+                               {0,  0,  0, 0},
+                               {0,  0,  0, 0},
+                               {0, 30,  0, 40}};
 
-// Perform backpropagation.
+// Perform backpropagation. Expect the input gradients from appendix B.
 convLayer.backpropagate(outputGradients);
+
+// Perform optimization. Expect the updated kernel and bias from appendix B.
+convLayer.optimize(0.001);
 ```
+
+Each of `feedforward()`, `backpropagate()` and `optimize()` returns a `bool`; the demo checks it and
+aborts with a message on failure.
 
 ---

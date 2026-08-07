@@ -191,10 +191,33 @@ class ConvLayer:
                 ]
 
 
-def main() -> None:
-    """Create and demonstrate a simple convolutional layer."""
+def print_comparison(label: str, computed: Matrix2d, expected: Matrix2d) -> None:
+    """Print a computed matrix next to the expected one from appendix B.
 
-    # Example 4x4 input matrix (could represent an image or feature map).
+    Args:
+        label: Text describing what's being printed.
+        computed: Matrix holding the computed values.
+        expected: Matrix holding the expected values.
+    """
+    width = len(computed) * 8
+    print(f"\n{label}:")
+    print("   ", f"{'computed:':<{width}}", " expected (appendix B):")
+
+    # Print the two matrices side by side, row by row.
+    for computed_row, expected_row in zip(computed, expected):
+        computed_text = " ".join(f"{num:7.2f}" for num in computed_row)
+        expected_text = " ".join(f"{num:7.2f}" for num in expected_row)
+        print("   ", computed_text, " ", expected_text)
+
+
+def main() -> None:
+    """Create and demonstrate a simple convolutional layer.
+
+    The layer is driven with the same values as the hand-training example in L06's appendix B,
+    so every result printed below can be compared against the numbers worked out by hand there.
+    """
+
+    # Input image from appendix B, resembling the digit 0 made up of ones.
     input_data = [
         [1, 1, 1, 1],
         [1, 0, 0, 1],
@@ -202,34 +225,75 @@ def main() -> None:
         [1, 1, 1, 1],
     ]
 
-    # Example output gradients (same shape as output, used for backpropagation demo).
+    # Gradients the max pooling layer sends back in appendix B.
     output_gradients = [
-        [1, 1, 1, 1],
-        [1, 1, 1, 1],
-        [1, 1, 1, 1],
-        [1, 1, 1, 1],
+        [0, 10, 20, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 30, 0, 40],
     ]
+
+    # The results appendix B works out by hand, used to check the computed ones.
+    expected_output = [
+        [1.3, 1.9, 1.9, 1.9],
+        [1.7, 1.7, 1.1, 1.9],
+        [1.7, 1.3, 0.5, 1.7],
+        [1.7, 2.1, 1.9, 2.3],
+    ]
+    expected_input_gradients = [
+        [6, 20, 16, 0],
+        [0, 0, 0, 0],
+        [6, 12, 8, 16],
+        [18, 24, 24, 32],
+    ]
+    expected_kernel = [
+        [0.23, 0.44],
+        [0.70, 0.90],
+    ]
+    expected_bias = 0.6
+    learning_rate = 0.001
 
     # Create a convolutional layer: 4x4 input, 2x2 kernel.
     conv_layer = ConvLayer(4, 2)
+
+    # Use appendix B's kernel and bias instead of the randomized ones, so the results below are
+    # the same on every run and can be compared against the hand-worked numbers.
+    conv_layer.kernel = [[0.2, 0.4], [0.6, 0.8]]
+    conv_layer.bias = 0.5
 
     print("Convolution input_data (2D):")
     for row in input_data:
         print("  ", " ".join(f"{num:.1f}" for num in row))
 
-    conv_layer.feedforward(input_data)
-    print("\nConvolution output (2D):")
-    for row in conv_layer.output:
-        print("  ", " ".join(f"{num:.1f}" for num in row))
+    if not conv_layer.feedforward(input_data):
+        print("Feedforward failed, aborting program!")
+        return
+    print_comparison("Convolution output (2D)", conv_layer.output, expected_output)
 
     print("\nConvolution output gradients (2D):")
     for row in output_gradients:
         print("  ", " ".join(f"{num:.1f}" for num in row))
 
-    conv_layer.backpropagate(output_gradients)
-    print("\nInput gradients after backpropagation (2D):")
-    for row in conv_layer.input_gradients:
-        print("  ", " ".join(f"{num:.1f}" for num in row))
+    if not conv_layer.backpropagate(output_gradients):
+        print("Backpropagation failed, aborting program!")
+        return
+    print_comparison(
+        "Input gradients after backpropagation (2D)",
+        conv_layer.input_gradients,
+        expected_input_gradients,
+    )
+
+    # Perform optimization, which adjusts the kernel and bias using the computed gradients.
+    if not conv_layer.optimize(learning_rate):
+        print("Optimization failed, aborting program!")
+        return
+    print_comparison(
+        "Kernel after optimization (2D)", conv_layer.kernel, expected_kernel
+    )
+    print("\nBias after optimization:")
+    print(
+        f"    computed: {conv_layer.bias:.2f}, expected (appendix B): {expected_bias:.2f}"
+    )
 
 
 # Invoke the main function if this is the startup script.

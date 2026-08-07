@@ -206,6 +206,35 @@ const matrix_t* conv_layer_input_gradients(const conv_layer_t* self)
 }
 
 // -----------------------------------------------------------------------------
+const matrix_t* conv_layer_kernel(const conv_layer_t* self)
+{
+    return NULL != self ? self->kernel : NULL;
+}
+
+// -----------------------------------------------------------------------------
+double conv_layer_bias(const conv_layer_t* self) { return NULL != self ? self->bias : 0.0; }
+
+// -----------------------------------------------------------------------------
+bool conv_layer_set_parameters(conv_layer_t* self, const matrix_t* kernel, const double bias)
+{
+    if ((NULL == self) || (NULL == kernel)) { return false; }
+
+    // Reject a kernel whose size doesn't match the one the layer was created with.
+    if (matrix_size(kernel) != matrix_size(self->kernel)) { return false; }
+
+    const double* new_kernel = matrix_data_const(kernel);
+    double* current_kernel   = matrix_data(self->kernel);
+
+    // Copy the new kernel weights, then set the bias.
+    for (size_t i = 0U; i < matrix_size(self->kernel); ++i)
+    {
+        current_kernel[i] = new_kernel[i];
+    }
+    self->bias = bias;
+    return true;
+}
+
+// -----------------------------------------------------------------------------
 bool conv_layer_feedforward(conv_layer_t* self, const matrix_t* input)
 {
     if ((NULL == self) || (NULL == input)) { return false; }
@@ -298,7 +327,7 @@ bool conv_layer_optimize(conv_layer_t* self, const double learning_rate)
 {
     if ((NULL == self) || (0.0 >= learning_rate)) { return false; }
 
-    self->bias -= self->bias_gradient * learning_rate;
+    self->bias += self->bias_gradient * learning_rate;
 
     const size_t kernel_size = conv_layer_kernel_size(self);
 
@@ -309,7 +338,7 @@ bool conv_layer_optimize(conv_layer_t* self, const double learning_rate)
             const size_t index           = ki * kernel_size + kj;
             const double kernel_gradient = matrix_data_const(self->kernel_gradients)[index];
 
-            matrix_data(self->kernel)[ki * kernel_size + kj] -= kernel_gradient * learning_rate;
+            matrix_data(self->kernel)[ki * kernel_size + kj] += kernel_gradient * learning_rate;
         }
     }
     return true;
