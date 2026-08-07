@@ -1,7 +1,7 @@
 # Appendix A - Finishing the Conv Layer
-You started implementing `ml::ConvLayer` in [L06](../../L06/appendix/d_conv_layer.md): finish it
+You started implementing `ml::ConvLayer` in [L06](../../L06/appendix/c_conv_layer.md): finish it
 here. The full task description, the diagram, and the target `main()` usage are all in
-[L06's appendix D](../../L06/appendix/d_conv_layer.md); this appendix only covers the wrap-up steps
+[L06's appendix C](../../L06/appendix/c_conv_layer.md); this appendix only covers the wrap-up steps
 for compiling and running it for the first time, in
 [conv_demo.cpp](../../L06/conv_layer/cpp/conv_demo.cpp).
 

@@ -2,7 +2,7 @@
 You'll continue extending `cnn_work` (from L08), implementing a concrete class `MaxPool`,
 replacing the temporary stub class `ml::conv_layer::MaxPoolStub` currently used for the max
 pooling layer in `factory.cpp`. This is the same logic you already worked through by hand in
-[L06's appendix C](../../L06/appendix/c_backprop_exercises.md) and implemented as a standalone
+[L06's appendix B](../../L06/appendix/b_exercises.md) and implemented as a standalone
 struct in [L07's `ml::MaxPoolLayer`](../../L07/appendix/b_max_pool_layer.md): here you're adapting
 that same logic to satisfy `cnn_work`'s polymorphic `conv_layer::Interface` instead. `MaxPool` uses
 the *same* interface as `Conv` (from L08); a max pooling layer just has no trainable parameters and

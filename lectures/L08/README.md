@@ -34,7 +34,7 @@ class looks like.
 
 ## Evaluation
 * What's the difference between `ml::conv_layer::Interface` and your concrete class `Conv`, and why is this split beneficial?
-* Can you connect the mathematical formulas from L06's appendix B/C to each computation step in your `feedforward()`/`backpropagate()`?
+* Can you connect the mathematical formulas from L06's appendix B to each computation step in your `feedforward()`/`backpropagate()`?
 * How does your `ml::conv_layer::Conv` compare to the `ml::ConvLayer` struct you wrote in L06/L07: same math, what's different about the design?
 * Why do `Conv` and `MaxPool` (next lecture) share a single interface, `conv_layer::Interface`?
 

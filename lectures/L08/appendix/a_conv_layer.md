@@ -2,8 +2,8 @@
 You'll extend the `cnn_work` codebase, implementing a concrete class `Conv`, replacing
 the temporary stub class `ml::conv_layer::ConvStub` currently used for the conv layer in
 `factory.cpp`. This is the same math you already worked through by hand in
-[L06's appendix B/C](../../L06/appendix/b_exercises.md) and implemented as a standalone struct in
-[L06/L07's `ml::ConvLayer`](../../L06/appendix/d_conv_layer.md): here you're adapting that same
+[L06's appendix B](../../L06/appendix/b_exercises.md) and implemented as a standalone struct in
+[L06/L07's `ml::ConvLayer`](../../L06/appendix/c_conv_layer.md): here you're adapting that same
 logic to satisfy `cnn_work`'s polymorphic `conv_layer::Interface` instead.
 
 ---
