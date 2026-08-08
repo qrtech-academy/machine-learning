@@ -66,28 +66,34 @@ public:
      *
      * @return The input size of the layer.
      */
-    std::size_t inputSize() const noexcept override { return myInputGradients.size(); }
+    [[nodiscard]] std::size_t inputSize() const noexcept override
+    {
+        return myInputGradients.size();
+    }
 
     /**
      * @brief Get the output size of the layer.
      *
      * @return The output size of the layer.
      */
-    std::size_t outputSize() const noexcept override { return myOutput.size(); }
+    [[nodiscard]] std::size_t outputSize() const noexcept override { return myOutput.size(); }
 
     /**
      * @brief Get the output of the layer.
      *
      * @return Matrix holding the output of the layer.
      */
-    const Matrix2d& output() const noexcept override { return myOutput; }
+    [[nodiscard]] const Matrix2d& output() const noexcept override { return myOutput; }
 
     /**
      * @brief Get the input gradients of the layer.
      *
      * @return Matrix holding the input gradients of the layer.
      */
-    const Matrix2d& inputGradients() const noexcept override { return myInputGradients; }
+    [[nodiscard]] const Matrix2d& inputGradients() const noexcept override
+    {
+        return myInputGradients;
+    }
 
     /**
      * @brief Perform feedforward operation.
@@ -203,28 +209,34 @@ public:
      *
      * @return The input size of the layer.
      */
-    std::size_t inputSize() const noexcept override { return myInputGradients.size(); }
+    [[nodiscard]] std::size_t inputSize() const noexcept override
+    {
+        return myInputGradients.size();
+    }
 
     /**
      * @brief Get the output size of the layer.
      *
      * @return The output size of the layer.
      */
-    std::size_t outputSize() const noexcept override { return myOutput.size(); }
+    [[nodiscard]] std::size_t outputSize() const noexcept override { return myOutput.size(); }
 
     /**
      * @brief Get the output of the layer.
      *
      * @return Matrix holding the output of the layer.
      */
-    const Matrix2d& output() const noexcept override { return myOutput; }
+    [[nodiscard]] const Matrix2d& output() const noexcept override { return myOutput; }
 
     /**
      * @brief Get the input gradients of the layer.
      *
      * @return Matrix holding the input gradients of the layer.
      */
-    const Matrix2d& inputGradients() const noexcept override { return myInputGradients; }
+    [[nodiscard]] const Matrix2d& inputGradients() const noexcept override
+    {
+        return myInputGradients;
+    }
 
     /**
      * @brief Perform feedforward operation.

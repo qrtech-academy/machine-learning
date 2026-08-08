@@ -39,7 +39,7 @@ public:
      *
      * @return Pointer to the new activation function.
      */
-    ActFuncPtr actFunc(const act_func::Type type) noexcept override
+    [[nodiscard]] ActFuncPtr actFunc(const act_func::Type type) noexcept override
     {
         (void)(type);
         return std::make_unique<act_func::None>();
@@ -54,8 +54,8 @@ public:
      *
      * @return Pointer to the new convolutional layer.
      */
-    ConvLayerPtr convLayer(const std::size_t inputSize, const std::size_t kernelSize,
-                           const act_func::Type actFunc) noexcept override
+    [[nodiscard]] ConvLayerPtr convLayer(const std::size_t inputSize, const std::size_t kernelSize,
+                                         const act_func::Type actFunc) noexcept override
     {
         return std::make_unique<conv_layer::ConvStub>(inputSize, kernelSize, actFunc);
     }
@@ -69,8 +69,9 @@ public:
      *
      * @return Pointer to the new dense layer.
      */
-    DenseLayerPtr denseLayer(const std::size_t inputSize, const std::size_t outputSize,
-                             const act_func::Type actFunc) noexcept override
+    [[nodiscard]] DenseLayerPtr denseLayer(const std::size_t inputSize,
+                                           const std::size_t outputSize,
+                                           const act_func::Type actFunc) noexcept override
     {
         return std::make_unique<dense_layer::Stub>(inputSize, outputSize, actFunc);
     }
@@ -82,7 +83,7 @@ public:
      *
      * @return Pointer to the new flatten layer.
      */
-    FlattenLayerPtr flattenLayer(const std::size_t inputSize) noexcept override
+    [[nodiscard]] FlattenLayerPtr flattenLayer(const std::size_t inputSize) noexcept override
     {
         return std::make_unique<flatten_layer::Stub>(inputSize);
     }
@@ -95,8 +96,8 @@ public:
      *
      * @return Pointer to the new max pooling layer.
      */
-    ConvLayerPtr maxPoolLayer(const std::size_t inputSize,
-                              const std::size_t poolSize) noexcept override
+    [[nodiscard]] ConvLayerPtr maxPoolLayer(const std::size_t inputSize,
+                                            const std::size_t poolSize) noexcept override
     {
         return std::make_unique<conv_layer::MaxPoolStub>(inputSize, poolSize);
     }

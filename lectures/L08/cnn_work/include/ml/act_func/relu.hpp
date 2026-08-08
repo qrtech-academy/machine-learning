@@ -32,7 +32,10 @@ public:
      *
      * @return The input if positive, otherwise 0 (ReLU function: f(x) = max(0, x)).
      */
-    double output(const double input) const noexcept override { return 0.0 < input ? input : 0.0; }
+    [[nodiscard]] double output(const double input) const noexcept override
+    {
+        return 0.0 < input ? input : 0.0;
+    }
 
     /**
      * @brief Compute the activation function derivative (delta for backpropagation).
@@ -41,7 +44,10 @@ public:
      *
      * @return 1 if input is positive, otherwise 0 (ReLU derivative: f'(x) = 1 if x > 0, else 0).
      */
-    double delta(const double input) const noexcept override { return 0.0 < input ? 1.0 : 0.0; }
+    [[nodiscard]] double delta(const double input) const noexcept override
+    {
+        return 0.0 < input ? 1.0 : 0.0;
+    }
 
     Relu(const Relu&)            = delete; // No copy constructor.
     Relu(Relu&&)                 = delete; // No move constructor.

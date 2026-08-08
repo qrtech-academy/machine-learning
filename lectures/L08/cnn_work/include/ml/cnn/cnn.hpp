@@ -42,14 +42,14 @@ public:
      *
      * @return The input size of the CNN.
      */
-    std::size_t inputSize() const noexcept override;
+    [[nodiscard]] std::size_t inputSize() const noexcept override;
 
     /**
      * @brief Get the output size of the CNN.
      *
      * @return The output size of the CNN.
      */
-    std::size_t outputSize() const noexcept override;
+    [[nodiscard]] std::size_t outputSize() const noexcept override;
 
     /**
      * @brief Predict based on the given input.
@@ -58,7 +58,7 @@ public:
      *
      * @return The predicted output.
      */
-    const Matrix1d& predict(const Matrix2d& input) noexcept override;
+    [[nodiscard]] const Matrix1d& predict(const Matrix2d& input) noexcept override;
 
     /**
      * @brief Add dense layer.

@@ -67,7 +67,7 @@ public:
      *
      * @return The input size of the layer.
      */
-    std::size_t inputSize() const noexcept override
+    [[nodiscard]] std::size_t inputSize() const noexcept override
     {
         return myWeights.empty() ? 0U : myWeights[0U].size();
     }
@@ -77,21 +77,24 @@ public:
      *
      * @return The output size of the layer.
      */
-    std::size_t outputSize() const noexcept override { return myOutput.size(); }
+    [[nodiscard]] std::size_t outputSize() const noexcept override { return myOutput.size(); }
 
     /**
      * @brief Get the output values of the layer.
      *
      * @return Matrix holding the output values of the layer.
      */
-    const Matrix1d& output() const noexcept override { return myOutput; }
+    [[nodiscard]] const Matrix1d& output() const noexcept override { return myOutput; }
 
     /**
      * @brief Get the input gradients of the layer.
      *
      * @return Matrix holding the input gradients of the layer.
      */
-    const Matrix1d& inputGradients() const noexcept override { return myInputGradients; }
+    [[nodiscard]] const Matrix1d& inputGradients() const noexcept override
+    {
+        return myInputGradients;
+    }
 
     /**
      * @brief Perform feedforward operation.

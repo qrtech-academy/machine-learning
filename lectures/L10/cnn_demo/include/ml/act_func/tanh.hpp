@@ -34,7 +34,10 @@ public:
      *
      * @return Hyperbolic tangent of input (tanh function: f(x) = tanh(x), range [-1, 1]).
      */
-    double output(const double input) const noexcept override { return std::tanh(input); }
+    [[nodiscard]] double output(const double input) const noexcept override
+    {
+        return std::tanh(input);
+    }
 
     /**
      * @brief Compute the activation function derivative (delta for backpropagation).
@@ -43,7 +46,7 @@ public:
      *
      * @return Derivative of tanh (f'(x) = 1 - tanh²(x)).
      */
-    double delta(const double input) const noexcept override
+    [[nodiscard]] double delta(const double input) const noexcept override
     {
         const double out{std::tanh(input)};
         return 1.0 - out * out;

@@ -33,28 +33,28 @@ public:
      *
      * @return The input size of the layer.
      */
-    std::size_t inputSize() const noexcept override;
+    [[nodiscard]] std::size_t inputSize() const noexcept override;
 
     /**
      * @brief Get the output size of the layer.
      *
      * @return The output size of the layer.
      */
-    std::size_t outputSize() const noexcept override;
+    [[nodiscard]] std::size_t outputSize() const noexcept override;
 
     /**
      * @brief Get the input gradients of the layer.
      *
      * @return Matrix holding the input gradients of the layer.
      */
-    const Matrix2d& inputGradients() const noexcept override;
+    [[nodiscard]] const Matrix2d& inputGradients() const noexcept override;
 
     /**
      * @brief Get the flattened output of the layer.
      *
      * @return Matrix holding the output of the layer.
      */
-    const Matrix1d& output() const noexcept override;
+    [[nodiscard]] const Matrix1d& output() const noexcept override;
 
     /**
      * @brief Flatten the input from 2D to 1D.

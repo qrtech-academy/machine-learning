@@ -31,7 +31,7 @@ public:
      *
      * @return Random integer in the range [0, maxExclusive).
      */
-    std::uint32_t uint32(std::uint32_t maxExclusive) const noexcept override;
+    [[nodiscard]] std::uint32_t uint32(std::uint32_t maxExclusive) const noexcept override;
 
     /**
      * @brief Generate a random 32-bit integer within the specified range.
@@ -41,7 +41,7 @@ public:
      *
      * @return Random integer in the range [min, max].
      */
-    std::int32_t int32(std::int32_t min, std::int32_t max) const noexcept override;
+    [[nodiscard]] std::int32_t int32(std::int32_t min, std::int32_t max) const noexcept override;
 
     /**
      * @brief Generate a random 64-bit floating point value within the specified range.
@@ -51,7 +51,7 @@ public:
      *
      * @return Random double in the range [min, max).
      */
-    double float64(double min, double max) const noexcept override;
+    [[nodiscard]] double float64(double min, double max) const noexcept override;
 
     Generator(const Generator&)            = delete; // No copy constructor.
     Generator(Generator&&)                 = delete; // No move constructor.

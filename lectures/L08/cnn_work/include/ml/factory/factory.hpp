@@ -34,7 +34,7 @@ public:
      *
      * @return Pointer to the new activation function.
      */
-    ActFuncPtr actFunc(act_func::Type type) noexcept override;
+    [[nodiscard]] ActFuncPtr actFunc(act_func::Type type) noexcept override;
 
     /**
      * @brief Create a convolutional layer.
@@ -45,8 +45,8 @@ public:
      *
      * @return Pointer to the new convolutional layer.
      */
-    ConvLayerPtr convLayer(std::size_t inputSize, std::size_t kernelSize,
-                           act_func::Type actFunc) noexcept override;
+    [[nodiscard]] ConvLayerPtr convLayer(std::size_t inputSize, std::size_t kernelSize,
+                                         act_func::Type actFunc) noexcept override;
 
     /**
      * @brief Create a dense layer.
@@ -57,8 +57,8 @@ public:
      *
      * @return Pointer to the new dense layer.
      */
-    DenseLayerPtr denseLayer(std::size_t inputSize, std::size_t outputSize,
-                             act_func::Type actFunc) noexcept override;
+    [[nodiscard]] DenseLayerPtr denseLayer(std::size_t inputSize, std::size_t outputSize,
+                                           act_func::Type actFunc) noexcept override;
 
     /**
      * @brief Create a flatten layer.
@@ -67,7 +67,7 @@ public:
      *
      * @return Pointer to the new flatten layer.
      */
-    FlattenLayerPtr flattenLayer(std::size_t inputSize) noexcept override;
+    [[nodiscard]] FlattenLayerPtr flattenLayer(std::size_t inputSize) noexcept override;
 
     /**
      * @brief Create a max pooling layer.
@@ -77,7 +77,8 @@ public:
      *
      * @return Pointer to the new max pooling layer.
      */
-    ConvLayerPtr maxPoolLayer(std::size_t inputSize, std::size_t poolSize) noexcept override;
+    [[nodiscard]] ConvLayerPtr maxPoolLayer(std::size_t inputSize,
+                                            std::size_t poolSize) noexcept override;
 
     Factory(const Factory&)            = delete; // No copy constructor.
     Factory(Factory&&)                 = delete; // No move constructor.

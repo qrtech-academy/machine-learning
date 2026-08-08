@@ -32,7 +32,7 @@ public:
      *
      * @return The input value (identity function: f(x) = x).
      */
-    double output(const double input) const noexcept override { return input; }
+    [[nodiscard]] double output(const double input) const noexcept override { return input; }
 
     /**
      * @brief Compute the activation function derivative (delta for backpropagation).
@@ -41,7 +41,7 @@ public:
      *
      * @return Always returns 1 (derivative of identity function: f'(x) = 1).
      */
-    double delta(const double input) const noexcept override
+    [[nodiscard]] double delta(const double input) const noexcept override
     {
         (void)(input);
         constexpr double deltaVal{1.0};
