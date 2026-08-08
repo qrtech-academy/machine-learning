@@ -27,10 +27,33 @@ After completing the course, participants should be able to:
 
 ---
 
+## Written Examinations
+Nothing in this course is marked. Assessment is the exercises in each lecture's appendix, the test
+suite most of them ship with, and the self-assessment questions in
+[L10's appendix C](./lectures/L10/appendix/c_exercises.md), each of which checks a component you
+built or a number you computed beside it.
+
+[`exam/`](./exam/README.md) holds two four-hour papers with worked solutions, and they check
+something else: **your theoretical knowledge, on paper, with nothing in front of you.** Nine
+questions each, mixing theory with code, and every derivation the appendices make asked for without
+the appendix in the room.
+
+**They gate nothing, they are not a qualification, and no part of the course requires them.**
+Nothing in this repository depends on them and `make test` does not know they exist. They are here
+purely so students can test their own skills and knowledge after the course, and for the case where
+a written result is wanted anyway.
+
+**Take one after the course is over**, after L10. Both papers draw on all ten lectures, so sitting
+one partway through examines material nobody has taught you yet, and the result says more about how
+far you have read than about what you have understood.
+
+---
+
 ## Structure
 
 ```text
 ci/          Scripts for code formatting and compilation
+exam/        Two written papers and their solutions. Optional, and marked by nobody here.
 info/        Course information and schedule
 lectures/    Lecture plans, literature, and exercises
 ```
