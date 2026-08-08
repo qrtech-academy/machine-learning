@@ -122,6 +122,12 @@ bool Conv::optimize(const double learningRate) noexcept
 }
 
 // -----------------------------------------------------------------------------
+const Matrix2d& Conv::kernel() const noexcept { return myKernel; }
+
+// -----------------------------------------------------------------------------
+double Conv::bias() const noexcept { return myBias; }
+
+// -----------------------------------------------------------------------------
 void Conv::checkParameters(const std::size_t inputSize, const std::size_t kernelSize) noexcept
 {
     if ((MinKernelSize > kernelSize) || (MaxKernelSize < kernelSize))

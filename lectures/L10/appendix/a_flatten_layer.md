@@ -86,3 +86,39 @@ move assignment operator.
    this is a good place to check your work against.
 
 ---
+
+## Running the tests
+The final test suite is available in [exercises/test](./exercises/test/). It's cumulative: it
+carries the conv and max pooling layer tests over unchanged and adds unit tests for `Flatten`,
+plus **component tests for the network as a whole**.
+
+Build and run it from that directory:
+
+```bash
+make -C exercises/test
+```
+
+There's nothing to copy: `ML_DIR` already points back at the `cnn_work` codebase you started in
+L08. All 73 test cases should pass, in about a second.
+
+The component tests are new in this lecture, and they're the reason this suite couldn't exist
+earlier: they build a whole network through the real factory and train it, so they only pass once
+`Conv`, `MaxPool` and `Flatten` are all real. `LearnsToRecognizeAllFourDigits` trains on the
+digits 0 - 3 and checks the right output node wins for each - which is the closest thing this
+course has to a final exam for your code.
+
+Two things worth knowing before you start:
+
+* The one flatten layer test to read is `BackpropagateUndoesFeedforward`. Whether you flatten row
+  by row or column by column doesn't actually matter, as long as `backpropagate()` undoes exactly
+  what `feedforward()` did. If the two disagree, gradients land on the wrong pixels and the conv
+  layer quietly learns from noise - the network still runs, it just never gets good.
+* If `LearnsToRecognizeAllFourDigits` fails but every unit test passes, the layers are individually
+  right and something about how they're wired together is wrong. Start with
+  `BackpropagationReachesTheConvLayerThroughEveryLayer`, which chains the four layers by hand and
+  checks the gradients survive the trip back.
+
+See the [test suite's README](./exercises/test/README.md) for more information, including how the
+convergence thresholds were measured.
+
+---

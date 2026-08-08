@@ -92,6 +92,20 @@ public:
      */
     bool optimize(double learningRate) noexcept override;
 
+    /**
+     * @brief Get kernel matrix.
+     *
+     * @return Matrix holding the layer's kernel.
+     */
+    [[nodiscard]] const Matrix2d& kernel() const noexcept;
+
+    /**
+     * @brief Get kernel bias.
+     *
+     * @return Kernel bias value.
+     */
+    [[nodiscard]] double bias() const noexcept;
+
     Conv()                       = delete; // No default constructor.
     Conv(const Conv&)            = delete; // No copy constructor.
     Conv(Conv&&)                 = delete; // No move constructor.
