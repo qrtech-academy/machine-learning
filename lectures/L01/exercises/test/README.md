@@ -1,7 +1,7 @@
 # L01 Test Suite
 
 Unit and component tests for the linear regression model built in
-[appendix B](../../b_exercises.md), written with the
+[appendix B](../../appendix/b_exercises.md), written with the
 [`QAcademy Test`](https://github.com/qrtech-academy/test-framework) framework.
 
 The tests use nothing but the public interface of the model: the constructor, `predict()` and

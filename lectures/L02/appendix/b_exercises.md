@@ -31,7 +31,7 @@ Add a private member variable named `myTrainOrder` to `Fixed`:
 The member variable `mySetCount` from **L01** can now be removed: `myTrainOrder` holds one index per training set, so `myTrainOrder.size()` is the number of training sets.
 
 Update the constructor in `source/ml/lin_reg/fixed.cpp`:
-* Compute the number of complete training sets as in **L01**, i.e. `std::min(trainInput.size(), trainOutput.size())`, but keep it in a local variable rather than a member.
+* Compute the number of complete training sets as in **L01**, i.e. `std::min(trainIn.size(), trainOut.size())`, but keep it in a local variable rather than a member.
 * Print an error message and call `std::terminate()` if the set count is 0, as in **L01**.
 * Call `initRandGen()`, so the random number generator is ready before the first shuffle. Calling it here rather than in `train()` means it's initialized exactly once per model, no matter how often training is started.
 * Resize `myTrainOrder` to the set count, then fill it with the indices `0, 1, 2 ... N-1`.
@@ -90,14 +90,11 @@ Compile and test-run the program. The model should now stop training as soon as 
 
 ```
 Target precision 1.00 reached after 11 epochs!
-
---------------------------------------------------------------------------------
-Input: 0, predicted output: 2
-Input: 1, predicted output: 4
-Input: 2, predicted output: 6
-Input: 3, predicted output: 8
-Input: 4, predicted output: 10
---------------------------------------------------------------------------------
+Input: 0, prediction: 2
+Input: 1, prediction: 5
+Input: 2, prediction: 8
+Input: 3, prediction: 11
+Input: 4, prediction: 14
 ```
 
 The training order is random, so the epoch count can vary between runs. For this training data it settles at 11: the precision is only checked every tenth epoch, so the check that first passes is the one after the eleventh epoch has run. Report the number of epochs completed, not the loop index, so the first epoch reads as 1 rather than 0.

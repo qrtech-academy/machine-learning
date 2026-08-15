@@ -7,7 +7,7 @@ ML_DIR := ..
 
 # Directory holding the QAcademy Test framework, checked out as a submodule at the root of this
 # repository. Run 'git submodule update --init' once if it's empty.
-QACADEMY_TEST_DIR := ../../../../../libs/test
+QACADEMY_TEST_DIR := ../../../../libs/test
 QACADEMY_TEST_LIB := $(QACADEMY_TEST_DIR)/libqacademy_test.a
 
 # Source files under test - update this list as new source files are added to the implementation.

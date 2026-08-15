@@ -31,7 +31,7 @@ Then perform prediction for input consisting of all integers in the range [-5, 5
 You'll implement an interface and an accompanying class for a linear regression model in C++.
 
 ### 1. Directory structure
-You'll write your code in this lecture's [exercises](./exercises/) directory. Build up the
+You'll write your code in this lecture's [exercises](../exercises/) directory. Build up the
 following structure inside it:
 
 ```
@@ -102,8 +102,8 @@ The class should have the following public methods:
 * **`Fixed()`:**
     * The class's only implemented constructor.
     * Should take the following arguments:
-        * `trainInput`: reference to a read-only vector of floating-point numbers (training data, input).
-        * `trainOutput`: reference to a read-only vector of floating-point numbers (training data, output).
+        * `trainIn`: reference to a read-only vector of floating-point numbers (training data, input).
+        * `trainOut`: reference to a read-only vector of floating-point numbers (training data, output).
     * Should be marked `explicit` and `noexcept`.
 * **`~Fixed()`:**
     * Destructor overriding the interface's destructor.
@@ -136,16 +136,16 @@ Delete the class's default constructor, copy and move constructors, and the corr
 
 ### 8. Private member variables
 Add the following private member variables to `Fixed`:
-* **`myTrainInput`:**
+* **`myTrainIn`:**
     * Reference to the training data's input points.
     * Initialized via the constructor.
     * Should be marked `const`.
-* **`myTrainOutput`:**
+* **`myTrainOut`:**
     * Reference to the training data's output points.
     * Initialized via the constructor.
     * Should be marked `const`.
 * **`mySetCount`:**
-    * The number of complete training sets, i.e. `std::min(trainInput.size(), trainOutput.size())` (`std::min` is available in `<algorithm>`).
+    * The number of complete training sets, i.e. `std::min(trainIn.size(), trainOut.size())` (`std::min` is available in `<algorithm>`).
     * Training data holding more inputs than outputs, or the other way around, has no complete set beyond the shorter of the two vectors, so the surplus values are unusable.
     * Initialized via the constructor.
     * Should be an unsigned integer (`std::size_t`, from `<cstddef>`) and marked `const`.
@@ -210,19 +210,21 @@ Implement the method `optimize()` in `source/ml/lin_reg/fixed.cpp`:
 Compile the program and make sure you get the following output:
 
 ```
---------------------------------------------------------------------------------
-Input: 0, predicted output: 2
-Input: 1, predicted output: 4
-Input: 2, predicted output: 6
-Input: 3, predicted output: 8
-Input: 4, predicted output: 10
---------------------------------------------------------------------------------
+Input: 0, prediction: 2
+Input: 1, prediction: 5
+Input: 2, prediction: 8
+Input: 3, prediction: 11
+Input: 4, prediction: 14
 ```
+
+The model has been trained on the same five training sets you trained by hand at the top of this
+document, so this output is what `y = 3x + 2` looks like once the model has found the line on its
+own.
 
 ---
 
 ### 14. Running the tests
-A ready-made test suite for the model is available in [exercises/test](./exercises/test/). It
+A ready-made test suite for the model is available in [exercises/test](../exercises/test/). It
 checks the behaviour specified above: the initial parameter values, the argument validation in
 `train()`, the parameter updates made by `optimize()`, and a handful of complete training runs.
 
@@ -240,8 +242,42 @@ All 15 test cases should pass. When one fails, the output names the assertion th
 values involved, and the file and line it came from. Use it to find the part of the specification
 your implementation doesn't match yet.
 
-See the [test suite's README](./exercises/test/README.md) for more information, including the one
+See the [test suite's README](../exercises/test/README.md) for more information, including the one
 piece of behaviour it deliberately doesn't cover.
+
+---
+
+### 15. Tuning the training
+The `main.cpp` you pasted trains for 1000 epochs at a learning rate of 10%, which is far more work
+than these five training sets need. Tune the two constants at the top of `main()`, i.e. lower
+`epochCount` and raise `learningRate`, and find the fewest epochs that still reproduce the output
+in [section 13](#13-compiling-and-running) exactly.
+
+Change one constant at a time and rebuild with `make` after each change. A few things worth
+knowing while you experiment:
+* `learningRate` must stay inside the range `(0.0, 1.0)`, otherwise `train()` returns `false` and
+  the program prints `Training failed!` instead of any predictions.
+* Don't expect the epoch count to drop smoothly as the learning rate rises. There's a stretch where
+  a higher learning rate needs *more* epochs, not fewer, because each pass overshoots the line and
+  the next has to correct back.
+* Raise the learning rate far enough and training stops converging altogether: the predictions grow
+  by orders of magnitude per epoch and print as values like `-2.60711e+06`, or as `inf` and `nan`
+  once the rate is higher still. Find roughly where that starts. It's well below the 1.0 the
+  interface allows, which is why the limit in `train()` is an outer bound rather than a
+  recommendation.
+* The predictions are printed with `%g`, which shows six significant digits. Matching the output in
+  section 13 therefore means "correct to six digits", not "exact". Print with `%.10f` instead if
+  you want to see the error that's left.
+* The test suite in section 14 doesn't use `main.cpp`, so it keeps passing no matter which
+  constants you settle on.
+
+It can be done in well under ten epochs. Note down the pair you end up with, along with roughly
+where training started to diverge.
+
+Keep the pair you settled on in `main.cpp` here, but set `epochCount` back to `1000` and
+`learningRate` back to `0.1` when you carry the code forward into **L02**. That lecture teaches the
+model to stop training on its own once it's accurate enough, which only shows as a difference when
+the model is given more epochs than it needs.
 
 ---
 
@@ -249,9 +285,8 @@ piece of behaviour it deliberately doesn't cover.
 
 ```cpp
 /**
- * @brief Linear regression demonstration.
+ * @file Application entry point.
  */
-#include <cstdint>
 #include <cstdio>
 
 #include "ml/lin_reg/fixed.hpp"
@@ -260,58 +295,42 @@ piece of behaviour it deliberately doesn't cover.
 namespace
 {
 /**
- * @brief Predict with the given linear regression model.
+ * @brief Evaluate the model with the given inputs.
  *
- * @param[in] linReg Linear regression model to predict with.
- * @param[in] inputData Input data to predict with.
+ * @param[in] linReg Model to evaluate.
+ * @param[in] inputs Input values for the evaluation.
  */
-void predict(const ml::lin_reg::Interface& linReg, const ml::Matrix1d& inputData) noexcept
+void evaluateModel(const ml::lin_reg::Interface& linReg, const ml::Matrix1d& inputs) noexcept
 {
-    // Check the number of input sets, terminate if missing.
-    if (inputData.empty())
+    for (const auto& input : inputs)
     {
-        std::printf("No input data!\n");
-        return;
+        std::printf("Input: %g, ", input);
+        std::printf("prediction: %g\n", linReg.predict(input));
     }
-
-    // Perform prediction with each input set, print the result in the terminal.
-    std::printf(
-        "--------------------------------------------------------------------------------\n");
-    for (const auto& input : inputData)
-    {
-        const auto prediction = linReg.predict(input);
-        std::printf("Input: %g, predicted output: %g\n", input, prediction);
-    }
-    std::printf(
-        "--------------------------------------------------------------------------------\n\n");
 }
 } // namespace
 
 /**
  * @brief Train and predict with a linear regression model.
  *
- * @return 0 on success, or -1 on failure.
+ * @return 0 if the model was trained, -1 otherwise.
  */
 int main()
 {
-    constexpr std::uint32_t epochCount{1000U};
+    constexpr std::size_t epochCount{1000U};
     constexpr double learningRate{0.1};
 
-    // Create linear regression model to predict y = 2x + 2.
-    const ml::Matrix1d trainInput{0.0, 1.0, 2.0, 3.0, 4.0};
-    const ml::Matrix1d trainOutput{2.0, 4.0, 6.0, 8.0, 10.0};
-    ml::lin_reg::Fixed linReg{trainInput, trainOutput};
+    // Create linear regression model holding five training sets (y = 3x + 2).
+    const ml::Matrix1d trainIn{0.0, 1.0, 2.0, 3.0, 4.0};
+    const ml::Matrix1d trainOut{2.0, 5.0, 8.0, 11.0, 14.0};
+    ml::lin_reg::Fixed linReg{trainIn, trainOut};
 
-    // Train the model, terminate on failure.
-    if (!linReg.train(epochCount, learningRate))
-    {
-        std::printf("Training failed!\n");
-        return -1;
-    }
+    // Train the model, print the results on success.
+    const auto trained = linReg.train(epochCount, learningRate);
 
-    // Perform prediction with all input sets.
-    predict(linReg, trainInput);
-    return 0;
+    if (trained) { evaluateModel(linReg, trainIn); }
+    else { std::fprintf(stderr, "Training failed!\n"); }
+    return trained ? 0 : -1;
 }
 ```
 

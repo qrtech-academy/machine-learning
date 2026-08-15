@@ -334,8 +334,8 @@ TEST(LinRegFixed, MismatchedTrainingData)
 }
 
 /**
- * @brief Verify that the model reproduces the training data for y = 2x + 2, i.e. the output
- *        printed by main.cpp.
+ * @brief Verify that the model reproduces the training data it was trained on, here the line
+ *        y = 2x + 2.
  */
 TEST(LinRegComponent, HappyPath)
 {
