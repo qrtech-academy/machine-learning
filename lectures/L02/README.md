@@ -1,8 +1,10 @@
 # L02 - Linear Regression (Part II)
 
 ## Agenda
-* Further implementation of regression models in software: randomizing the training order.
-* Further implementation of regression models in software: computing precision.
+* Further implementation of regression models in software, including randomizing the training
+  order and computing precision.
+* Concepts and implementation techniques that will prepare you for neural networks in the next
+  lecture.
 
 ---
 
