@@ -57,17 +57,32 @@ solution_dir_for_lecture() {
 
 ################################################################################
 # Print the lecture number the given test directory belongs to, without leading
-# zeros, e.g. 2 for lectures/L02/appendix/exercises/test.
+# zeros, e.g. 2 for lectures/L02/appendix/exercises/test. The path is walked
+# upwards until the lecture directory is found, so suites are located whether
+# they sit in <lecture>/exercises/test or <lecture>/appendix/exercises/test.
 # Globals:
 #   None
 # Arguments:
 #   $1 - Path to a lecture test directory.
 ################################################################################
 lecture_of_test_dir() {
+    local dir="$1"
     local lecture
-    lecture="$(basename "$(dirname "$(dirname "$(dirname "$1")")")")"
-    lecture="${lecture#L}"
-    echo "$((10#$lecture))"
+
+    while [[ "$dir" != "/" && "$dir" != "." ]]
+    do
+        lecture="$(basename "$dir")"
+
+        if [[ "$lecture" =~ ^L[0-9]+$ ]]
+        then
+            echo "$((10#${lecture#L}))"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+
+    echo "error: no lecture directory (e.g. L02) found in the path $1." >&2
+    return 1
 }
 
 # Terminate the script if the test framework submodule hasn't been checked out.
@@ -103,6 +118,6 @@ do
     make -C "$test_dir" clean build run ML_DIR="$solution_dir" QACADEMY_TEST_DIR="$FRAMEWORK_DIR"
     make -C "$test_dir" clean
     suite_count=$((suite_count + 1))
-done < <(find "$ROOT_DIR/lectures" -path "*/appendix/exercises/test/Makefile" -print0 | sort -z)
+done < <(find "$ROOT_DIR/lectures" -path "*/exercises/test/Makefile" -print0 | sort -z)
 
 echo "Ran $suite_count test suite(s), skipped $skip_count."

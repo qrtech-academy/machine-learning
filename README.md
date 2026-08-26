@@ -117,7 +117,7 @@ git submodule update --init
 
 Solutions are published after each lecture, so `make test` skips the suites whose solution isn't in
 place yet and reports how many it ran and how many it skipped. Each suite can also be run on its own
-from its own directory with `make`; see the `README.md` in any
-`lectures/L*/appendix/exercises/test/` for the details.
+from its own directory with `make`; see the `README.md` in any lecture's `exercises/test/`
+directory for the details.
 
 ---
