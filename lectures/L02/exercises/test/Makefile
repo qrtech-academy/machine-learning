@@ -7,15 +7,18 @@ ML_DIR := ..
 
 # Directory holding the QAcademy Test framework, checked out as a submodule at the root of this
 # repository. Run 'git submodule update --init' once if it's empty.
-QACADEMY_TEST_DIR := ../../../../../libs/test
+QACADEMY_TEST_DIR := ../../../../libs/test
 QACADEMY_TEST_LIB := $(QACADEMY_TEST_DIR)/libqacademy_test.a
 
 # Source files under test - update this list as new source files are added to the implementation.
 # Note that main.cpp is excluded: the test suite provides its own main() in testsuite.cpp.
-SOURCE_FILES := $(ML_DIR)/source/ml/lin_reg/fixed.cpp \
+SOURCE_FILES := $(ML_DIR)/source/ml/lin_reg/adaptive.cpp \
+                $(ML_DIR)/source/ml/lin_reg/fixed.cpp \
+                $(ML_DIR)/source/ml/utils.cpp \
 
 # Test files - update this list as new test files are added to this directory.
-TEST_FILES := ml/lin_reg/fixed_test.cpp \
+TEST_FILES := ml/lin_reg/adaptive_test.cpp \
+              ml/lin_reg/fixed_test.cpp \
               testsuite.cpp \
 
 # All files.

@@ -1,8 +1,5 @@
 /**
  * @file Unit and component tests for ml::lin_reg::Fixed.
- *
- * @note The component tests check each prediction with std::isfinite() first, because a diverged
- *       model yields NaN and every NaN comparison is false, including the one in EXPECT_NEAR().
  */
 #include <algorithm>
 #include <cmath>
