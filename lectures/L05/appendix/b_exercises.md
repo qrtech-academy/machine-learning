@@ -71,6 +71,7 @@ clean:
 In the header file `include/ml/dense_layer/dense.hpp`, in the namespace `ml::dense_layer`, add a class named `Dense` that inherits the corresponding interface, see the file `include/ml/dense_layer/interface.hpp`:
 * Use public inheritance and mark the class `final` so it can't be inherited further.
 * Override every method from the interface, including the destructor.
+* That includes `initParams()`, which `Stub` implements as an empty method for want of anything to reset (see **L03**). `Dense` has bias values and weights to draw again, so its override does real work; the implementation follows in section 2 of the next part.
 
 **Tip**: copy the entire contents of the interface and paste it into the new file. Then adapt the code for the new subclass `Dense` (no `virtual` or `= 0`, use `override`, etc.).
 
@@ -118,6 +119,7 @@ Define all methods, constructors, etc. that aren't marked `delete` or `default` 
     * `myOutput`, `myPreActivationOutput`, and `myError` should hold `nodeCount` floating-point values equal to 0.0 at the start.
     * `myBias` should hold `nodeCount` floating-point values randomized in `[0.0, 1.0]`.
     * `myWeights` should hold `nodeCount` x `weightCount` floating-point values randomized in `[0.0, 1.0]`.
+    * The randomizing itself is written once, in `initParams()`, and called from here; see section 2 of the next part.
     * `myActFunc` should be assigned the given activation function.
 * If `nodeCount` or `weightCount` equals 0, the error message `Invalid dense layer parameters: nodeCount and weightCount must be greater than 0!` should be printed to standard error, after which the program should terminate by calling `std::terminate()`, as shown below:
 
@@ -134,16 +136,17 @@ if ((0U == nodeCount) || (0U == weightCount))
 ```
 
 **Other methods:**
-* Implement every method from the interface except `feedforward()`, `backpropagate()`, and `optimize()`.
+* Implement every method from the interface except `feedforward()`, `backpropagate()`, `optimize()`, and `initParams()`.
 * Follow the descriptions in `include/ml/dense_layer/interface.hpp`:
     * Methods such as `nodeCount()` and `weightCount()` should return the number of nodes and weights per node in the layer, respectively.
     * Getter methods such as `output()` and `error()` should return references to the corresponding member variables.
     * The three unimplemented methods return `bool` (see **L03**), so an empty body won't compile. Give each one a placeholder body of `return false;` until you implement it below. `false` rather than `true`, so that a method you forget to finish reports failure instead of quietly claiming success.
+    * `initParams()` returns nothing, so an empty body compiles fine. Leave it empty until section 2 of the next part, where the constructor starts calling it. That's the body the stub keeps for good; for `Dense` it's a placeholder.
 
 ---
 
 ## Implementing the Dense Layer
-You'll complete the class `Dense` you just declared by implementing the methods `feedforward()`, `backpropagate()`, and `optimize()`. See [appendix A](./a_theory.md) for an overview of how
+You'll complete the class `Dense` you just declared by implementing the methods `initParams()`, `feedforward()`, `backpropagate()`, and `optimize()`. See [appendix A](./a_theory.md) for an overview of how
 the math from **L03** maps onto the code below.
 
 ---
@@ -187,14 +190,27 @@ Neither activation function needs an error case. `ActFunc` has exactly three enu
 ---
 
 ### 2. Randomizing bias and weights
-Randomize all bias values and weights:
-* In the constructor, first call `initRandGen()` (from `ml/utils.hpp`) to seed the random number generator.
-* Iterate through every node in the layer with a for loop: `for (std::size_t i{}; i < nodeCount; ++i)`.
+Randomize all bias values and weights in `initParams()`, the interface method `Dense` overrides
+(see section 4 of the previous part). It takes no arguments, returns nothing, and should be marked
+`override` and `noexcept`:
+* Iterate through every node in the layer with a for loop: `for (std::size_t i{}; i < nodeCount(); ++i)`.
 * For each node `i`:
     * Assign a random number to its bias value by calling `randomStartVal()`: `myBias[i] = randomStartVal()`.
-    * Iterate through the node's weights with a nested for loop: `for (std::size_t j{}; j < weightCount; ++j)`.
+    * Iterate through the node's weights with a nested for loop: `for (std::size_t j{}; j < weightCount(); ++j)`.
     * For each weight `j`:
         * Assign a random number to the weight by calling `randomStartVal()`: `myWeights[i][j] = randomStartVal()`.
+
+In the constructor, first call `initRandGen()` (from `ml/utils.hpp`) to seed the random number
+generator, then call `initParams()` to fill the two containers. A layer therefore starts out
+randomized exactly as before; the randomization has simply moved into a method the network can call
+again.
+
+**Who calls it, and why the network needs it.** `Shallow::train()` calls `initParams()` on both
+its layers before the first epoch (see **L04**), so every call trains a network from scratch rather
+than continuing the one the previous call left behind. That matters most when a run ends badly:
+training on top of a network that has settled into a bad set of parameters mostly keeps it there,
+while a fresh start draws new ones and can converge on the second attempt. Without a method on the
+interface, the network couldn't do it at all, since the bias and weights are private to the layer.
 
 ---
 
@@ -282,8 +298,10 @@ Update `main.cpp` to use your new layer:
   wiring: the output layer's weight count must still match the hidden layer's node count.
 * Give both layers `ActFunc::Tanh`, and make the hidden layer wider than the task strictly needs,
   e.g. 8 nodes. Keep the 2-bit XOR training data from **L04**.
-* Train for a few thousand epochs (e.g. 5000) with a learning rate of `0.1`, then predict once per
-  training set and print the results as before.
+* Train for a good few thousand epochs (e.g. 10000), then predict once per training set and print
+  the results as before. There's no learning rate to pass any more: the network sets its own, and
+  stops as soon as it reaches the precision threshold, so the epoch count is an upper bound rather
+  than a number to tune.
 
 **Don't delete `stub.hpp`.** `Dense` replaces the stub in your *network*, not in your codebase. The
 test suite still compiles both, and still uses the stub to test `Shallow`, since a layer that
@@ -292,6 +310,17 @@ computes nothing is what makes the network's wiring visible. See section 8.
 Compile and test-run the program. Unlike **L04**, where every prediction was the stub's fixed
 output, each prediction should now land within a few hundredths of its training target. Your exact
 numbers will differ from run to run, because the bias and weights start randomized.
+
+The early-stop line from `train()` should appear above the predictions, reporting a precision and
+an epoch count well short of the 10000 you asked for. Both vary from run to run: the starting
+parameters are random, and so is the training order. A run that stops after a few hundred epochs
+and one that runs several thousand are both normal.
+
+**When a run doesn't converge.** Roughly two XOR networks in a thousand settle into a set of
+parameters they can't improve on, predicting something near 0.5 for every input however long they
+train. Call `train()` again: it resets both layers first, so the second call starts from newly
+drawn parameters rather than the ones that got stuck. That's the reset from **L04** earning its
+keep, and it's what the test suite's convergence test relies on.
 
 **Worth trying:** switch both layers to `ActFunc::Relu` and shrink the hidden layer to 2 nodes.
 Roughly one run in four then fails to learn XOR at all, however long you train. `randomStartVal()`
@@ -313,10 +342,15 @@ Once you've carried your code forward into this lecture's exercises directory, b
 make -C test
 ```
 
-All 54 test cases should pass. Because `Dense` randomizes its own bias and weights, none of its
+All 57 test cases should pass. Because `Dense` randomizes its own bias and weights, none of its
 output can be predicted from the constructor arguments, so the tests recover the bias by feeding
 the layer a vector of zeros: every weight term drops out and the weighted sum is the bias alone.
 That makes every expected value exact rather than approximate.
+
+`InitParamsDrawsNewValues` is the first test in the course where `initParams()` has anything to do.
+The stub tests only check that calling it changes nothing, which is all an empty override can be
+asked for; here the values it writes are read straight back out of `weights()` and out of a
+zero-input feedforward.
 
 The one to read is `BackpropagateUsesPreActivationDerivative`. It checks the **Note!** in sections
 4 and 5 above, and only `ActFunc::Tanh` can catch that mistake: for `Relu` the two values agree,

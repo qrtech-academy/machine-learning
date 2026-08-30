@@ -41,10 +41,16 @@ struct Test
     static constexpr std::size_t HiddenCount{8U};
 
     /** Epochs used by the convergence test. */
-    static constexpr std::size_t EpochCount{5000U};
+    static constexpr std::size_t EpochCount{10000U};
+
+    /** Precision the convergence test trains towards, i.e. a mean absolute error of 0.01. */
+    static constexpr double PrecisionThreshold{0.99};
 
     /** Mean absolute error the convergence test must reach. */
     static constexpr double ConvergenceThreshold{0.05};
+
+    /** Training runs the convergence test is allowed, each starting from fresh parameters. */
+    static constexpr std::size_t TrainAttempts{3U};
 };
 
 // -----------------------------------------------------------------------------
@@ -527,6 +533,53 @@ TEST(DenseLayerDense, UsableThroughInterface)
 }
 
 /**
+ * @brief Verify that initParams() draws a new set of trainable parameters, leaving the
+ *        layer's dimensions and every value's range intact.
+ */
+TEST(DenseLayerDense, InitParamsDrawsNewValues)
+{
+    DenseLayer denseLayer{Test::NodeCount, Test::WeightCount, ActFunc::None};
+
+    const auto biasBefore    = recoverBias(denseLayer);
+    const auto weightsBefore = denseLayer.weights();
+
+    denseLayer.initParams();
+
+    const auto biasAfter    = recoverBias(denseLayer);
+    const auto weightsAfter = denseLayer.weights();
+
+    // Test the shape of the layer after the reset.
+    // Expect it unchanged: initParams() replaces values, it doesn't resize anything.
+    EXPECT_EQ(denseLayer.nodeCount(), Test::NodeCount);
+    EXPECT_EQ(denseLayer.weightCount(), Test::WeightCount);
+    EXPECT_EQ(biasAfter.size(), Test::NodeCount);
+    EXPECT_EQ(weightsAfter.size(), Test::NodeCount);
+
+    // Test the new values against the range randomStartVal() draws from.
+    // Expect every one of them inside [0.0, 1.0], exactly as after construction.
+    std::size_t changedCount{};
+
+    for (std::size_t i{}; i < Test::NodeCount; ++i)
+    {
+        EXPECT_TRUE((0.0 <= biasAfter[i]) && (1.0 >= biasAfter[i]));
+
+        if (biasAfter[i] != biasBefore[i]) { ++changedCount; }
+
+        for (std::size_t j{}; j < Test::WeightCount; ++j)
+        {
+            EXPECT_TRUE((0.0 <= weightsAfter[i][j]) && (1.0 >= weightsAfter[i][j]));
+
+            if (weightsAfter[i][j] != weightsBefore[i][j]) { ++changedCount; }
+        }
+    }
+
+    // Test how many of the nine values the reset replaced.
+    // Expect at least one: a method that left every one of them alone reset nothing. Drawing the
+    // same nine values twice from std::rand() is possible in theory and never seen in practice.
+    EXPECT_TRUE(changedCount > std::size_t{});
+}
+
+/**
  * @brief Verify that a network of two dense layers actually learns, by training it on 2-bit XOR
  *        and comparing its error against its own error before training.
  */
@@ -542,9 +595,18 @@ TEST(DenseLayerDense, NetworkLearnsXorPattern)
     const auto errorBeforeTraining = meanAbsoluteError(network, trainInput, trainOutput);
     EXPECT_TRUE(std::isfinite(errorBeforeTraining));
 
-    EXPECT_TRUE(network.train(Test::EpochCount, Test::LearningRate));
+    // Train until the network converges, giving it a few attempts to get there. A network that
+    // settles into a bad set of parameters can't train its way out of them, and train() resets
+    // both layers before its first epoch, so every attempt starts from newly drawn values.
+    double errorAfterTraining{};
 
-    const auto errorAfterTraining = meanAbsoluteError(network, trainInput, trainOutput);
+    for (std::size_t attempt{}; attempt < Test::TrainAttempts; ++attempt)
+    {
+        EXPECT_TRUE(network.train(Test::EpochCount, Test::PrecisionThreshold));
+        errorAfterTraining = meanAbsoluteError(network, trainInput, trainOutput);
+
+        if (errorAfterTraining < Test::ConvergenceThreshold) { break; }
+    }
     EXPECT_TRUE(std::isfinite(errorAfterTraining));
 
     // Test the error against the threshold and against the untrained baseline.

@@ -35,6 +35,7 @@
 * What's the purpose of an activation function, and what happens if you don't use one?
 * What happens to training if the learning rate is set too high or too low?
 * Why is it beneficial to define an interface for the dense layer rather than implementing a class directly?
+* Your stub implements `initParams()` as an empty method. Why does the interface declare a method the stub has nothing to do for, and what would the network in L04 lose without it?
 
 ---
 

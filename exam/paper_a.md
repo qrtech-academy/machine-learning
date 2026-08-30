@@ -98,9 +98,20 @@ The training method below compiles, runs, and returns `true`. It is the L04 trai
 wrong in several independent ways.
 
 ```cpp
-bool Shallow::train(const std::size_t epochCount, const double learningRate) noexcept
+bool Shallow::train(const std::size_t epochCount, const double precisionThreshold) noexcept
 {
-    if ((0U == epochCount) || (0.0 >= learningRate) || (1.0 <= learningRate)) { return false; }
+    constexpr std::size_t evaluationInterval{100U};
+    constexpr double initialLearningRate{0.1};
+
+    double learningRate{initialLearningRate};
+    double prevPrecision{};
+
+    if ((0U == epochCount) || (0.0 >= precisionThreshold) || (1.0 <= precisionThreshold))
+    {
+        return false;
+    }
+    myHiddenLayer.initParams();
+    myOutputLayer.initParams();
 
     randomizeTrainOrder();
 
@@ -116,10 +127,22 @@ bool Shallow::train(const std::size_t epochCount, const double learningRate) noe
             myHiddenLayer.optimize(myTrainInput[x], learningRate);
             myOutputLayer.optimize(myHiddenLayer.output(), learningRate);
         }
+        const bool evaluate{(0U != epoch) && (0U == (epoch % evaluationInterval))};
+
+        if (evaluate)
+        {
+            const auto currentPrecision = precision();
+
+            if (precisionThreshold <= currentPrecision) { return true; }
+            updateLearningRate(learningRate, prevPrecision, currentPrecision);
+        }
     }
     return true;
 }
 ```
+
+The parameter reset, the evaluation every hundredth epoch and the learning rate rule are all as
+specified; the faults below are elsewhere.
 
 **(a)** The loop was supposed to visit the training sets in a different random order every epoch.
 Two separate faults prevent it. Name both, and state what order the sets are actually visited in.

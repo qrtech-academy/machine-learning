@@ -56,7 +56,7 @@ You'll implement the method `train()` in `ml::neural_network::Shallow`. The meth
   * Computes gradients (simplified error) for every node in the network.
   * Must be computed backward (from output to input).
 * Optimization:
-  * Adjusts the trainable parameters (weights and biases) based on the computed error, together with the given learning rate.
+  * Adjusts the trainable parameters (weights and biases) based on the computed error, together with the learning rate the network currently holds.
   * Computation can happen in either direction.
 
 ---
@@ -66,16 +66,25 @@ You'll implement the method `train()` in `ml::neural_network::Shallow`. The meth
 The training loop can be summarized as follows:
 
 ```
+Reset both layers' trainable parameters
+
 For each epoch:
     For each training set x:
         1. Feedforward: compute predictions
         2. Backpropagation: compute error
         3. Optimization: update weights and biases
+
+    Every hundredth epoch:
+        4. Measure the precision, and stop early or set a new learning rate from it
 ```
 
 The order matters:
 * Backpropagation depends on the result of feedforward.
 * Optimization depends on the result of backpropagation.
+
+The reset at the top is what makes a second call to `train()` train a new network rather than
+continue the old one, and step 4 is what frees the caller from having to pick a learning rate. Both
+are covered in [appendix B](./b_exercises.md).
 
 ---
 
@@ -115,7 +124,26 @@ myHiddenLayer.optimize(myTrainInput[x], learningRate)
 myOutputLayer.optimize(myHiddenLayer.output(), learningRate)
 ```
 
-The hidden layer's input is the original input. The output layer's input is the hidden layer's output (the one computed during feedforward).
+The hidden layer's input is the original input. The output layer's input is the hidden layer's output (the one computed during feedforward). `learningRate` is the network's own, a local variable in `train()` rather than an argument, revised in step 4 below.
+
+---
+
+### Step 4 - Evaluation
+Once every hundredth epoch, measure how close the network is to its training data and act on the
+number:
+
+```
+precision = 1.0 - MAE (over every value of every training set)
+
+precision >= precisionThreshold  ->  stop training, the network is done
+otherwise                        ->  updateLearningRate(): raise the rate when progress has
+                                     stalled, lower it when the network is overshooting
+```
+
+The learning rate is therefore never supplied by the caller. It starts at `0.1` and is revised from
+one evaluation to the next, exactly as in `ml::lin_reg::Adaptive` from **L02**, which evaluates
+every tenth epoch instead: a linear regression model converges in tens of epochs, a network in
+thousands.
 
 ---
 
@@ -130,6 +158,8 @@ These three steps map directly onto the theory from **L03** (see [appendix A](..
 
 ---
 
+---
+
 ### Input Validation
 Check that training is possible before the training loop starts. Print an error message and return `false` immediately if any of the following conditions hold:
 
@@ -137,6 +167,9 @@ Check that training is possible before the training loop starts. Print an error 
 |---|---|
 | `myTrainSetCount == 0` | Training can't be carried out without training data. |
 | `epochCount == 0` | Training must run for at least one epoch. |
-| `learningRate <= 0.0 \|\| learningRate >= 1.0` | Invalid learning rate: must be in the range `(0.0, 1.0)`. |
+| `precisionThreshold <= 0.0 \|\| precisionThreshold >= 1.0` | Invalid threshold: must be in the range `(0.0, 1.0)`. A threshold of `1.0` or more can never be reached; `0.0` or less is reached by any network at all. |
+
+There's no learning rate among them: the network sets its own, and the layers check the rate they're
+handed on every call to `optimize()`.
 
 ---

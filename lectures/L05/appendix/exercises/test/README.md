@@ -64,6 +64,9 @@ make
 `make build`, `make run`, and `make clean` do what their names suggest. The test suite exits with
 code 0 when everything passes, and -1 otherwise.
 
+The suite holds 57 test cases: 14 for the stub and 14 for the network, both carried over from L04,
+plus 21 for `Dense` and 8 for the helpers in `ml/utils`.
+
 ---
 
 ## What's Covered
@@ -92,6 +95,7 @@ The range is closed at both ends: `randomStartVal()` divides by `RAND_MAX`, so a
 | `ConstructedMatrixShapes`                  | output, error, and weights are right-shaped   |
 | `ConstructedParametersAreRandomized`       | bias and weights in `[0.0, 1.0]`, and varying |
 | `LayersAreIndependentlyRandomized`         | two layers don't share parameters             |
+| `InitParamsDrawsNewValues`             | the reset replaces bias and weights in place  |
 | `FeedforwardComputesWeightedSum`           | output equals bias plus the weighted sum      |
 | `FeedforwardAppliesActivationFunction`     | the activation function is applied to the sum |
 | `FeedforwardIsDeterministic`               | same input, same output                       |
@@ -114,6 +118,11 @@ warns about, and it can only be caught with `ActFunc::Tanh`: for `Relu` the two 
 `max(0.0, s)` is positive exactly when `s` is, and for `None` the derivative is `1.0` either way.
 Both `backpropagate()` overloads are checked this way for the same reason.
 
+`InitParamsDrawsNewValues` is the first test in the course where the parameter reset has anything
+to do. The stub tests in L03 and L04 only check that calling `initParams()` changes nothing, which
+is all an empty override can be asked for; here the values it writes are read back out of
+`weights()` and out of a zero-input feedforward, which recovers the bias.
+
 `NetworkLearnsXorPattern` trains a `Shallow` with two `Dense` layers on 2-bit XOR, which isn't
 linearly separable, so reaching the target is only possible if the hidden layer does real work. It
 asserts against **both** a fixed error threshold and the network's own error before training, since
@@ -122,19 +131,33 @@ the threshold alone would pass for a network that started out lucky.
 ---
 
 ## Choosing the Convergence Threshold
-The threshold is `0.05` mean absolute error after 5000 epochs with 8 hidden `Tanh` nodes. That
-combination was measured over 500 runs before being written down:
+The test trains towards a precision of `0.99`, i.e. a mean absolute error of `0.01`, over at most
+10000 epochs with 8 hidden `Tanh` nodes, and asserts a mean absolute error below `0.05`. Measured
+over 1000 runs before being written down:
 
-* worst post-training error: **0.0092**
+* worst error of a run that reached the precision threshold: **0.0100**, since `train()` stops on
+  the same measurement the test then makes
 * best *untrained* error: **0.443**
+* runs that failed to converge at all: **2 in 1000**, ending near `0.26` rather than near `0.01`
+* epochs to the threshold: **2300 on average**, **9800 at worst**, which is what the 10000-epoch
+  budget is sized for
 
-A factor of five of margin below, and a factor of nearly fifty above.
+Those 2 runs in 1000 are why the test trains up to three times rather than once. Each call to
+`train()` resets both layers, so an attempt that ends stuck is followed by one starting from newly
+drawn parameters; three independent attempts put the odds of a spurious failure at roughly one in
+a hundred million. Retrying would be pointless without the reset: a second call that continued from
+the stuck parameters would stay stuck.
 
 `Tanh` rather than `Relu`, and 8 hidden nodes rather than 2, for a reason worth knowing: the same
 network built from two hidden `Relu` nodes reaches that error in only about 72% of runs, because
 `randomStartVal()` never returns a negative number and ReLU struggles with XOR from an
 all-positive start. Appendix B section 7 invites you to try exactly that and watch it fail. Fine
 for an experiment you re-run by hand, hopeless as a test.
+
+Widening the hidden layer doesn't help either, which is less obvious: at 16 nodes the failure rate
+climbs from 2 runs in 1000 to more than 1 in 5. The network sets its own learning rate now, and the
+rule pushes it to the top of its range whenever progress is slow; a wider layer takes larger
+combined steps at that rate and saturates its `Tanh` nodes.
 
 ---
 
