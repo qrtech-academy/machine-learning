@@ -77,8 +77,14 @@ have `.cpp` files under `source/ml/`.
 | `OptimizeChecksInputSize`                 | input holds one value per weight             |
 | `OptimizeChecksLearningRate`              | the learning rate lies inside `(0.0, 1.0)`   |
 | `FeedforwardCount`                        | counts every call, accepted or not           |
-| `ComputationLeavesStateUnchanged`         | a full compute cycle changes nothing         |
+| `ComputationLeavesStateUnchanged`         | a compute cycle and a reset change nothing   |
 | `UsableThroughInterface`                  | works through the interface                  |
+
+`initParams()` is checked inside those last two rather than in a test of its own, since there's
+nothing for it to do here: the stub has no trainable parameters, so its override is empty, and both
+tests assert that calling it leaves the layer exactly as it was. What matters at this point is that
+it's *callable*, directly and through an `Interface&`. The network in **L04** calls it on both of
+its layers before every training run, and `Dense` gives it a real body in **L05**.
 
 The three size checks are deliberately fussy about *which* count they compare against, because
 mixing up the node count and the weight count is the easiest mistake to make here, and the one
@@ -112,7 +118,8 @@ These don't, because they describe a layer that deliberately computes nothing:
   `feedforwardCount()` and `clearFeedforwardCount()` live on the stub only.
 * `ErrorIsZero` / `WeightsAreZero`: a real layer starts with randomized weights and computes a
   real error during backpropagation.
-* `ComputationLeavesStateUnchanged`: the exact opposite is true of a real layer.
+* `ComputationLeavesStateUnchanged`: the exact opposite is true of a real layer, for the reset as
+  much as for the compute cycle. `Dense::initParams()` draws new values every time it's called.
 
 ---
 

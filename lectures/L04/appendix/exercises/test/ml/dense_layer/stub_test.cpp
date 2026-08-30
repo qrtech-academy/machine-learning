@@ -335,6 +335,11 @@ TEST(DenseLayerStub, ComputationLeavesStateUnchanged)
     EXPECT_TRUE(denseLayer.backpropagate(nextLayer));
     EXPECT_TRUE(denseLayer.optimize(input, Test::LearningRate));
 
+    // Reset the trainable parameters on top of that cycle.
+    // Expect nothing to happen: the stub has none, so its override is empty. It's the call the
+    // network in L04 makes on both of its layers before it starts training.
+    denseLayer.initParams();
+
     // Test the layer's state after that cycle.
     // Expect it to be untouched, since the stub performs range checks only.
     for (const auto output : denseLayer.output())
@@ -377,5 +382,10 @@ TEST(DenseLayerStub, UsableThroughInterface)
 
     EXPECT_TRUE(interface.feedforward(input));
     EXPECT_FALSE(interface.feedforward(wrongSized));
+
+    // Test the parameter reset through the interface reference, the way a network calls it.
+    // Expect the output to survive it: the stub has no trainable parameters to draw again.
+    interface.initParams();
+    EXPECT_NEAR(interface.output()[0U], outputValue, Test::Tolerance);
 }
 } // namespace

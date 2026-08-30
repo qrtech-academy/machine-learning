@@ -179,6 +179,13 @@ depends on it needs to change when that happens.
 | `backpropagate(reference)` | Computes error from reference values (output layer) |
 | `backpropagate(nextLayer)` | Computes error from the next layer (hidden layer) |
 | `optimize(input, learningRate)` | Updates bias and weights |
+| `initParams()` | Resets the layer's trainable parameters, i.e. bias and weights |
+
+Every method in the table is pure virtual: the interface states what a dense layer must be able to
+do and nothing about how. `initParams()` is what lets the network in **L04** start each training
+run from freshly drawn parameters without knowing which kind of layer it holds; a layer with
+nothing to reset, like the stub, implements it as an empty method. See
+[appendix B](./b_exercises.md).
 
 ---
 
@@ -186,6 +193,8 @@ depends on it needs to change when that happens.
 `ml::dense_layer::Stub` implements the interface but doesn't do anything meaningful:
 * Feedforward always sets the output to a fixed value (e.g. `0.5`).
 * Backpropagation and optimization do nothing.
+* The parameter reset is implemented as an empty method: there's no bias, and the weights stay at
+  zero.
 
 The stub exists so that other code, namely the `Shallow` network class you'll build next
 lecture, can be written, compiled, and test-run against a real `dense_layer::Interface` before a

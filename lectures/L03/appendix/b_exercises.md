@@ -335,6 +335,23 @@ constructor, which has no way to return a failure code to the caller:
     * `input`: read-only floating-point vector.
     * `learningRate`: floating-point number.
 
+One method more, `noexcept` and returning nothing:
+* **`initParams()`:** resets the layer's trainable parameters, i.e. its bias values and weights, to
+  their initial values.
+    * Takes no arguments and returns nothing.
+    * Pure virtual like the rest, so every layer states what its own reset means, even when the
+      answer is "nothing". `Stub` has no trainable parameters to draw again, so its override is
+      empty; `Dense` overrides it in **L05** by drawing a new random bias and weight for every
+      node, and its constructor calls it too, so the randomization is written once and used from
+      both places.
+
+**Who calls it.** The network you write in **L04** does, on both of its layers, before its first
+training epoch. That's what makes a second call to `train()` train a new network rather than
+continue the one the previous call left behind, which matters when a run ends up badly trained: a
+network that has settled into a bad set of parameters mostly stays there, while a fresh start draws
+new ones and can converge on the next attempt. The bias and weights are private to the layer, so
+without a method on the interface the network couldn't reset them at all.
+
 **The stub class (`ml/dense_layer/stub.hpp`):**
 In the namespace `ml::dense_layer`, implement a subclass named `Stub` that inherits `Interface`
 via public inheritance. The class should be marked `final`. The stub doesn't perform any real
@@ -409,6 +426,15 @@ network you build in **L04** is tested entirely against this stub, so it's worth
         * Nothing else can: a loop that runs a single pass instead of every epoch still lines up
           dimensionally and still returns `true`, so without a count it's indistinguishable from
           a correct one.
+
+* **`initParams()`:**
+    * Overrides the corresponding method in the interface, and should be marked `override` and
+      `noexcept`.
+    * Its body is empty: the stub has no bias, and its weights never move from the zeros it was
+      constructed with, so there's nothing to draw again.
+    * An empty body is the implementation here, not a placeholder. It's also the only one the
+      network in **L04** needs: that network calls `initParams()` on both of its layers before
+      every training run, and against a stub the call has to compile, run, and change nothing.
 
 For this class, the default constructor and the copy and move constructors (and corresponding
 operators) should be deleted.
