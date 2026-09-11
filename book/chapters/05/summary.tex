@@ -1,0 +1,36 @@
+% Section 5.3, from lectures/L05/README.md: the objectives, the evaluation questions, and the next
+% lecture.
+
+\needspace{10\baselineskip}
+\section{Review}
+\label{c5:sec:review}
+
+\subsection*{What you should be able to do now}
+After this chapter, you should:
+\begin{itemize}
+  \item Have created a concrete subclass that inherits the existing dense layer interface.
+  \item Have implemented all methods, including \code{initParams()}, \code{feedforward()},
+    \code{backpropagate()}, and \code{optimize()}.
+  \item Have created a fully functioning dense layer implementation.
+  \item Have tested the implementation with a complete neural network (the one created in the
+    exercises in Chapter~\ref{c4:ch:network}).
+\end{itemize}
+
+\needspace{6\baselineskip}
+\subsection*{Questions to test yourself}
+You should be able to explain:
+\begin{enumerate}
+  \item What's the difference between \code{ml::dense_layer::Interface} and your concrete class,
+    and why is this split beneficial?
+  \item Which activation functions does your implementation support, and when is each one
+    suitable?
+  \item Can you connect the mathematical formulas for backpropagation to your implementation; what
+    does each computation step in the code represent?
+  \item How do you test that the implementation is correct, and how do you know when the network
+    is sufficiently trained?
+\end{enumerate}
+
+\needspace{6\baselineskip}
+\subsection*{Looking ahead}
+Chapter~\ref{c6:ch:cnn} begins Part~II of the book, and introduces convolutional neural networks
+(CNNs) for image classification.

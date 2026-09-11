@@ -1,0 +1,40 @@
+% Chapter 8, typeset from lectures/L08: the README is the opener and the closing review, the
+% README of the cnn_work project the chapter is worked in is a section of its own, and appendix A
+% is the exercises.
+
+\chapter{The Convolutional Layer}
+\label{c8:ch:conv}
+
+{\large\itshape The conv layer, rebuilt behind an interface in a real pipeline.\par}
+
+\begin{chapterbox}{In this chapter}
+\begin{itemize}
+  \item The polymorphic \code{cnn_work} pipeline, and how its layers connect.
+  \item A concrete class \code{ml::conv_layer::Conv} implementing \code{conv_layer::Interface}.
+  \item Its \code{feedforward()}, \code{backpropagate()} and \code{optimize()}.
+  \item Replacing \code{ConvStub} in \file{factory.cpp}.
+  \item The split between an interface and the concrete class behind it.
+\end{itemize}
+\end{chapterbox}
+
+This chapter implements a real, working convolutional layer, \code{ml::conv_layer::Conv}, in the
+polymorphic CNN pipeline \code{cnn_work}, replacing the stub the pipeline currently uses for it. The
+math is the one you worked through by hand in \secref{c6:sec:exercises} and wrote as the struct
+\code{ml::ConvLayer} in Chapters~\ref{c6:ch:cnn} and~\ref{c7:ch:layers}; what is new is the design
+around it. After this chapter you should have created a concrete subclass \code{Conv} that
+inherits \code{ml::conv_layer::Interface}, and implemented its \code{feedforward()},
+\code{backpropagate()} and \code{optimize()}.
+
+\Secref{c8:sec:pipeline} introduces \code{cnn_work}, which is wired together from end to end but
+still runs on stub layers. Build and run it with \code{make} before you change anything, to see the
+meaningless output the stubs produce, then start replacing them with real layers in the exercises
+in \secref{c8:sec:exercises}. It is your own copy from here on, and you keep building it up through
+Chapters~\ref{c9:ch:maxpool} and~\ref{c10:ch:flatten}. The max pooling and flatten layers are still
+stubs at the end of this chapter, so the program won't produce meaningful predictions until every
+layer is real, at the end of Chapter~\ref{c10:ch:flatten}. In the meantime, \file{dense.hpp} and
+\file{dense.cpp} are left in the project already fully implemented, as a working example of what a
+finished layer class looks like.
+
+\input{chapters/08/pipeline}
+\input{chapters/08/summary}
+\input{chapters/08/exercises}

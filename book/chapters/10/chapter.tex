@@ -1,0 +1,43 @@
+% Chapter 10, typeset from lectures/L10: the README is the opener and the closing review, appendix B
+% (the course review) and appendix D (the constraints of resource-constrained targets, without its
+% exercise) are sections, and appendices A and C and the exercise of appendix D are the exercises.
+
+\chapter{The Flatten Layer and the Complete Network}
+\label{c10:ch:flatten}
+
+{\large\itshape Every layer real, and what changes off the laptop.\par}
+
+\begin{chapterbox}{In this chapter}
+\begin{itemize}
+  \item A real, working flatten layer, \code{ml::flatten_layer::Flatten}, replacing the
+    \code{flatten_layer::Stub} in the \code{cnn_work} pipeline.
+  \item Wiring the complete CNN together: switching \file{factory.cpp} from stubs to the real
+    classes, and seeing every layer type work together for the first time.
+  \item A review of the whole book: linear regression, neural networks, and CNNs are all the same
+    underlying pattern (feedforward, backpropagation, optimization), applied to increasingly
+    structured layers.
+  \item What changes when a network like this has to run on a resource-constrained target instead
+    of a laptop.
+\end{itemize}
+\end{chapterbox}
+
+This chapter finishes \code{cnn_work}. The flatten layer is the last one still stubbed, and a
+flatten layer has no trainable parameters, so its interface declares no \code{optimize()} at all:
+there are only \code{feedforward()} and \code{backpropagate()} to write. With it in place, every
+layer in the pipeline is real and the network runs end to end,
+\code{input → Conv → MaxPool → Flatten → Dense → prediction}, telling the four hand-drawn digits
+apart. Run \code{make} once the wiring is done, and compare its now meaningful predictions against
+the placeholder output you first saw in Chapter~\ref{c8:ch:conv}.
+
+The chapter then steps back. \Secref{c10:sec:course} compares every layer type built in the book,
+from \code{Fixed} to \code{Flatten}, in terms of trainable parameters, computation, and role in the
+network, and shows the shared feedforward, backpropagate and optimize pattern they all follow.
+\Secref{c10:sec:embedded} closes the book with what happens to that network on a microcontroller:
+memory footprint, numeric precision, and real-time constraints. The exercises in
+\secref{c10:sec:exercises} implement the flatten layer, run the final test suite, the first that can
+test the network as a whole, and then review the whole book on paper.
+
+\input{chapters/10/course}
+\input{chapters/10/embedded}
+\input{chapters/10/summary}
+\input{chapters/10/exercises}

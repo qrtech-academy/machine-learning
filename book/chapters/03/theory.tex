@@ -1,0 +1,249 @@
+% Sections 3.1 and 3.2, from lectures/L03/appendix/a_theory.md: one section per numbered section of
+% the appendix.
+
+\section{Neural Networks}
+\label{c3:sec:nn}\label{c3:app:a}
+
+\subsection{Introduction}
+\begin{itemize}
+  \item Through machine learning, a given machine can become capable of learning rules without
+    having been explicitly programmed to do so.
+  \item \textbf{Deep learning} is a subfield of machine learning and involves techniques that
+    vaguely resemble how our brains work. The name stems from the fact that the technique was
+    originally inspired by how our brains function. In practice, though, brains and neural networks
+    work very differently.
+  \item Deep learning uses so-called \textbf{neural networks} containing several steps, or layers,
+    between input and output, often hundreds, which allows relevant information to be extracted
+    from the input while irrelevant information is discarded. This makes deep learning well suited
+    to images and similar data containing a large amount of information, most of which is usually
+    insignificant.
+  \item The more layers used in a neural network, the deeper the model. Information can be thought
+    of as passing through and being processed by different filters that distill the information.
+    In each layer, a certain type of irrelevant data is filtered out while relevant data is
+    retained. Step by step, the input changes from its original form and increasingly contains
+    information about the output.
+\end{itemize}
+
+\subsection{Theory Behind Training a Neural Network}
+\begin{itemize}
+  \item For a neural network to predict with low deviation, the network must be trained so that the
+    parameters (weights and biases) of its nodes are adjusted to suitable values.
+  \item Existing training sets are therefore used to train the network for a certain number of
+    epochs. At each epoch, the order of the training sets is randomized so the network doesn't get
+    used to any patterns arising from the particular order the training sets happen to be stored
+    in.
+\end{itemize}
+The following steps are performed for each training set, for a simple neural network consisting of
+an input layer, a hidden layer, and an output layer.
+
+\subsubsection{1. Feedforward}
+\begin{itemize}
+  \item The nodes in the input layer form the inputs $x$ to every node in the hidden layer.
+  \item Since these inputs $x$ carry different degrees of importance, also called weight, each is
+    multiplied by its own weight $w$ in the hidden layer. These weights should be randomly chosen at
+    the start, and then adjusted during training.
+\end{itemize}
+For each node in the hidden layer, the contribution $w \cdot x$ from each input $x$ from the input
+layer is summed together with the node's resting point, or bias, $b$ into a sum $s$:
+\[
+  s = b + \sum_{i=0}^{n-1} w_i \cdot x_i
+    = b + w_0 \cdot x_0 + w_1 \cdot x_1 + \dots + w_{n-1} \cdot x_{n-1},
+\]
+where:
+\begin{itemize}
+  \item $b$ is the node's bias.
+  \item $n$ is the number of inputs.
+  \item $w_i \cdot x_i$ is the product of each weight $w$ and its connected input $x$.
+\end{itemize}
+The node's predicted output $\yp$ is obtained via an activation function $\sigma$:
+\[
+  \yp = \sigma(s) = \sigma\!\left(b + \sum_{i=0}^{n-1} w_i \cdot x_i\right)
+\]
+The outputs from the hidden layer then form the inputs to the output layer, where the same
+principle applies.
+
+\subsubsection{2. Backpropagation}
+The deviation for each node's output is computed starting from the output layer and moving backward
+to the hidden layer. For a given node $n$ in the output layer:
+\[
+  \delta = \yref - \yp
+\]
+The computed error $\Delta e$ for a given node $n$ in the output layer:
+\[
+  \Delta e = \delta \cdot \yp',
+\]
+where $\yp'$ is the derivative of the node's predicted output.
+
+For a given node $n$ in a given hidden layer, the deviation $\delta$ is computed as
+\[
+  \delta = \sum_{i=0}^{n-1} \left[\Delta e_i \cdot w_i\right]
+\]
+and the computed error $\Delta e$ for the node:
+\[
+  \Delta e = \delta \cdot \yp'
+\]
+
+\subsubsection{3. Optimization}
+Once the error for the nodes' parameters has been computed, optimization is performed via a gradient
+algorithm. The rate of change $\Delta c_n$ for a given node $n$:
+\[
+  \Delta c_n = \Delta e_n \cdot L,
+\]
+where:
+\begin{itemize}
+  \item $\Delta e_n$ is the computed error for the current node.
+  \item $L$ is the learning rate.
+\end{itemize}
+The node's bias $b_n$ is updated:
+\[
+  b_n = b_n + \Delta c_n
+\]
+Each weight $w_j$ connected to node $n$ is updated:
+\[
+  w_j = w_j + \Delta c_n \cdot y_j,
+\]
+where $y_j$ is the output from the connected node $j$ in the previous layer (for the input layer,
+$y_j = x_j$).
+
+\subsection{Activation Functions}
+\begin{itemize}
+  \item Some type of activation function is typically used for each node in the hidden and output
+    layers. This introduces non-linearity into the network, which is required to model anything
+    beyond simple linear relationships.
+  \item Some activation functions (e.g.\ sigmoid, tanh, and softmax) also keep the output within a
+    certain range, while others (e.g.\ ReLU) are unbounded above.
+\end{itemize}
+
+\begin{booktable}{@{}>{\raggedright\arraybackslash}p{5.6em}>{\raggedright\arraybackslash}p{6.6em}LL@{}}
+  \thead{Activation function} & \thead{Output range} & \thead{Typical use} &
+    \thead{Main drawback} \\
+  \midrule
+  ReLU & $[0, \infty)$ & Hidden layers (default choice) & Can ``die'' on negative inputs \\
+  Leaky ReLU & $(-\infty, \infty)$ & Hidden layers, alternative to ReLU & Extra hyperparameter
+    ($\alpha$) to choose \\
+  Sigmoid & $(0, 1)$ & Output layer for binary classification & Saturates at large $\lvert s
+    \rvert$, gives small gradients \\
+  Tanh & $(-1, 1)$ & Hidden layers, zero-centered output & Saturates at large $\lvert s \rvert$,
+    gives small gradients \\
+  Softmax & $(0, 1)$, sums to 1 & Output layer for multi-class classification & Requires one output
+    node per class \\
+\end{booktable}
+
+\noindent The node's output $y$ is obtained as:
+\[
+  y = \sigma(s) = \sigma\!\left(b + \sum_{i=0}^{n-1} w_i \cdot x_i\right)
+\]
+
+\subsubsection{1. ReLU}
+The most common activation function in deep learning is \textbf{ReLU} (\emph{Rectified Linear
+Unit}):
+\[
+  \begin{cases} s > 0 \Rightarrow y = s \\ s \leq 0 \Rightarrow y = 0 \end{cases}
+\]
+As a rule of thumb, ReLU tends to be the most suitable activation function to implement when
+there's no clear-cut answer.
+
+\textbf{Leaky ReLU} is an improved variant where signals below zero are retained as a weak signal:
+\[
+  \begin{cases} s > 0 \Rightarrow y = s \\ s \leq 0 \Rightarrow y = s \cdot \alpha \end{cases}
+\]
+\begin{itemize}
+  \item As a rule of thumb, $\alpha = 0.01$ can be used.
+  \item Leaky ReLU counteracts nodes ``dying'' (getting stuck at zero), which can otherwise cause
+    the model to train poorly.
+\end{itemize}
+The derivative of ReLU:
+\[
+  \begin{cases} s > 0 \Rightarrow dy = 1 \\ s \leq 0 \Rightarrow dy = 0 \end{cases}
+\]
+Every derivative below is a function of the weighted sum $s$, which is what the implementation
+passes in. Sigmoid and tanh simply happen to have compact forms that reuse the output $y$; that's
+the same number, not a different argument. See \secref{c5:sec:math} for why the layer keeps $s$
+around alongside $y$.
+
+\subsubsection{2. Sigmoid}
+Sigmoid is a common activation function when only two classes are used, where the output is set to
+a number between 0 and 1:
+\[
+  y = \frac{1}{1 + e^{-s}}
+\]
+The derivative:
+\[
+  \sigma'(s) = y \cdot (1 - y), \quad \text{where } y = \sigma(s)
+\]
+
+\subsubsection{3. Tanh}
+Tanh (\emph{hyperbolic tangent}) resembles sigmoid but produces an output between $-1$ and 1, which
+often leads to faster learning since the outputs become zero-centered:
+\[
+  y = \tanh(s) = \frac{e^s - e^{-s}}{e^s + e^{-s}}
+\]
+The derivative:
+\[
+  \sigma'(s) = 1 - \tanh^2(s) = 1 - y^2
+\]
+
+\subsubsection{4. Softmax}
+Softmax is a common activation function in the output layer, where the sum of all output
+probabilities equals one. The output $y$ for a node in a layer of $n$ nodes:
+\[
+  y = \frac{e^s}{\sum_{i=0}^{n-1} e^{s_i}}
+\]
+Softmax is particularly useful for multi-class classification, e.g.\ image recognition.
+
+% ------------------------------------------------------------------------------------------
+\section{Dense Layer Architecture}
+\label{c3:sec:dense}
+
+\subsection{Overview}
+Starting in this chapter, you'll build up a small neural network in C++ step by step, over this
+chapter and the next. The first piece is a \code{dense_layer::Interface} and a placeholder
+implementation of it, \code{dense_layer::Stub}:
+
+\begin{console}
+ml::dense_layer::Interface   (Interface for a dense layer)
+└── ml::dense_layer::Stub    (Dense layer stub)
+\end{console}
+
+\noindent In Chapter~\ref{c4:ch:network}, this interface will be used by a
+\code{neural_network::Shallow} class to build a small working (if not yet properly trained) network.
+Chapter~\ref{c5:ch:dense} then replaces \code{Stub} with a real, trainable implementation; the
+interface stays the same throughout, so nothing that depends on it needs to change when that
+happens.
+
+\subsection{The Dense Layer's Interface}
+\code{ml::dense_layer::Interface} defines the contract every dense layer must fulfill:
+
+\begin{booktable}{@{}>{\raggedright\arraybackslash}p{14em}L@{}}
+  \thead{Method} & \thead{Description} \\
+  \midrule
+  \code{nodeCount()} & Number of nodes in the layer \\
+  \code{weightCount()} & Number of weights per node \\
+  \code{output()} & The layer's outputs after feedforward \\
+  \code{error()} & The layer's computed error after backpropagation \\
+  \code{weights()} & The layer's weights (2D: node $\times$ weight) \\
+  \code{feedforward(input)} & Computes outputs from the input \\
+  \code{backpropagate(reference)} & Computes error from reference values (output layer) \\
+  \code{backpropagate(nextLayer)} & Computes error from the next layer (hidden layer) \\
+  \code{optimize(input, learningRate)} & Updates bias and weights \\
+  \code{initParams()} & Resets the layer's trainable parameters, i.e.\ bias and weights \\
+\end{booktable}
+
+Every method in the table is pure virtual: the interface states what a dense layer must be able to
+do and nothing about how. \code{initParams()} is what lets the network in
+Chapter~\ref{c4:ch:network} start each training run from freshly drawn parameters without knowing
+which kind of layer it holds; a layer with nothing to reset, like the stub, implements it as an
+empty method. See \secref{c3:sec:exercises}.
+
+\subsection{The Stub Class}
+\code{ml::dense_layer::Stub} implements the interface but doesn't do anything meaningful:
+\begin{itemize}
+  \item Feedforward always sets the output to a fixed value (e.g.\ \code{0.5}).
+  \item Backpropagation and optimization do nothing.
+  \item The parameter reset is implemented as an empty method: there's no bias, and the weights stay
+    at zero.
+\end{itemize}
+The stub exists so that other code, namely the \code{Shallow} network class you'll build in
+Chapter~\ref{c4:ch:network}, can be written, compiled, and test-run against a real
+\code{dense_layer::Interface} before a correct implementation exists. A correct implementation
+follows in Chapter~\ref{c5:ch:dense}.

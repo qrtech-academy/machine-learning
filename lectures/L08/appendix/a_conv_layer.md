@@ -134,7 +134,7 @@ in L09 and has neither a kernel nor a bias to report.
 ---
 
 ## Running the tests
-A test suite for `Conv` is available in [exercises/test](./exercises/test/). It's the first suite of
+A test suite for `Conv` is available in [exercises/test](../exercises/test/). It's the first suite of
 part II and covers this lecture's layer only; L09 and L10 add their own.
 
 Build and run it from this lecture's `appendix` directory:
@@ -151,7 +151,7 @@ type`; the suite is the specification, so it doesn't compile until the class doe
 the tests construct `Conv` directly, so they pass whether or not you've done the `factory.cpp`
 wiring step above; run `cnn_work` itself to check that.
 
-See the [test suite's README](./exercises/test/README.md) for more information, including why the
+See the [test suite's README](../exercises/test/README.md) for more information, including why the
 layer needs `kernel()` and `bias()` at all.
 
 ---

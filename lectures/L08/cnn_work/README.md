@@ -113,7 +113,7 @@ size 1, no mini-batching). The training order is reshuffled every epoch. If `fee
 | Function | `output(x)` | `delta(x)` |
 |---|---|---|
 | `Relu` | `x` if `x > 0`, otherwise `0` | `1` if `x > 0`, otherwise `0` |
-| `Tanh` | `tanh(x)`, range `[-1, 1]` | `1 - tanh(x)²` |
+| `Tanh` | `tanh(x)`, range `(-1, 1)` | `1 - tanh(x)²` |
 | `None` | `x` (identity) | `1` |
 
 `delta()` is always computed from the pre-activation sum (the value before the activation function

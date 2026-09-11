@@ -1,0 +1,51 @@
+% Section 10.3, from lectures/L10/README.md: the objectives, the evaluation questions, and what comes
+% after the last lecture.
+
+\needspace{10\baselineskip}
+\section{Review}
+\label{c10:sec:review}
+
+\subsection*{What you should be able to do now}
+After this chapter, you should:
+\begin{itemize}
+  \item Have created a concrete subclass \code{Flatten} that inherits
+    \code{ml::flatten_layer::Interface}.
+  \item Have implemented \code{feedforward()} and \code{backpropagate()} for \code{Flatten} (note:
+    no \code{optimize()}; the interface has none, since a flatten layer has no trainable
+    parameters).
+  \item Have a fully working, end-to-end CNN:
+    \code{input → Conv → MaxPool → Flatten → Dense → prediction}.
+  \item Recognize the shared feedforward, backpropagate and optimize pattern common to every layer
+    type built in this book.
+  \item Be able to compare the layer types built in this book (\code{Fixed}, \code{Dense},
+    \code{Conv}, \code{MaxPool}, \code{Flatten}) in terms of trainable parameters, computation, and
+    role in the network.
+  \item Be able to reason about memory footprint, numeric precision, and real-time constraints when
+    deploying a trained network outside of a general-purpose computer.
+\end{itemize}
+
+\needspace{6\baselineskip}
+\subsection*{Questions to test yourself}
+You should be able to explain:
+\begin{enumerate}
+  \item Can you trace a single training example through your finished \code{cnn_work} pipeline,
+    from feedforward through backpropagation to weight updates, describing what happens at each
+    layer?
+  \item What do all the layer types built in this book have in common in their interface
+    (feedforward, backpropagate, optimize), and where do they genuinely differ?
+  \item Which layer types have trainable parameters, and which don't? Why?
+  \item If you were designing a new CNN for a different image classification task, how would you
+    decide how many conv and pooling layers to use, and why?
+  \item Why might a network that runs comfortably on a laptop fail to fit, or fail to meet a
+    deadline, on a microcontroller?
+  \item What's the trade-off between fixed-point and floating-point arithmetic, and why does it
+    matter more on some targets than others?
+\end{enumerate}
+
+\needspace{6\baselineskip}
+\subsection*{Looking ahead}
+This is the last chapter, and with it the book's main text is complete. What remains is to work the
+exercises in \secref{c10:sec:exercises}, and to compare the Calculation and Reflection exercises
+with their worked solutions in Appendix~\ref{sol:ch:solutions}. After that, the two written papers
+in Appendices~\ref{exam:ch:about} to \ref{ansb:ch:answers} are there to test, on paper and without a
+compiler, how much of all ten chapters you can reconstruct on your own.

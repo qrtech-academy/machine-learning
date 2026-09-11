@@ -72,7 +72,8 @@ move assignment operator.
 ---
 
 ## Wiring It In
-1. Add `source/ml/flatten_layer/flatten.cpp` to `cnn_work`'s `Makefile` `SRC_FILES`.
+1. Make sure `source/ml/flatten_layer/flatten.cpp` is listed in `cnn_work`'s `Makefile` under
+   `SRC_FILES`. It already is, as it has been since L08: the placeholder compiles to nothing.
 2. In `source/ml/factory/factory.cpp`, find `Factory::flattenLayer()`: it currently returns a
    `flatten_layer::Stub` (marked with a `//! @todo` comment). Replace that with your new class:
    ```cpp
@@ -88,7 +89,7 @@ move assignment operator.
 ---
 
 ## Running the tests
-The final test suite is available in [exercises/test](./exercises/test/). It's cumulative: it
+The final test suite is available in [exercises/test](../exercises/test/). It's cumulative: it
 carries the conv and max pooling layer tests over unchanged and adds unit tests for `Flatten`,
 plus **component tests for the network as a whole**.
 
@@ -120,7 +121,7 @@ Two things worth knowing before you start:
   `BackpropagationReachesTheConvLayerThroughEveryLayer`, which chains the four layers by hand and
   checks the gradients survive the trip back.
 
-See the [test suite's README](./exercises/test/README.md) for more information, including how the
+See the [test suite's README](../exercises/test/README.md) for more information, including how the
 convergence thresholds were measured.
 
 ---

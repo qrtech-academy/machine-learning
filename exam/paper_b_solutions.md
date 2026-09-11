@@ -88,11 +88,11 @@ value. A learning rate of $1.0$ or more corrects by at least the full error on e
 makes training oscillate or diverge rather than converge.
 *(1 mark)*
 
-**Why passing the check guarantees nothing.** The $LR < 1.0$ bound is the right bound only for
-$x = 0$, where the weight does not move at all and (c) reduces to $LR < 2$. As soon as
-$\lvert x \rvert > 1$ the real bound $2/(1+x^2)$ is much tighter, and it tightens quadratically. At
-$x = 4$ it is $0.1176$; the $LR = 0.5$ used in (b) sails through `train()`'s check and diverges
-anyway, which is exactly what (b) shows happening.
+**Why passing the check guarantees nothing.** The $LR < 1.0$ bound coincides with the bound from
+(c) only at $\lvert x \rvert = 1$, where $2/(1+x^2) = 1$. At $x = 0$, where the weight does not move
+at all, the real bound is looser, $LR < 2$; as soon as $\lvert x \rvert > 1$ it is tighter, and it
+tightens quadratically. At $x = 4$ it is $0.1176$; the $LR = 0.5$ used in (b) sails through
+`train()`'s check and diverges anyway, which is exactly what (b) shows happening.
 
 The check is necessary, not sufficient. What actually bounds the safe learning rate is the scale of
 the input data, which `train()` never looks at.
@@ -106,8 +106,10 @@ the input data, which `train()` never looks at.
 
 Trained in a fixed order every epoch, the model risks fitting the **ordering** rather than the data:
 it sees the same sequence of corrections over and over and can settle into a pattern that reflects
-how the training sets happen to be stored, rather than the relationship between $x$ and $y$. The
-course also notes it raises the risk of getting stuck in a local minimum.
+how the training sets happen to be stored, rather than the relationship between $x$ and $y$. Local
+minima are not the issue here: the course notes that a linear model has none, since its
+squared-error surface has exactly one minimum. That benefit of shuffling arrives with the
+non-linear networks from L03 onward, where it helps the parameters escape poor regions.
 *(1 mark)*
 
 What the shuffle protects is the model's generalization: reshuffling every epoch exposes the model
@@ -126,8 +128,8 @@ several calls in the same second would reset the generator to the identical stat
 `std::rand()` would return the identical sequence each time; the shuffle would stop shuffling.
 *(1 mark)*
 
-**What breaks in the L02 arrangement.** An anonymous namespace gives every translation unit its own
-private copy of the function *and its own private `initialized` flag*. With two `.cpp` files that
+**What would have broken in the first arrangement.** An anonymous namespace gives every translation
+unit its own private copy of the function *and its own private `initialized` flag*. With two `.cpp` files that
 each need the generator, the seeding happens once per file rather than once per program: the second
 file's call re-seeds a generator the first file had already set up, and the "exactly once"
 guarantee is gone. Seeding has to happen once per **program**, which is what a single definition in
@@ -175,9 +177,9 @@ which can be a large fraction of the total work when the training loop itself is
 
 1. Up to nine epochs of unnecessary training after the threshold has actually been reached, since
    the check only fires on every tenth.
-2. The reported epoch count is quantized to multiples of ten and so is not the true one. This is
-   why L02's example prints "reached after 10 epochs" for data that in fact converged somewhere in
-   epochs 1 to 10.
+2. The reported epoch count is quantized to the epochs the check runs after, 1, 11, 21 and so on,
+   and so is not the true one. This is why L02's example prints "reached after 11 epochs" for data
+   that in fact reached the threshold somewhere in epochs 2 to 11.
 
 *(1 mark)*
 
@@ -350,8 +352,9 @@ through its return value.
 construction failed. A `Shallow` built with no training data, or with an output layer whose weight
 count does not match the hidden layer's node count, can never do anything useful, and letting it
 exist only defers the failure to somewhere less informative. `train()` does have a return value, so
-it can hand the decision back to the caller, who may reasonably want to retry with a different
-learning rate rather than have the program killed.
+it can hand the decision back to the caller, who may reasonably want to retry, with a different
+epoch count or threshold or simply again, rather than have the program killed; `train()` resets
+both layers first, so every retry starts from freshly drawn parameters.
 *(1 mark)*
 
 ---
@@ -413,10 +416,10 @@ and that this is a feature rather than a fault, has understood the question.
 
 Passing the **output** instead of the weighted sum:
 
-$$\sigma'(y) = 1 - \tanh^2(0.905148) = 1 - 0.718796^2 = 1 - 0.516668 = \mathbf{0.483332}$$
-$$\Delta e_{wrong} = -0.405148 \times 0.483332 = \mathbf{-0.195821}$$
+$$\sigma'(y) = 1 - \tanh^2(0.905148) = 1 - 0.718795^2 = 1 - 0.516666 = \mathbf{0.483334}$$
+$$\Delta e_{wrong} = -0.405148 \times 0.483334 = \mathbf{-0.195822}$$
 
-$$\text{ratio} = \frac{-0.195821}{-0.073213} = \mathbf{2.675}$$
+$$\text{ratio} = \frac{-0.195822}{-0.073213} = \mathbf{2.675}$$
 
 *(2 marks)*
 
@@ -430,7 +433,7 @@ return the same number for every $s$, not merely for the values that happen to b
 no input that distinguishes them.
 *(1 mark)*
 
-**The consequence for testing.** A suite that exercises only `Relu` cannot detect the bug at all -
+**The consequence for testing.** A suite that exercises only `Relu` cannot detect the bug at all;
 every assertion passes and the layer is wrong. The test has to be written against `Tanh`
 specifically, which is what `BackpropagateUsesPreActivationDerivative` in the L05 suite does. The
 general point: a test has to include a case that *distinguishes* the correct implementation from the
@@ -506,8 +509,8 @@ so the surplus lands at the bottom and the right and is dead storage.
 The alignment consequence is the real point. The padding is effectively one row and column *before*
 the image and none after, so output cell $(i,j)$ is computed from the window covering input cells
 $(i-1, j-1)$ to $(i, j)$. There is no centre cell for an even kernel to sit on, so the output is not
-centred on the input: a feature at input position $(r, c)$ appears in the output shifted down and
-right by half a kernel. An odd kernel has a true centre and does not suffer this.
+centred on the input: a feature at input position $(r, c)$ reaches outputs $(r, c)$ to
+$(r+1, c+1)$, so it appears in the output shifted down and right by half a pixel. An odd kernel has a true centre and does not suffer this.
 *(1 mark)*
 
 ### (c) 4 marks
@@ -570,10 +573,10 @@ gradient.
 
 Applying an update per position instead would be a different algorithm and a wrong one: each of the
 sixteen updates after the first would be computed against a kernel that the previous updates had
-already moved, so the sum would no longer be the gradient at the point where it was evaluated, and
-the effective step size would scale with the image size. This is the one place where a conv layer
-genuinely differs from a dense layer in its backward pass, and it is a direct consequence of weight
-sharing: a parameter used in many places accumulates blame from all of them.
+already moved, so the sum would no longer be the gradient at the point where it was evaluated. This
+is the one place where a conv layer genuinely differs from a dense layer in its backward pass, and it
+is a direct consequence of weight sharing: a parameter used in many places accumulates blame from
+all of them.
 *(1 mark)*
 
 ---
@@ -596,10 +599,10 @@ the conv layer updates its kernel from a neighbourhood the prediction never used
 and leaves every other cell untouched, so those cells retain whatever the *previous* call left in
 them.
 
-What the conv layer behind receives: this example's gradients mixed with stale gradients from
-earlier training examples, at up to $poolSize^2 - 1$ positions per block. Since the course trains
-with a batch size of 1, that is one earlier example's blame added to every example's. The layer
-never sees a clean gradient matrix after the first training set.
+What the conv layer behind receives: this example's gradients mixed with stale gradients at up to
+$poolSize^2 - 1$ positions per block, each left there by whichever earlier training example last
+wrote that cell, possibly many examples ago. The layer never sees a clean gradient matrix after the
+first training set.
 *(2 marks)*
 
 ### (b) 3 marks
@@ -673,20 +676,33 @@ price of the shared interface, not a preference.
 
 ### (d) 2 marks
 
-**The symptom.** Nothing at all, on the surface. The network compiles, runs, predicts, and every
-call returns `true`. What the user sees is a network that simply does not learn well: predictions
-that never converge on the training targets, precision that plateaus at roughly whatever the random
-initialization gave, and no error message anywhere. Training more epochs does not help, which is the
-tell.
+**The symptom.** Almost nothing, on the surface. The network compiles, runs, predicts, and every
+call returns `true`; there is no error message anywhere. Most training runs still end up
+classifying all four digits, because the dense layer does most of the classifying and the conv layer
+behind the pooling layer is only partly misled. What the user sees is a network that now and then
+fails to learn: measured on the digits 0 to 3, a `MaxPool` with all three faults leaves roughly one
+training run in seven unable to tell all four digits apart, where the correct layer never fails.
+Retraining usually fixes it, which is exactly what makes the fault easy to ship.
 *(1 mark)*
 
-**The test.** `LearnsToRecognizeAllFourDigits` in the L10 suite, the component test that trains on
-the digits 0 to 3 and checks the right output node wins for each. Every *unit* test can pass while
-this one fails, which is the L10 appendix's stated signal that the layers are individually right and
-the wiring or the gradient flow is not. The next place to look is
-`BackpropagationReachesTheConvLayerThroughEveryLayer`, which chains the four layers by hand and
-checks the gradients survive the trip back; it would catch fault (a) directly.
-*(1 mark)*
+**The tests.** The L10 suite carries L09's `MaxPool` unit tests over unchanged, and they are what
+catches all three:
+
+* **Fault (a) 1, `>=`:** `BackpropagateRoutesToFirstMaxOnTies` fails, and so does
+  `BackpropagateMatchesHandTrainedExample`, since the conv output from L06's hand-training example
+  holds 1.9 three times in its top-right block.
+* **Fault (c), the invented `optimize()`:** `OptimizeAcceptsAnyLearningRate` fails, because this
+  `optimize()` validates a learning rate it has no use for and returns `false` for the zero, negative
+  and out-of-range rates the test passes.
+* **Fault (a) 2, the missing reset:** `BackpropagateResetsGradientsBetweenCalls` fails. It feeds
+  two inputs whose maxima sit in different positions and backpropagates after each, so the gradients
+  the first call wrote are still there after the second, where the correct layer has zeros. It is
+  the only test that fails every time: `LearnsToRecognizeAllFourDigits`, the component test that
+  trains on the digits 0 to 3 and checks the right output node wins for each, catches this fault
+  only on some runs, roughly one in five. A test that backpropagated the same input twice would miss
+  it entirely, since an assignment that writes the same cells twice looks clean.
+
+*(1 mark for a unit test that fails for each of the three faults)*
 
 ---
 

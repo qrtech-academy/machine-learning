@@ -57,9 +57,9 @@ solution_dir_for_lecture() {
 
 ################################################################################
 # Print the lecture number the given test directory belongs to, without leading
-# zeros, e.g. 2 for lectures/L02/appendix/exercises/test. The path is walked
-# upwards until the lecture directory is found, so suites are located whether
-# they sit in <lecture>/exercises/test or <lecture>/appendix/exercises/test.
+# zeros, e.g. 2 for lectures/L02/exercises/test. The path is walked upwards
+# until the lecture directory is found, so the suite is located regardless of
+# how deeply it sits below it.
 # Globals:
 #   None
 # Arguments:

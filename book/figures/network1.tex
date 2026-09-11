@@ -1,0 +1,50 @@
+% A network with two inputs, two hidden nodes and one output node: the network trained by hand in
+% the first and third examples of L03's appendix B.
+%
+% Redrawn from lectures/L03/appendix/images/network1.png and network3.png, the same drawing, which
+% are both rendered from this file (see the comment at the end). Each weight is labelled on its
+% connection near the node it belongs to, which is the node whose weighted sum it is part of.
+\begin{tikzpicture}[
+    x=1cm, y=1cm, font=\small,
+    unit/.style={circle, draw=ink, line width=0.6pt, minimum size=1.05cm, inner sep=0pt},
+    input/.style={unit, fill=fillmuted},
+    hidden/.style={unit, fill=fillaccent2},
+    output/.style={unit, fill=fillaccent},
+    link/.style={draw=ink, line width=0.5pt},
+    weight/.style={pos=0.74, fill=white, inner sep=1pt, font=\footnotesize, text=ink},
+    bias/.style={font=\footnotesize, text=ink, above, inner sep=1.5pt},
+  ]
+  \node[input]  (x1) at (0, 1.1)   {$x_1$};
+  \node[input]  (x2) at (0, -1.1)  {$x_2$};
+  \node[hidden] (y1) at (3.2, 1.1)  {$y_1$};
+  \node[hidden] (y2) at (3.2, -1.1) {$y_2$};
+  \node[output] (y3) at (6.0, 0)    {$y_3$};
+
+  % The network's inputs and output.
+  \draw[link] (-1.2, 1.1) node[left] {$X_1$} -- (x1);
+  \draw[link] (-1.2, -1.1) node[left] {$X_2$} -- (x2);
+  \draw[link] (y3) -- (7.2, 0) node[right] {$Y$};
+
+  % Every node after the input layer has a bias.
+  \foreach \n/\b in {y1/1, y2/2, y3/3} {
+    \draw[link] (\n.north) -- ++(0, 0.3) node[bias] {$b_{\b}$};
+  }
+
+  % Input layer to hidden layer.
+  \draw[link] (x1) -- (y1) node[weight] {$w_1$};
+  \draw[link] (x2) -- (y1) node[weight] {$w_2$};
+  \draw[link] (x1) -- (y2) node[weight] {$w_3$};
+  \draw[link] (x2) -- (y2) node[weight] {$w_4$};
+
+  % Hidden layer to output layer.
+  \draw[link] (y1) -- (y3) node[weight] {$w_5$};
+  \draw[link] (y2) -- (y3) node[weight] {$w_6$};
+
+  % Layer names.
+  \foreach \x/\name in {0/input layer, 3.2/hidden layer, 6.0/output layer} {
+    \node[font=\scriptsize\scshape, text=muted] at (\x, -2.15) {\name};
+  }
+\end{tikzpicture}
+
+% The lecture's PNGs are this drawing: `make -C book png` redraws
+% lectures/L03/appendix/images/network1.png and network3.png from it, through figures/png.tex.

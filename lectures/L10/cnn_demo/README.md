@@ -123,7 +123,7 @@ size 1, no mini-batching). The training order is reshuffled every epoch. If `fee
 | Function | `output(x)` | `delta(x)` |
 |---|---|---|
 | `Relu` | `x` if `x > 0`, otherwise `0` | `1` if `x > 0`, otherwise `0` |
-| `Tanh` | `tanh(x)`, range `[-1, 1]` | `1 - tanh(x)²` |
+| `Tanh` | `tanh(x)`, range `(-1, 1)` | `1 - tanh(x)²` |
 | `None` | `x` (identity) | `1` |
 
 `delta()` is always computed from the pre-activation sum (the value before the activation function
@@ -150,11 +150,6 @@ This builds and runs the program directly (the `build` target followed by the `r
 ---
 
 ## Implementation Details Worth Knowing
-* **The `-DSTUB` flag in the Makefile currently has no effect.** The comment in the Makefile
-  suggests it switches to the stub implementations, but there's no `#ifdef STUB` anywhere in the
-  code that reacts to the flag. The stub classes exist and can be used (via
-  `ml::factory::create(true)`), but `main.cpp` always calls `ml::factory::create()` with no
-  arguments, which gives the real implementation. So the stub layers are never used in this demo.
 * **`Dense::backpropagate()` reuses the same formula for the output layer and hidden layers.** For
   the last dense layer, `outputGradients` is literally the target vector, so
   `outputGradients[i] - myOutput[i]` becomes `target - prediction`, which is the deviation the

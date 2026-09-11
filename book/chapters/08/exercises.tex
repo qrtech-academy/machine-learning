@@ -1,0 +1,233 @@
+% Section 8.3, from lectures/L08/appendix/a_conv_layer.md, with the setup and the numbers from the
+% suite's README, lectures/L08/appendix/exercises/test/README.md. The solution to the code is in
+% the repository.
+
+\section{Exercises}
+\label{c8:sec:exercises}\label{c8:app:a}
+
+\begin{aside}
+\textbf{How to work these.} The three sets are one class, written in \code{cnn_work}
+(\file{lectures/L08/cnn_work}, see \secref{c8:sec:pipeline}), which is where you write your code
+from here on. There's nothing to copy: \file{conv.hpp} and \file{conv.cpp} are already in the
+project as placeholders, and already built by its Makefile.
+
+\textbf{How to check your work.} The test suite in \file{lectures/L08/appendix/exercises/test}
+already points at \code{cnn_work}; Exercise~\ref{c8:ex:10} runs it, and \code{make ML_DIR=<path>}
+points it at a tree of your own elsewhere. Run \code{cnn_work} itself as well, once
+Exercise~\ref{c8:ex:9} has wired the class in.
+
+The finished reference implementation of this chapter's class, and of the next two chapters' too,
+is published in the companion repository as \file{lectures/L10/cnn_demo}; see the warning below.
+\end{aside}
+
+\begin{warning}
+\textbf{Spoiler warning.} \file{lectures/L10/cnn_demo} is the finished reference copy of this
+project, and it contains working \code{Conv}, \code{MaxPool} and \code{Flatten} classes; i.e.\ the
+answers to this chapter's exercises and the next two chapters'. It's there for
+Chapter~\ref{c10:ch:flatten}, where you compare your own pipeline against it. Write your own
+version first; reading it now costs you the exercise.
+\end{warning}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Declaring the Conv Layer}
+\label{c8:set:1}
+You'll extend the \code{cnn_work} codebase, implementing a concrete class \code{Conv}, replacing the
+temporary stub class \code{ml::conv_layer::ConvStub} currently used for the conv layer in
+\file{factory.cpp}. This is the same math you already worked through by hand in
+\secref{c6:sec:exercises} and implemented as the standalone struct \code{ml::ConvLayer} in
+Chapters~\ref{c6:ch:cnn} and~\ref{c7:ch:layers}: here you're adapting that same logic to satisfy
+\code{cnn_work}'s polymorphic \code{conv_layer::Interface} instead.
+
+\codeexercise{The \code{Conv} class, declaration}
+\label{c8:ex:1}
+In the header file \file{include/ml/conv_layer/conv.hpp} (currently a placeholder), add a class
+named \code{Conv} that inherits \code{ml::conv_layer::Interface}, from
+\file{include/ml/conv_layer/interface.hpp}:
+\begin{itemize}
+  \item Use public inheritance and mark the class \code{final} so it can't be inherited further.
+  \item Override every method from the interface, including the destructor.
+\end{itemize}
+The interface is typeset below, straight from the repository:
+
+\cppfile{lectures/L08/cnn_work/include/ml/conv_layer/interface.hpp}
+
+\note[Tip] Copy the entire contents of the interface and paste it into the new file, then adapt it
+(no \code{virtual} or \code{= 0}, add \code{override} everywhere; including on
+\code{inputGradients()}, which is easy to miss).
+
+\codeexercise{Removed constructors and operators}
+\label{c8:ex:2}
+Delete the default constructor, copy constructor, move constructor, copy assignment operator, and
+move assignment operator.
+
+\codeexercise{Private member variables}
+\label{c8:ex:3}
+Add the following private member variables to \code{Conv}:
+\begin{itemize}
+  \item \textbf{\code{myInputPadded}}: the zero-padded input (\code{Matrix2d}).
+  \item \textbf{\code{myInputGradientsPadded}}: input gradients, padded (\code{Matrix2d}).
+  \item \textbf{\code{myInputGradients}}: input gradients, unpadded; what \code{inputGradients()}
+    returns (\code{Matrix2d}).
+  \item \textbf{\code{myKernel}}: the kernel weights (\code{Matrix2d}).
+  \item \textbf{\code{myKernelGradients}}: kernel gradients (\code{Matrix2d}).
+  \item \textbf{\code{myOutput}}: the layer's output (feature map); what \code{output()} returns
+    (\code{Matrix2d}).
+  \item \textbf{\code{myPreActivationOutput}}: the sum before the activation function is applied,
+    needed later by \code{backpropagate()} to compute the activation's derivative
+    (\code{Matrix2d}).
+  \item \textbf{\code{myBias}}: the bias value (\code{double}).
+  \item \textbf{\code{myBiasGradient}}: the bias gradient (\code{double}).
+  \item \textbf{\code{myActFunc}}: pointer to the activation function (\code{ActFuncPtr}, see
+    \file{ml/act_func/interface.hpp}).
+\end{itemize}
+Feel free to add private helper methods as needed: the reference implementation uses one to
+validate the constructor's parameters, one to (re-)build the zero-padded input, and one to strip
+the padding back off the input gradients, but you're free to structure this however you like.
+
+\codeexercise{Constructor}
+\label{c8:ex:4}
+Implement the constructor:
+
+\begin{cppcode}
+explicit Conv(std::size_t inputSize, std::size_t kernelSize,
+              act_func::Type actFunc = act_func::Type::None) noexcept;
+\end{cppcode}
+
+\begin{itemize}
+  \item Print an error message and call \code{std::terminate()} if \code{kernelSize} is outside
+    \code{[1, 11]}, or if \code{inputSize < kernelSize}.
+  \item Compute the padding offset (\code{kernelSize / 2}) and the padded size
+    (\code{inputSize + 2 * offset}).
+  \item Size \code{myInputPadded} and \code{myInputGradientsPadded} to the padded size,
+    \code{myInputGradients}, \code{myOutput} and \code{myPreActivationOutput} to
+    \code{inputSize}, and \code{myKernel} and \code{myKernelGradients} to \code{kernelSize} (see
+    \code{ml::initMatrix()} in \file{ml/utils.hpp}).
+  \item Randomize the bias and every kernel weight using \code{ml::randomStartVal()}.
+  \item Get the activation function:
+    \code{factory::Factory factory\{\}; myActFunc = factory.actFunc(actFunc);} (see
+    \file{ml/factory/factory.hpp}; this is the same pattern the already finished \code{Dense} layer
+    uses in \file{dense.cpp}, if you want a working example to compare against).
+\end{itemize}
+
+\codeexercise{\code{feedforward()}}
+\label{c8:ex:5}
+Implement \code{bool feedforward(const Matrix2d& input) noexcept}:
+\begin{itemize}
+  \item Return \code{false} if the size of \code{input} doesn't match the size of \code{myOutput}
+    (\code{ml::matchDimensions()}), or if padding the input fails (see below).
+  \item Zero-pad \code{input} into \code{myInputPadded}: for every position \code{(i, j)} in
+    \code{input}, write it to \code{myInputPadded[i + offset][j + offset]}, where
+    \code{offset = myKernel.size() / 2}. Return \code{false} if \code{input} isn't square
+    (\code{ml::isMatrixSquare()}).
+  \item For each output position \code{(i, j)}: sum \code{myBias} plus the element-wise product of
+    \code{myKernel} and the corresponding \code{kernelSize × kernelSize} window of
+    \code{myInputPadded} starting at \code{(i, j)}. Store the sum in
+    \code{myPreActivationOutput[i][j]}, then store \code{myActFunc->output(sum)} in
+    \code{myOutput[i][j]}.
+  \item Return \code{true}.
+\end{itemize}
+
+\codeexercise{\code{backpropagate()}}
+\label{c8:ex:6}
+Implement \code{bool backpropagate(const Matrix2d& outputGradients) noexcept}:
+\begin{itemize}
+  \item Return \code{false} if the size of \code{outputGradients} doesn't match the size of
+    \code{myOutput}, or if it isn't square.
+  \item Reset \code{myInputGradientsPadded}, \code{myInputGradients} and \code{myKernelGradients}
+    to zero, and \code{myBiasGradient} to \code{0.0}.
+  \item For each output position \code{(i, j)}, compute
+\begin{cppcode}
+delta   = myActFunc->delta(myPreActivationOutput[i][j])
+outGrad = outputGradients[i][j] * delta
+\end{cppcode}
+    and add \code{outGrad} to \code{myBiasGradient}. Then, for each kernel position
+    \code{(ki, kj)}: add \code{myInputPadded[i+ki][j+kj] * outGrad} to
+    \code{myKernelGradients[ki][kj]}, and add \code{myKernel[ki][kj] * outGrad} to
+    \code{myInputGradientsPadded[i+ki][j+kj]}.
+  \item Strip the padding border back off \code{myInputGradientsPadded} into
+    \code{myInputGradients} (the exact inverse of the padding step in \code{feedforward()}).
+  \item Return \code{true}.
+\end{itemize}
+
+\codeexercise{\code{optimize()}}
+\label{c8:ex:7}
+Implement \code{bool optimize(double learningRate) noexcept}:
+\begin{itemize}
+  \item Return \code{false} if the learning rate is invalid (\code{ml::checkLearningRate()}).
+  \item \code{myBias += myBiasGradient * learningRate}.
+  \item For every kernel position: \code{myKernel[i][j] += myKernelGradients[i][j] * learningRate}.
+  \item Return \code{true}.
+\end{itemize}
+
+\codeexercise{Trivial accessors}
+\label{c8:ex:8}
+Implement the four accessors from the interface:
+\begin{itemize}
+  \item \textbf{\code{inputSize()}}: returns \code{myInputGradients.size()}.
+  \item \textbf{\code{outputSize()}}: returns \code{myOutput.size()}.
+  \item \textbf{\code{output()}}: returns \code{myOutput}.
+  \item \textbf{\code{inputGradients()}}: returns \code{myInputGradients}.
+\end{itemize}
+Add two more accessors, which are \textbf{not} part of \code{conv_layer::Interface}. The tests call
+them on a \code{const Conv}, so both must be \code{const}:
+\begin{itemize}
+  \item \textbf{\code{kernel()}}: \code{[[nodiscard]] const Matrix2d& kernel() const noexcept;},
+    returns \code{myKernel}.
+  \item \textbf{\code{bias()}}: \code{[[nodiscard]] double bias() const noexcept;}, returns
+    \code{myBias}.
+\end{itemize}
+These two exist for the test suite. Because the constructor randomizes the bias and the kernel,
+nothing the layer computes can be predicted from the constructor arguments alone; the tests read
+these back and redo the arithmetic by hand to check the layer got the same answer. They're declared
+on \code{Conv} rather than on the interface because the max pooling layer implements that same
+interface in Chapter~\ref{c9:ch:maxpool} and has neither a kernel nor a bias to report.
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Wiring It In}
+\label{c8:set:2}
+
+\codeexercise{Wiring it in}
+\label{c8:ex:9}
+\begin{enumerate}
+  \item Make sure \file{source/ml/conv_layer/conv.cpp} is listed in \code{cnn_work}'s
+    \file{Makefile} under \code{SRC_FILES}.
+  \item In \file{source/ml/factory/factory.cpp}, find \code{Factory::convLayer()}: it currently
+    returns a \code{conv_layer::ConvStub} (marked with a \code{//! @todo} comment). Replace that
+    with your new class:
+\begin{cppcode}
+return std::make_unique<conv_layer::Conv>(inputSize, kernelSize, actFunc);
+\end{cppcode}
+  \item Run \code{make}. The conv layer in \code{cnn_work} is now real; though the rest of the
+    pipeline (max pooling, flatten) is still stubbed, so the output of \code{predict()} won't be
+    meaningful yet. That happens once every layer is real, at the end of
+    Chapter~\ref{c10:ch:flatten}.
+\end{enumerate}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Running the Tests}
+\label{c8:set:3}
+
+\codeexercise{Running the tests}
+\label{c8:ex:10}
+A test suite for \code{Conv} is available in \file{lectures/L08/appendix/exercises/test}. It's the
+first suite of Part~II and covers this chapter's layer only; Chapters~\ref{c9:ch:maxpool}
+and~\ref{c10:ch:flatten} add their own.
+
+Build and run it from this lecture's \file{appendix} directory:
+
+\begin{shell}
+make -C exercises/test
+\end{shell}
+
+\noindent You don't need to copy anything: unlike the suites of Chapters~\ref{c1:ch:linreg}
+to~\ref{c5:ch:dense}, the suite's \code{ML_DIR} already points at \code{cnn_work}, where you're
+writing the code. All 22 test cases should pass.
+
+Until \code{Conv} exists the build fails with
+\code{'Conv' in namespace 'ml::conv_layer' does not name a type}; the suite is the specification, so
+it doesn't compile until the class does. Note also that the tests construct \code{Conv} directly,
+so they pass whether or not you've done the \file{factory.cpp} wiring step in
+Exercise~\ref{c8:ex:9}; run \code{cnn_work} itself to check that.
+
+The test suite's README, \file{lectures/L08/appendix/exercises/test/README.md}, has more
+information, including why the layer needs \code{kernel()} and \code{bias()} at all.

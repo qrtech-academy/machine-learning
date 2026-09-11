@@ -90,9 +90,11 @@ $k = 0.4$.
 $m = \mathbf{0.08}$ and $k = \mathbf{1.76}$.
 *(1 mark)*
 
-Against (b)'s $k = 1.544$, $m = 0.827$: the special case ends with a larger weight and a bias still
-near zero rather than well above it, because it never let the first set push the bias the short way
-and then spent the rest of the epoch undoing it. Both models are still far from $(4, -1)$.
+Against (b)'s $k = 1.544$, $m = 0.827$: the special case puts the bias at its target, $-1$, at
+once, so sets 2 and 3 start from a bias 0.9 lower than in (b). The lower bias makes both predictions
+lower and both deviations larger, $4$ and $6.8$ against $3.1$ and $6.17$, so the weight is pushed
+further, to $1.76$ against $1.544$, and the bias is pulled back up by $1.08$ rather than $0.927$,
+ending at $0.08$ instead of $0.827$. Both models are still far from $(4, -1)$.
 
 **When it is a bad idea.** When the training data is noisy, or contains more than one set at
 $x = 0$. The bias is a property of the whole data set; the special case snaps it onto a single
@@ -288,7 +290,8 @@ derivative is exactly zero, its error is zero, its parameters stop updating, and
 the sum back up. The node is dead for the rest of training.
 
 **The countermeasure** the course names is **Leaky ReLU**, which passes a weak signal below zero
-($y = ks$ with $k \approx 0.01$) and so keeps the derivative non-zero everywhere.
+($y = s \cdot \alpha$ for $s \leq 0$, with $\alpha \approx 0.01$) and so keeps the derivative non-zero
+everywhere.
 *(1 mark)*
 
 ---
@@ -322,9 +325,9 @@ $$\sigma'(s) = 1 - \tanh^2(1.5) = 1 - 0.905148^2 = 1 - 0.819293 = \mathbf{0.1807
 
 Wrong, the derivative evaluated at the activation's *output*, $y = \tanh(1.5) = 0.905148$:
 
-$$1 - \tanh^2(0.905148) = 1 - 0.718796^2 = 1 - 0.516668 = \mathbf{0.483332}$$
+$$1 - \tanh^2(0.905148) = 1 - 0.718795^2 = 1 - 0.516666 = \mathbf{0.483334}$$
 
-$$\text{ratio} = \frac{0.483332}{0.180707} = \mathbf{2.675}$$
+$$\text{ratio} = \frac{0.483334}{0.180707} = \mathbf{2.675}$$
 
 The wrong value is 2.7x too large, so every parameter this node feeds moves 2.7x too far on every
 step. The error grows with $\lvert s \rvert$: the true derivative collapses towards zero as the node
@@ -349,7 +352,7 @@ case each of them handles.
 
 ### (c) 3 marks
 
-`randomStartVal()` divides `std::rand()` by `RAND_MAX`, so it returns a value in $(0, 1)$ and never
+`randomStartVal()` divides `std::rand()` by `RAND_MAX`, so it returns a value in $[0, 1]$ and never
 a negative one. Every bias and every weight therefore starts positive, and every node starts on
 ReLU's positive side.
 *(1 mark)*
@@ -777,7 +780,7 @@ With `maxValue` starting at 0.0 and `maxRow`/`maxCol` starting at 0:
 * top right: 0.3 beats 0.0; $(0,2)$ receives -3.
 * bottom left: 0.9 beats 0.0; $(3,1)$ receives 2.
 * bottom right: every value is negative, so **nothing ever beats 0.0**. `maxRow` and `maxCol` keep
-  their default value of 0, and 7 is written to $(0,0)$.
+  their initial value of 0, and 7 is written to $(0,0)$.
 
 ```text
  7    0   -3    0

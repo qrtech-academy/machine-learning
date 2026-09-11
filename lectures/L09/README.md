@@ -20,7 +20,7 @@ implement the class `ml::conv_layer::MaxPool`, satisfying the same
 [`conv_layer::Interface`](../L08/cnn_work/include/ml/conv_layer/interface.hpp) as `Conv`. See
 [appendix A](./appendix/a_max_pool_layer.md) for the full spec, including how to wire it into
 `factory.cpp` in place of `MaxPoolStub`.
-* Verify your implementation with the [test suite](./appendix/exercises/test/README.md).
+* Verify your implementation with the [test suite](./exercises/test/README.md).
 * **Spoiler warning.** [L10's `cnn_demo`](../L10/cnn_demo) is the finished reference copy of
 this project, and it contains working `Conv`, `MaxPool` and `Flatten` classes; i.e. the answers
 to this lecture's exercise and the next two. It's there for L10, where you compare your own

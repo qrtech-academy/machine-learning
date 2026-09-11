@@ -27,7 +27,7 @@ A dense layer with `nodeCount` nodes and `weightCount` weights per node consists
 ---
 
 ### Activation Function
-Each layer is assigned an activation function of type `ActFunc` (`Relu` or `Tanh`) at construction. The activation function is applied to every node in the layer during feedforward (implemented later this lecture).
+Each layer is assigned an activation function of type `ActFunc` (`Relu`, `Tanh`, or `None`) at construction. The activation function is applied to every node in the layer during feedforward (implemented later this lecture).
 
 ---
 

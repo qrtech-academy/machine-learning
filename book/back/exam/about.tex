@@ -1,0 +1,156 @@
+% Appendix, from exam/README.md: what the two written papers are for, what they cover, why they ask
+% for code, the conventions they assume, and how they are marked.
+
+\chapter{The Self-Assessment Papers}
+\label{exam:ch:about}
+
+This appendix and the four after it hold two complete four-hour papers for \emph{Machine Learning},
+with worked solutions. Appendices~\ref{exa:ch:paper} and \ref{exb:ch:paper} are the papers,
+questions only; Appendices~\ref{ansa:ch:answers} and \ref{ansb:ch:answers} are their model answers,
+with marks.
+
+\section*{What these are for}
+The book has \textbf{no exam and nothing is marked}. What you get instead is a test suite for the
+code exercises of Chapters~1 to~5 and~8 to~10, the conv demo of Chapter~\ref{c6:ch:cnn} printing its
+results next to the numbers you worked out by hand in that chapter's hand-training exercise, the
+worked solutions in Appendix~\ref{sol:ch:solutions}, and the self-assessment exercises in
+\secref{c10:sec:exercises}. Every one of those checks a component you built or a number you computed
+beside it.
+
+These papers do not replace that. \textbf{They are here to test your own skills and knowledge,
+nothing more.} They gate nothing, they are not a qualification, and no part of the book requires
+them. Nothing in the companion repository depends on them and \code{make test} does not know they
+exist. They are useful where a written result is wanted anyway, for a certifying employer or a
+formal course credit, and useful on their own for finding out what you can reconstruct with nothing
+in front of you.
+
+\textbf{Take one after the last chapter.} Every paper draws on all ten chapters, so sitting one
+partway through examines material you have not read yet, and the result says more about how far you
+have read than about what you have understood. The intended point is after
+Chapter~\ref{c10:ch:flatten}, once your \code{cnn_work} trains end to end.
+
+\section*{The two papers}
+Both cover the whole book, Chapters~1 to~10, and share no question. Either can be used alone; use
+both as a main sitting and a resit, or in alternate years.
+
+They do \textbf{not} weight the book identically, and that is deliberate rather than accidental.
+Paper~A spends more on the convolutional layer itself (Chapter~6 is worth roughly three times as
+much there), Paper~B spends more on the finished network and its constraints (Chapter~10 is worth
+twice as much). Two topics appear on one paper only: the precision and early stopping of
+Chapter~\ref{c2:ch:training} are examined on \textbf{B alone} (Q2c, Q2d), and the fixed-point and
+real-time material from \secref{c10:sec:embedded} is likewise \textbf{B alone} (Q9b, Q9c). Paper~A
+is also the only one that asks a candidate to write a method from scratch. If you are using the
+papers as a sitting and a resit, that asymmetry is worth knowing; if you need the two to examine
+exactly the same ground, sit both.
+
+\subsection*{Paper A}
+
+\begin{booktable}{@{}p{4.6em}Lp{5.4em}r@{}}
+  \thead{Question} & \thead{Topic} & \thead{Chapters} & \thead{Marks} \\
+  \midrule
+  1 & Learning the rules instead of writing them & 1, 2 & 12 \\
+  2 & The training loop that trains nothing & 2, 4 & 12 \\
+  3 & A network trained by hand & 3 & 14 \\
+  4 & The activation function, and the argument it is given & 3, 5 & 10 \\
+  5 & The dense layer, written out & 5 & 12 \\
+  6 & Why an image is not just a long vector & 6 & 10 \\
+  7 & A convolutional layer, traced by hand & 6, 7, 8 & 14 \\
+  8 & Max pooling, and the value it forgets & 7, 9 & 8 \\
+  9 & The finished network, and the target it has to run on & 10 & 8 \\
+  \midrule
+    & & & \textbf{100} \\
+\end{booktable}
+
+\subsection*{Paper B}
+
+\begin{booktable}{@{}p{4.6em}Lp{5.4em}r@{}}
+  \thead{Question} & \thead{Topic} & \thead{Chapters} & \thead{Marks} \\
+  \midrule
+  1 & The model, and the rate that destroys it & 1 & 10 \\
+  2 & Order, precision, and knowing when to stop & 2, 4 & 10 \\
+  3 & Two output nodes & 3 & 14 \\
+  4 & The network class, and what a stub can prove & 3, 4 & 12 \\
+  5 & The dense layer, and the mistake only Tanh can catch & 5 & 12 \\
+  6 & Padding, sharing, and the kernel's gradient & 6, 7, 8 & 14 \\
+  7 & A pooling layer that runs and returns true & 7, 9 & 12 \\
+  8 & Every layer, side by side & 10 & 8 \\
+  9 & Off the laptop & 10 & 8 \\
+  \midrule
+    & & & \textbf{100} \\
+\end{booktable}
+
+Paper~A leans towards \textbf{tracing an algorithm forwards}: one epoch of linear regression by hand,
+a full \code{feedforward()}/\code{backpropagate()}/\code{optimize()} step through a small network, a
+$4 \times 4$ image pushed through conv, pooling and flatten, and the gradients routed back.
+Paper~B leans towards \textbf{the conditions under which the algorithm stops working}: the learning
+rate that diverges inside the range \code{train()} permits, the derivative that is right for ReLU and
+wrong for Tanh, the even kernel whose padding does not line up, and a pooling layer whose faults never
+produce an error message.
+
+\section*{Code on a written paper}
+Unlike the papers for some other QAcademy courses, these two \textbf{do ask a candidate to write
+C++}. That is deliberate. This book teaches machine learning by building it: the specification of
+every layer is prose in a chapter and a test suite that tells you whether what you wrote satisfies
+it, and a paper that avoided code entirely would be examining a different book.
+
+The code questions come in two shapes, and neither of them is a typing exercise:
+\begin{itemize}
+  \item \textbf{Write one method.} \code{Dense::feedforward()}, \code{backpropagate()} and
+    \code{optimize()} are asked for in Paper~A; the answers are ten to twenty lines each. What
+    carries the marks is the algorithm, namely the validation, the weighted sum starting at the
+    bias, the derivative taken at the right argument; not the syntax.
+  \item \textbf{Find what is wrong with the algorithm.} Both papers hand over a listing that
+    compiles, runs, and returns \code{true}, and ask what it does instead of what it should. The
+    faults are the ones the course's own test-suite READMEs single out: a shuffle nobody reads,
+    backpropagation in the wrong order, a max search that starts at \code{0.0}, a gradient matrix
+    that is never cleared.
+\end{itemize}
+Both papers state in their rubric that answers may be written in C++17 \textbf{or in unambiguous
+pseudocode}, and that nothing is marked on syntax. A missing semicolon costs nothing. A missing
+bounds check costs everything.
+
+\section*{Conventions the papers assume}
+Both papers state these in their own rubric, so a candidate never has to have read this appendix.
+\begin{itemize}
+  \item \textbf{The book's sign convention.} The deviation is $\delta = \yref - \yp$ and every
+    parameter is \emph{increased} by its adjustment, so every update reads
+    \code{parameter += gradient * learningRate} with no minus sign. A candidate who flips the sign
+    consistently and says so is not penalized twice.
+  \item \textbf{The activation derivative is evaluated at the weighted sum $s$}, never at the output
+    $y$. Both papers have a question about what happens when it is not.
+  \item \textbf{Conv layers zero-pad} with \code{pad = kernelSize / 2}, so the output is the same
+    size as the input.
+  \item \textbf{Max pooling breaks ties toward the first occurrence} in row-major order, and
+    \textbf{flatten is row-major}, matching the hand-training exercise of
+    Chapter~\ref{c6:ch:cnn} and the shipped implementations.
+  \item \textbf{Only the values nobody could be expected to carry are supplied}: a handful of
+    \code{tanh()} values, $2^{16}$ on Paper~B, and that a KB is 1024 bytes. Parameter counts, output
+    shapes and padding sizes are derived, because deriving them is the examinable skill.
+  \item \textbf{Code questions refer to the \code{Dense}/\code{Shallow} API specified in
+    Chapters~3 to~5}, the one the candidate builds, not to the refactored API in \code{cnn_demo}.
+    The two differ: \code{cnn_demo}'s \code{Dense} reverses the constructor arguments, renames the
+    accessors, collapses the two \code{backpropagate()} overloads into one, and carries a seventh
+    member variable. Answers written against either are accepted, but the model answers follow
+    Chapters~3 to~5.
+\end{itemize}
+
+\section*{Marking}
+Every solution is written to be marked by somebody who has read the chapters and does not otherwise
+write machine learning code, so each carries the reasoning rather than the answer alone. Marks are
+shown per part in the solutions.
+
+Three conventions worth agreeing before a paper is marked:
+\begin{itemize}
+  \item \textbf{Method carries the marks.} A correct update rule with an arithmetic slip in it is
+    worth more than a correct number with no working, and both papers are built so that later parts
+    consume earlier answers. Follow through an error rather than penalizing it twice.
+  \item \textbf{The named traps are worth full marks on their own.} Several questions exist entirely
+    to see whether a candidate avoids a specific mistake: the activation derivative taken from $y$
+    instead of $s$, a gradient that ReLU has already annihilated, \code{optimize()} given the
+    network's input instead of the previous layer's output, a max search starting at \code{0.0}, an
+    \code{optimize()} invented for a layer that has nothing to optimize. Where a solution flags one
+    of these, a candidate who walks into it loses those marks and no others.
+  \item \textbf{The discussion parts are not decoration.} ``State why'' is where the book's actual
+    content is, and a paper marked only on the arithmetic would pass a candidate who has understood
+    none of it.
+\end{itemize}

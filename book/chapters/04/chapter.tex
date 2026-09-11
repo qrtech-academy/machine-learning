@@ -1,0 +1,37 @@
+% Chapter 4, typeset from lectures/L04: the README is the opener and the closing review, each
+% numbered section of appendix A is a section, in the same order and with the same subsections,
+% and appendix B is the exercises.
+
+\chapter{A Network Built on Interfaces}
+\label{c4:ch:network}
+
+{\large\itshape Two layers, one training loop, and nothing that knows what the layers really
+are.\par}
+
+\begin{chapterbox}{In this chapter}
+\begin{itemize}
+  \item A neural network interface, and a concrete \code{Shallow} class that uses the
+    \code{dense_layer::Interface}/\code{Stub} pair from Chapter~\ref{c3:ch:nn}.
+  \item Connecting components via interfaces.
+  \item The network's training method, including the precision it measures itself by and the
+    adaptive learning rate it derives from that measurement.
+\end{itemize}
+\end{chapterbox}
+
+This chapter builds the piece that puts the dense layer interface to use: a small neural network
+with one hidden layer and one output layer, written against \code{dense_layer::Interface} so that
+it never needs to know which kind of layer it holds. After it, you should have an interface for a
+neural network and a concrete class implementing it, with a fully working training method, and be
+able to explain how a model can set its own learning rate, and why a training method that resets
+its parameters first is worth having. The layers are still the stub from Chapter~\ref{c3:ch:nn}, so
+the network runs, trains and predicts, but learns nothing until Chapter~\ref{c5:ch:dense} gives it
+a real layer.
+
+\Secref{c4:sec:architecture} shows how the network is put together, and \secref{c4:sec:training}
+how its training loop maps onto the theory from \secref{c3:sec:nn}. The exercises in
+\secref{c4:sec:exercises} then declare the network class and implement its training method, with
+the adaptive learning rate from Chapter~\ref{c2:ch:training} carried over to it.
+
+\input{chapters/04/theory}
+\input{chapters/04/summary}
+\input{chapters/04/exercises}

@@ -1,0 +1,143 @@
+% Sections 5.1 and 5.2, from lectures/L05/appendix/a_theory.md: one section per numbered section
+% of the appendix.
+
+\section{Dense Layer Architecture}
+\label{c5:sec:architecture}\label{c5:app:a}
+
+\subsection{Introduction}
+\begin{itemize}
+  \item A \textbf{dense layer} \emph{(fully connected layer)} is a layer in a neural network where
+    every node receives all inputs from the previous layer.
+  \item The class \code{ml::dense_layer::Dense} (see \secref{c5:sec:exercises}) implements the
+    interface \code{ml::dense_layer::Interface} and represents such a layer, whether it's used as a
+    hidden layer or output layer in the network.
+\end{itemize}
+
+\subsection{Structure of a layer}
+A dense layer with \code{nodeCount} nodes and \code{weightCount} weights per node consists of the
+parts described below. These map directly onto the theory in Chapter~\ref{c3:ch:nn} (see
+\secref{c3:sec:nn}):
+
+\begin{booktable}{@{}p{11em}p{12.4em}L@{}}
+  \thead{Member variable} & \thead{Size} & \thead{Corresponds to (see \secref{c3:sec:nn})} \\
+  \midrule
+  \code{myOutput} & \code{nodeCount} & $y$, each node's output (after the activation function) \\
+  \code{myPreActivationOutput} & \code{nodeCount} & $s$, each node's weighted sum (before the
+    activation function) \\
+  \code{myError} & \code{nodeCount} & $\Delta e$, each node's computed error \\
+  \code{myBias} & \code{nodeCount} & $b$, each node's bias \\
+  \code{myWeights} & \code{nodeCount} $\times$ \code{weightCount} & $w$, each node's weights \\
+  \code{myActFunc} & none & $\sigma$, the layer's activation function \\
+\end{booktable}
+
+\subsection{Activation function}
+Each layer is assigned an activation function of type \code{ActFunc} (\code{Relu}, \code{Tanh}, or
+\code{None}) at construction. The activation function is applied to every node in the layer during
+feedforward (implemented in the exercises).
+
+\subsection{Composing a neural network}
+A simple neural network (\code{ml::neural_network::Shallow}, see Chapter~\ref{c4:ch:network})
+consists of two dense layers: a hidden layer and an output layer. The hidden layer's outputs are
+the output layer's inputs, so the output layer's \code{weightCount} equals the hidden layer's
+\code{nodeCount}.
+
+% ------------------------------------------------------------------------------------------
+\section{From Math to Code}
+\label{c5:sec:math}
+This section summarizes how the equations for feedforward, backpropagation, and optimization from
+Chapter~\ref{c3:ch:nn} (see \secref{c3:sec:nn}) map onto the code you write in \code{Dense} (see
+\secref{c5:sec:exercises} for the full instructions).
+
+\subsection{Feedforward}
+\[
+  s = b + \sum_{i=0}^{n-1} w_i \cdot x_i, \qquad y = \sigma(s)
+\]
+
+\begin{narrowtable}{@{}ll@{}}
+  \thead{Math} & \thead{Code} \\
+  \midrule
+  $b$ & \code{myBias[i]} \\
+  $w_i$ & \code{myWeights[i][j]} \\
+  $x_i$ & \code{input[j]} \\
+  $s$ & \code{sum} (also stored in \code{myPreActivationOutput[i]}, see below) \\
+  $\sigma(s)$ & \code{actFuncOutput(myActFunc, sum)} \\
+  $y$ & \code{myOutput[i]} \\
+\end{narrowtable}
+
+\code{myPreActivationOutput[i]} is needed for backpropagation below, since the activation
+function's derivative $y_p'$ must be computed from $s$ (the weighted sum before the activation
+function was applied), not from $y$ (the output after the activation function).
+
+\subsection{Backpropagation}
+\textbf{Output layer:}
+\[
+  \delta = \yref - \yp, \qquad \Delta e = \delta \cdot y_p'
+\]
+
+\begin{narrowtable}{@{}ll@{}}
+  \thead{Math} & \thead{Code} \\
+  \midrule
+  $\yref$ & \code{reference[i]} \\
+  $\yp$ & \code{myOutput[i]} \\
+  $\delta$ & \code{err} \\
+  $y_p'$ & \code{actFuncDelta(myActFunc, myPreActivationOutput[i])} \\
+  $\Delta e$ & \code{myError[i]} \\
+\end{narrowtable}
+
+\noindent\textbf{Hidden layer:}
+\[
+  \delta = \sum_{i=0}^{n-1} \left[\Delta e_i \cdot w_i\right], \qquad \Delta e = \delta \cdot y_p'
+\]
+
+\begin{narrowtable}{@{}ll@{}}
+  \thead{Math} & \thead{Code} \\
+  \midrule
+  $\Delta e_i$ (next layer) & \code{nextLayer.error()[j]} \\
+  $w_i$ (next layer) & \code{nextLayer.weights()[j][i]} \\
+  $\delta$ & \code{err} \\
+  $y_p'$ & \code{actFuncDelta(myActFunc, myPreActivationOutput[i])} \\
+  $\Delta e$ & \code{myError[i]} \\
+\end{narrowtable}
+
+$\Delta e$ is the \emph{negative} gradient of the cost with respect to the node's weighted sum $s$,
+which is why \code{optimize()} adds it rather than subtracting it. Most literature calls it the
+\emph{delta} or the \emph{error term}. It's kept as \code{error()} here because that's what the
+layer stores: one value per node.
+
+It is not the same thing as the \code{inputGradients()} you'll meet in Chapter~\ref{c8:ch:conv}
+(see the flatten layer in Chapter~\ref{c10:ch:flatten} for the clearest illustration of it), which
+holds one value per \emph{input} and is what a layer hands back to the layer before it. A hidden
+layer here fetches $\Delta e$ from its neighbour itself with \code{nextLayer.error()}, so no layer
+ever needs to publish that second vector.
+
+\subsection{Optimization}
+\[
+  \Delta c_n = \Delta e_n \cdot L, \qquad b_n = b_n + \Delta c_n, \qquad
+  w_j = w_j + \Delta c_n \cdot y_j
+\]
+
+\begin{narrowtable}{@{}ll@{}}
+  \thead{Math} & \thead{Code} \\
+  \midrule
+  $\Delta e_n$ & \code{myError[i]} \\
+  $L$ & \code{learningRate} \\
+  $b_n$ & \code{myBias[i]} \\
+  $w_j$ & \code{myWeights[i][j]} \\
+  $y_j$ (previous layer's output) & \code{input[j]} \\
+\end{narrowtable}
+
+\subsection{Helper functions \code{initRandGen()} and \code{randomStartVal()}}
+These don't correspond to any specific equation, but handle the random initialization of weights
+and biases described in Chapter~\ref{c3:ch:nn}. Both live in \file{ml/utils}, alongside the
+activation-function helpers, rather than inside the layer itself:
+\begin{itemize}
+  \item \code{initRandGen()} ensures the random number generator (\code{std::rand()}) is seeded
+    exactly once, regardless of how many layers are created. It's the same function you wrote in
+    Chapter~\ref{c4:ch:network}, which is exactly why it lives in a shared file.
+  \item \code{randomStartVal()} generates the actual random number in $[0.0, 1.0]$ that each bias
+    and weight value is initialized with. Note this is a deliberately simple choice for the course:
+    every parameter starts positive, with a mean of 0.5. Production networks initialize
+    symmetrically around zero and scale by the number of inputs (Xavier or He initialization),
+    which matters most for \code{Tanh} layers, since an all-positive start puts them straight into
+    saturation where the gradients are small.
+\end{itemize}

@@ -1,0 +1,540 @@
+% Section 5.4, from lectures/L05/appendix/b_exercises.md. Both sets are code; their solution is in
+% the repository.
+
+\section{Exercises}
+\label{c5:sec:exercises}\label{c5:app:b}
+
+\begin{aside}
+\textbf{How to work these.} Both sets extend the \code{ml} codebase from
+\secref{c4:sec:exercises}: carry it forward into the lecture's exercises directory,
+\file{lectures/L05/appendix/exercises} in the companion repository. Set~1 declares the
+\code{Dense} class, and Set~2 implements its methods, so your network finally runs on a layer that
+computes something rather than the stub it's been wired to since Chapter~\ref{c3:ch:nn}. See
+\secref{c5:sec:architecture} for a walkthrough of the dense layer's architecture before you start.
+
+\textbf{How to check your work.} The final test suite of Part~I is already in
+\file{lectures/L05/appendix/exercises/test}, and Exercise~\ref{c5:ex:16} runs it. It's cumulative:
+it carries the stub and network tests from Chapter~\ref{c4:ch:network} over unchanged and adds unit
+tests for \code{Dense} and for the helpers in \file{ml/utils}. It tests the directory above it by
+default; \code{make ML_DIR=<path>} points it at a tree of your own elsewhere.
+
+The solution is published in the companion repository after the lecture, and
+\file{lectures/L05/README.md} links to it. Try each exercise yourself before looking at it.
+\end{aside}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Declaring the Dense Layer}
+\label{c5:set:1}
+You'll extend your \code{ml} codebase from Chapter~\ref{c4:ch:network} by implementing a concrete
+subclass \code{Dense}, which takes over from \code{ml::dense_layer::Stub} as the layer your network
+is built from. The stub itself stays in the codebase; see Exercise~\ref{c5:ex:15}.
+
+\codeexercise{The \code{ActFunc} enum class}
+\label{c5:ex:1}
+In \file{ml/types.hpp}, define an enum class named \code{ActFunc}. This enum class should be usable
+to select the activation function for a given dense layer. Add the following enumerators:
+\begin{itemize}
+  \item \code{Relu}: for ReLU (\emph{Rectified Linear Unit}), which for a given input $x$ returns
+    $x$ if $x > 0$, otherwise 0.
+  \item \code{Tanh}: for hyperbolic tangent, which produces output in the range $(-1, 1)$.
+  \item \code{None}: for no activation at all, i.e.\ the identity function, which returns $x$
+    unchanged. Useful on an output layer that has to produce values outside the range a bounded
+    activation function can reach.
+\end{itemize}
+
+\codeexercise{Create \file{dense.hpp}}
+\label{c5:ex:2}
+Create a new file named \file{dense.hpp} in \file{include/ml/dense_layer}. The file path should
+therefore be \file{include/ml/dense_layer/dense.hpp}, and the file should be includable as shown
+below:
+
+\begin{cppcode}
+#include "ml/dense_layer/dense.hpp"
+\end{cppcode}
+
+\codeexercise{Create \file{dense.cpp}}
+\label{c5:ex:3}
+Create a new file named \file{dense.cpp} in \file{source/ml/dense_layer}. The file path should
+therefore be \file{source/ml/dense_layer/dense.cpp}.
+
+\textbf{Note! Don't forget to add this file to your makefile, see below!}
+
+\begin{makecode}
+# Application target.
+TARGET := app
+
+# Source files.
+# File added to the build here.
+SRC_FILES := source/main.cpp\
+                source/ml/dense_layer/dense.cpp\
+                source/ml/neural_network/shallow.cpp\
+                source/ml/utils.cpp\
+
+# Include directory.
+INC_DIR := include
+
+# Compiler flags.
+COMPILER_FLAGS := -Wall -Werror -std=c++17
+
+# Build and run the application as default.
+default: build run
+
+# Build the application.
+build:
+	@g++ $(SRC_FILES) -o $(TARGET) -I$(INC_DIR) $(COMPILER_FLAGS)
+
+# Run the application.
+run:
+	@./$(TARGET)
+
+# Clean the application.
+clean:
+	@rm -f $(TARGET)
+\end{makecode}
+
+\codeexercise{The \code{Dense} class: declaration}
+\label{c5:ex:4}
+In the header file \file{include/ml/dense_layer/dense.hpp}, in the namespace
+\code{ml::dense_layer}, add a class named \code{Dense} that inherits the corresponding interface,
+see the file \file{include/ml/dense_layer/interface.hpp}:
+\begin{itemize}
+  \item Use public inheritance and mark the class \code{final} so it can't be inherited further.
+  \item Override every method from the interface, including the destructor.
+  \item That includes \code{initParams()}, which \code{Stub} implements as an empty method for want
+    of anything to reset (see Chapter~\ref{c3:ch:nn}). \code{Dense} has bias values and weights to
+    draw again, so its override does real work; the implementation follows in
+    Exercise~\ref{c5:ex:10}.
+\end{itemize}
+\textbf{Tip:} copy the entire contents of the interface and paste it into the new file. Then adapt
+the code for the new subclass \code{Dense} (no \code{virtual} or \code{= 0}, use \code{override},
+etc.).
+
+\codeexercise{Removed constructors and operators}
+\label{c5:ex:5}
+Delete the following:
+\begin{itemize}
+  \item The default constructor.
+  \item The copy constructor.
+  \item The move constructor.
+  \item The copy operator.
+  \item The move operator.
+\end{itemize}
+
+\codeexercise{Constructor}
+\label{c5:ex:6}
+Create a constructor that can be used to create a dense layer with arbitrary dimensions and a
+selectable activation function.
+\begin{itemize}
+  \item \textbf{Takes:}
+  \begin{itemize}
+    \item \code{nodeCount}: the number of nodes in the layer (unsigned integer).
+    \item \code{weightCount}: the number of weights per node in the layer (unsigned integer).
+    \item \code{actFunc}: the activation function to use (of type \code{ActFunc}).
+      \code{ActFunc::Relu} should be used as the default.
+  \end{itemize}
+  \item Should be marked \code{explicit} and \code{noexcept}.
+  \item If \code{nodeCount} or \code{weightCount} equals 0, an error message should be printed and
+    the program terminated by calling \code{std::terminate()}.
+\end{itemize}
+
+\codeexercise{Private member variables}
+\label{c5:ex:7}
+Add the following private member variables to the class:
+\begin{itemize}
+  \item \code{myOutput}: vector holding the nodes' output (floating-point). Should hold
+    \code{nodeCount} values.
+  \item \code{myPreActivationOutput}: vector holding the nodes' weighted sum before the activation
+    function has been applied (floating-point). Should hold \code{nodeCount} values. Used by
+    \code{backpropagate()} (implemented in Set~2) to correctly compute the activation function's
+    derivative.
+  \item \code{myError}: vector holding the nodes' error (floating-point). Should hold
+    \code{nodeCount} values.
+  \item \code{myBias}: vector holding the nodes' bias values (floating-point). Should hold
+    \code{nodeCount} values.
+  \item \code{myWeights}: two-dimensional vector holding the nodes' weights. Should hold
+    \code{nodeCount} $\times$ \code{weightCount} values.
+  \item \code{myActFunc}: the layer's activation function (of type \code{ActFunc}).
+\end{itemize}
+
+\codeexercise{Defining the methods}
+\label{c5:ex:8}
+Define all methods, constructors, etc.\ that aren't marked \code{delete} or \code{default} in the
+file \file{source/ml/dense_layer/dense.cpp}.
+
+\task{Constructor}
+\begin{itemize}
+  \item In the constructor, all member variables should be initialized:
+  \begin{itemize}
+    \item \code{myOutput}, \code{myPreActivationOutput}, and \code{myError} should hold
+      \code{nodeCount} floating-point values equal to 0.0 at the start.
+    \item \code{myBias} should hold \code{nodeCount} floating-point values randomized in
+      $[0.0, 1.0]$.
+    \item \code{myWeights} should hold \code{nodeCount} $\times$ \code{weightCount} floating-point
+      values randomized in $[0.0, 1.0]$.
+    \item The randomizing itself is written once, in \code{initParams()}, and called from here; see
+      Exercise~\ref{c5:ex:10}.
+    \item \code{myActFunc} should be assigned the given activation function.
+  \end{itemize}
+  \item If \code{nodeCount} or \code{weightCount} equals 0, the error message below should be
+    printed to standard error, after which the program should terminate by calling
+    \code{std::terminate()}, as shown in the code after it:
+\end{itemize}
+
+\begin{console}
+Invalid dense layer parameters: nodeCount and weightCount must be greater than 0!
+\end{console}
+
+\begin{cppcode}
+#include <cstdio>
+#include <exception>
+
+if ((0U == nodeCount) || (0U == weightCount))
+{
+    std::fprintf(stderr, "Invalid dense layer parameters: "
+        "nodeCount and weightCount must be greater than 0!\n");
+    std::terminate();
+}
+\end{cppcode}
+
+\task{Other methods}
+\begin{itemize}
+  \item Implement every method from the interface except \code{feedforward()},
+    \code{backpropagate()}, \code{optimize()}, and \code{initParams()}.
+  \item Follow the descriptions in \file{include/ml/dense_layer/interface.hpp}:
+  \begin{itemize}
+    \item Methods such as \code{nodeCount()} and \code{weightCount()} should return the number of
+      nodes and weights per node in the layer, respectively.
+    \item Getter methods such as \code{output()} and \code{error()} should return references to the
+      corresponding member variables.
+    \item \code{feedforward()}, both overloads of \code{backpropagate()}, and \code{optimize()}
+      return \code{bool} (see Chapter~\ref{c3:ch:nn}), so an empty body won't compile. Give each
+      one a placeholder body of \code{return false;} until you implement it in Set~2.
+      \code{false} rather than \code{true}, so that a method you forget to finish reports failure
+      instead of quietly claiming success.
+    \item \code{initParams()} returns nothing, so an empty body compiles fine. Leave it empty until
+      Exercise~\ref{c5:ex:10}, where the constructor starts calling it. That's the body the stub
+      keeps for good; for \code{Dense} it's a placeholder.
+  \end{itemize}
+\end{itemize}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Implementing the Dense Layer}
+\label{c5:set:2}
+You'll complete the class \code{Dense} you just declared by implementing the methods
+\code{initParams()}, \code{feedforward()}, \code{backpropagate()}, and \code{optimize()}. See
+\secref{c5:sec:math} for an overview of how the math from Chapter~\ref{c3:ch:nn} maps onto the
+code below.
+
+\codeexercise{Helper functions}
+\label{c5:ex:9}
+\code{Dense} needs three helpers that don't belong to any one class. Add them to
+\file{ml/utils.hpp} and \file{source/ml/utils.cpp}, the pair you created in
+Chapter~\ref{c4:ch:network}, in the namespace \code{ml}. Declare each one in the header and define
+it in the \file{.cpp}, alongside the \code{initRandGen()} already there.
+\begin{itemize}
+  \item \code{randomStartVal()}: function to generate and return a random number in the range
+    $[0.0, 1.0]$.
+  \begin{itemize}
+    \item \textbf{Implementation:}
+    \begin{itemize}
+      \item Generate a random number in the range $[0.0, 1.0]$ by calling \code{std::rand()}, which
+        generates a random number in \code{[0, RAND_MAX]}, and dividing by \code{RAND_MAX}. Both
+        ranges are closed at each end: a draw of exactly \code{RAND_MAX} gives exactly \code{1.0}.
+      \item One of the operands must be converted to a floating-point number to avoid integer
+        division, e.g.\ \code{static_cast<double>(RAND_MAX)}.
+    \end{itemize}
+    \item Should be marked \code{[[nodiscard]]} and \code{noexcept}.
+    \item It belongs next to \code{initRandGen()}: both wrap \code{std::rand()}, and calling this
+      one without having called that one first gives the same sequence on every run.
+  \end{itemize}
+  \item \code{actFuncOutput()}: function to compute and return the output (floating-point) of a
+    given activation function.
+  \begin{itemize}
+    \item \textbf{Takes:}
+    \begin{itemize}
+      \item \code{actFunc}: the activation function to use (of type \code{ActFunc}).
+      \item \code{value}: input value to the activation function (floating-point).
+    \end{itemize}
+    \item \textbf{Implementation:}
+    \begin{itemize}
+      \item Use a switch statement to compute the output depending on the given activation
+        function:
+      \begin{itemize}
+        \item \code{ActFunc::Relu}: return \code{value} if \code{value > 0.0}, otherwise
+          \code{0.0}.
+        \item \code{ActFunc::Tanh}: return \code{std::tanh(value)} (requires
+          \code{#include <cmath>}).
+        \item Default case (\code{ActFunc::None}): return \code{value} unchanged, which is the
+          identity function.
+      \end{itemize}
+    \end{itemize}
+    \item Should be marked \code{[[nodiscard]]} and \code{noexcept}.
+  \end{itemize}
+  \item \code{actFuncDelta()}: function to compute and return the derivative (floating-point) of a
+    given activation function.
+  \begin{itemize}
+    \item \textbf{Takes:}
+    \begin{itemize}
+      \item \code{actFunc}: the activation function to use (of type \code{ActFunc}).
+      \item \code{value}: input value to the activation function (floating-point).
+    \end{itemize}
+    \item \textbf{Implementation:}
+    \begin{itemize}
+      \item Use a switch statement to compute the derivative depending on the given activation
+        function:
+      \begin{itemize}
+        \item \code{ActFunc::Relu}: return \code{1.0} if \code{value > 0.0}, otherwise
+          \code{0.0}.
+        \item \code{ActFunc::Tanh}: compute \code{const auto tanhOutput = std::tanh(value)} and
+          return \code{1.0 - tanhOutput * tanhOutput}.
+        \item Default case (\code{ActFunc::None}): return \code{1.0}, the derivative of the
+          identity function.
+      \end{itemize}
+    \end{itemize}
+    \item Should be marked \code{[[nodiscard]]} and \code{noexcept}.
+  \end{itemize}
+\end{itemize}
+Neither activation function needs an error case. \code{ActFunc} has exactly three enumerators, and
+all three are handled, so the default case is \code{None} rather than something that shouldn't
+happen.
+
+\codeexercise{Randomizing bias and weights}
+\label{c5:ex:10}
+Randomize all bias values and weights in \code{initParams()}, the interface method \code{Dense}
+overrides (see Exercise~\ref{c5:ex:4}). It takes no arguments, returns nothing, and should be
+marked \code{override} and \code{noexcept}:
+\begin{itemize}
+  \item Iterate through every node in the layer with a for loop:
+    \code{for (std::size_t i{}; i < nodeCount(); ++i)}.
+  \item For each node \code{i}:
+  \begin{itemize}
+    \item Assign a random number to its bias value by calling \code{randomStartVal()}:
+      \code{myBias[i] = randomStartVal()}.
+    \item Iterate through the node's weights with a nested for loop:
+      \code{for (std::size_t j{}; j < weightCount(); ++j)}.
+    \item For each weight \code{j}:
+    \begin{itemize}
+      \item Assign a random number to the weight by calling \code{randomStartVal()}:
+        \code{myWeights[i][j] = randomStartVal()}.
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+In the constructor, first call \code{initRandGen()} (from \file{ml/utils.hpp}) to seed the random
+number generator, then call \code{initParams()} to fill the two containers. A layer therefore
+starts out randomized exactly as before; the randomization has simply moved into a method the
+network can call again.
+
+\textbf{Who calls it, and why the network needs it.} \code{Shallow::train()} calls
+\code{initParams()} on both its layers before the first epoch (see Chapter~\ref{c4:ch:network}), so
+every call trains a network from scratch rather than continuing the one the previous call left
+behind. That matters most when a run ends badly: training on top of a network that has settled
+into a bad set of parameters mostly keeps it there, while a fresh start draws new ones and can
+converge on the second attempt. Without a method on the interface, the network couldn't do it at
+all, since the bias and weights are private to the layer.
+
+\codeexercise{The method \code{feedforward()}}
+\label{c5:ex:11}
+\task{Input validation}
+\begin{itemize}
+  \item Check that the dimensions of the given input match the number of weights per node in the
+    layer (\code{input.size() == weightCount()}).
+  \item If the dimensions don't match: print the error message
+    \code{"Input dimension mismatch: expected X, actual: Y!"} and return \code{false} without
+    computing anything.
+\end{itemize}
+
+\task{Computation for each node}
+\begin{itemize}
+  \item Iterate through every node in the layer with a for loop:
+    \code{for (std::size_t i{}; i < nodeCount(); ++i)}.
+  \item For each node \code{i}, compute the weighted sum:
+  \begin{enumerate}
+    \item Start with the node's bias value: \code{auto sum{myBias[i]}}.
+    \item Add each weight multiplied by the corresponding input:
+      \code{for (std::size_t j{}; j < weightCount(); ++j)} where
+      \code{sum += myWeights[i][j] * input[j]}.
+  \end{enumerate}
+  \item Store the weighted sum before the activation function is applied:\newline
+    \code{myPreActivationOutput[i] = sum}. This value is needed by \code{backpropagate()} below to
+    correctly compute the activation function's derivative.
+  \item Apply the activation function to the sum:
+    \code{myOutput[i] = actFuncOutput(myActFunc, sum)}.
+\end{itemize}
+
+\task{Return value}
+\code{true} once every node has been computed.
+
+\codeexercise{The method \code{backpropagate()} (output layer)}
+\label{c5:ex:12}
+Implement \code{backpropagate()} for output layers (with reference values).
+
+\task{Input validation}
+\begin{itemize}
+  \item Check that the size of the reference vector matches the number of nodes
+    (\code{reference.size() == nodeCount()}).
+  \item If the dimensions don't match: print the error message
+    \code{"Output dimension mismatch: expected X, actual: Y!"} and return \code{false} without
+    computing anything.
+\end{itemize}
+
+\task{Error computation for each node}
+\begin{itemize}
+  \item Iterate through every node in the layer:
+    \code{for (std::size_t i{}; i < nodeCount(); ++i)}.
+  \item For each node \code{i}:
+  \begin{enumerate}
+    \item Compute the raw error: \code{const auto err{reference[i] - myOutput[i]}}.
+    \item Compute the gradient error:\newline
+      \code{myError[i] = err * actFuncDelta(myActFunc, myPreActivationOutput[i])}.
+
+      \note[Note!] Use \code{myPreActivationOutput[i]} (the weighted sum before the activation
+      function was applied in \code{feedforward()}), not \code{myOutput[i]}.
+      \code{actFuncDelta()} expects the activation function's \emph{input}, not its output;
+      otherwise the derivative comes out wrong for \code{ActFunc::Tanh} (it happens to work for
+      \code{ActFunc::Relu} by coincidence).
+  \end{enumerate}
+\end{itemize}
+
+\task{Return value}
+\code{true} once every node's error has been computed.
+
+\codeexercise{The method \code{backpropagate()} (hidden layer)}
+\label{c5:ex:13}
+Implement \code{backpropagate()} for hidden layers (with error and weights from the next layer).
+
+\task{Input validation}
+\begin{itemize}
+  \item Check that the next layer's weight count matches this layer's node count
+    (\code{nextLayer.weightCount() == nodeCount()}).
+  \item If the dimensions don't match: print the error message
+    \code{"Layer dimension mismatch: expected X, actual: Y!"} and return \code{false} without
+    computing anything.
+\end{itemize}
+
+\task{Error computation for each node}
+\begin{itemize}
+  \item Iterate through every node in this layer:
+    \code{for (std::size_t i{}; i < nodeCount(); ++i)}.
+  \item For each node \code{i}:
+  \begin{enumerate}
+    \item Initialize a variable to store the computed raw error: \code{double err{}}.
+    \item Sum all errors from the next layer:\newline
+      \code{for (std::size_t j{}; j < nextLayer.nodeCount(); ++j)}
+    \begin{itemize}
+      \item \code{err += nextLayer.error()[j] * nextLayer.weights()[j][i]}.
+    \end{itemize}
+    \item Compute the gradient error:\newline
+      \code{myError[i] = err * actFuncDelta(myActFunc, myPreActivationOutput[i])}\newline (see the note in
+      Exercise~\ref{c5:ex:12} for why \code{myPreActivationOutput[i]} is used instead of
+      \code{myOutput[i]}).
+  \end{enumerate}
+\end{itemize}
+
+\task{Return value}
+\code{true} once every node's error has been computed.
+
+\codeexercise{The method \code{optimize()}}
+\label{c5:ex:14}
+\task{Input validation}
+\begin{itemize}
+  \item Check that the learning rate lies inside the range \code{(0.0, 1.0)}, the same range the
+    stub checked in Chapter~\ref{c3:ch:nn}.
+  \item If the learning rate is invalid: print the error message \code{"Invalid learning rate X!"}
+    and return \code{false} without updating anything.
+  \item Check that the input size matches the number of weights per node
+    (\code{input.size() == weightCount()}).
+  \item If the dimensions don't match: print the error message
+    \code{"Input dimension mismatch: expected X, actual: Y!"} and return \code{false} without
+    updating anything.
+\end{itemize}
+
+\task{Parameter update for each node}
+\begin{itemize}
+  \item Iterate through every node in the layer:
+    \code{for (std::size_t i{}; i < nodeCount(); ++i)}.
+  \item For each node \code{i}:
+  \begin{enumerate}
+    \item Update the bias: \code{myBias[i] += myError[i] * learningRate}.
+    \item Update all weights: \code{for (std::size_t j{}; j < weightCount(); ++j)}
+    \begin{itemize}
+      \item \code{myWeights[i][j] += myError[i] * learningRate * input[j]}
+    \end{itemize}
+  \end{enumerate}
+\end{itemize}
+
+\task{Return value}
+\code{true} once every node's bias and weights have been updated.
+
+\codeexercise{Compiling and testing}
+\label{c5:ex:15}
+Update \file{main.cpp} to use your new layer:
+\begin{itemize}
+  \item Replace the two \code{ml::dense_layer::Stub} instances with \code{ml::dense_layer::Dense},
+    keeping the same wiring: the output layer's weight count must still match the hidden layer's
+    node count.
+  \item Give both layers \code{ActFunc::Tanh}, and make the hidden layer wider than the task
+    strictly needs, e.g.\ 8 nodes. Keep the 2-bit XOR training data from
+    Chapter~\ref{c4:ch:network}.
+  \item Train for a good few thousand epochs (e.g.\ 10000), then predict once per training set and
+    print the results as before. There's no learning rate to pass any more: the network sets its
+    own, and stops as soon as it reaches the precision threshold, so the epoch count is an upper
+    bound rather than a number to tune.
+\end{itemize}
+\textbf{Don't delete \file{stub.hpp}.} \code{Dense} replaces the stub in your \emph{network}, not
+in your codebase. The test suite still compiles both, and still uses the stub to test
+\code{Shallow}, since a layer that computes nothing is what makes the network's wiring visible. See
+Exercise~\ref{c5:ex:16}.
+
+Compile and test-run the program. Unlike Chapter~\ref{c4:ch:network}, where every prediction was
+the stub's fixed output, each prediction should now land within a few hundredths of its training
+target. Your exact numbers will differ from run to run, because the bias and weights start
+randomized.
+
+The early-stop line from \code{train()} should appear above the predictions, reporting a precision
+and an epoch count well short of the 10000 you asked for. Both vary from run to run: the starting
+parameters are random, and so is the training order. A run that stops after a few hundred epochs
+and one that runs several thousand are both normal.
+
+\textbf{When a run doesn't converge.} Roughly two XOR networks in a thousand settle into a set of
+parameters they can't improve on, predicting something near 0.5 for every input however long they
+train. Call \code{train()} again: it resets both layers first, so the second call starts from newly
+drawn parameters rather than the ones that got stuck. That's the reset from
+Chapter~\ref{c4:ch:network} earning its keep, and it's what the test suite's convergence test relies
+on.
+
+\textbf{Worth trying:} switch both layers to \code{ActFunc::Relu} and shrink the hidden layer to 2
+nodes. Roughly one run in four then fails to learn XOR at all, however long you train.
+\code{randomStartVal()} never returns a negative number, so every node starts on ReLU's positive
+side, and a node whose weighted sum is driven negative for every input has a derivative of exactly
+zero from then on: it stops learning and can't recover. That's the dying ReLU problem from
+Chapter~\ref{c3:ch:nn}, and it's why the test suite trains with \code{Tanh}.
+
+\codeexercise{Running the tests}
+\label{c5:ex:16}
+The final test suite is available in \file{lectures/L05/appendix/exercises/test}. It's cumulative:
+it carries the stub and network tests from Chapter~\ref{c4:ch:network} over unchanged and adds unit
+tests for \code{Dense} and for the helpers in \file{ml/utils}.
+
+Once you've carried your code forward into this lecture's exercises directory, build and run it:
+
+\begin{shell}
+make -C test
+\end{shell}
+
+\noindent All 57 test cases should pass. Because \code{Dense} randomizes its own bias and weights,
+none of its output can be predicted from the constructor arguments, so the tests recover the bias
+by feeding the layer a vector of zeros: every weight term drops out and the weighted sum is the
+bias alone. That makes every expected value exact rather than approximate.
+
+\code{InitParamsDrawsNewValues} is the first test in the course where \code{initParams()} has
+anything to do. The stub tests only check that calling it changes nothing, which is all an empty
+override can be asked for; here the values it writes are read straight back out of
+\code{weights()} and out of a zero-input feedforward.
+
+The one to read is \code{BackpropagateUsesPreActivationDerivative}. It checks the note in
+Exercises~\ref{c5:ex:12} and~\ref{c5:ex:13}, and only \code{ActFunc::Tanh} can catch that mistake:
+for \code{Relu} the two values agree, since \code{max(0.0, s)} is positive exactly when \code{s}
+is.
+
+The test suite's README, \file{lectures/L05/appendix/exercises/test/README.md}, has more
+information, including how the convergence threshold was chosen.

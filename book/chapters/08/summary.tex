@@ -1,0 +1,35 @@
+% Section 8.2, from lectures/L08/README.md: the objectives, the evaluation questions, and the next
+% lecture.
+
+\needspace{10\baselineskip}
+\section{Review}
+\label{c8:sec:review}
+
+\subsection*{What you should be able to do now}
+After this chapter, you should:
+\begin{itemize}
+  \item Have created a concrete subclass \code{Conv} that inherits
+    \code{ml::conv_layer::Interface}.
+  \item Have implemented \code{feedforward()}, \code{backpropagate()}, and \code{optimize()} for
+    \code{Conv}.
+\end{itemize}
+
+\needspace{6\baselineskip}
+\subsection*{Questions to test yourself}
+You should be able to explain:
+\begin{enumerate}
+  \item What's the difference between \code{ml::conv_layer::Interface} and your concrete class
+    \code{Conv}, and why is this split beneficial?
+  \item Can you connect the mathematical formulas from the hand-training exercise in
+    \secref{c6:sec:exercises} to each computation step in your \code{feedforward()} and
+    \code{backpropagate()}?
+  \item How does your \code{ml::conv_layer::Conv} compare to the \code{ml::ConvLayer} struct you
+    wrote in Chapters~\ref{c6:ch:cnn} and~\ref{c7:ch:layers}: same math, but what's different about
+    the design?
+  \item Why do \code{Conv} and \code{MaxPool} (Chapter~\ref{c9:ch:maxpool}) share a single
+    interface, \code{conv_layer::Interface}?
+\end{enumerate}
+
+\needspace{6\baselineskip}
+\subsection*{Looking ahead}
+Chapter~\ref{c9:ch:maxpool} implements the max pooling layer in the same CNN pipeline.

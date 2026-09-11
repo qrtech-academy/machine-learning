@@ -1,0 +1,34 @@
+% Chapter 1, typeset from lectures/L01: the README is the opener and the closing review, each
+% numbered section of appendix A is a section, in the same order and with the same subsections,
+% and appendix B is the exercises.
+
+\chapter{Linear Regression}
+\label{c1:ch:linreg}
+
+{\large\itshape A first model that finds its own rules in the data it is given.\par}
+
+\begin{chapterbox}{In this chapter}
+\begin{itemize}
+  \item A brief introduction to \code{std::vector}, used throughout the book.
+  \item What machine learning is, and how it differs from traditional programming.
+  \item Linear regression: prediction, parameters, error, epochs, and learning rate.
+  \item Training a linear regression model by hand.
+  \item Implementing the linear regression model in software, and training it.
+\end{itemize}
+\end{chapterbox}
+
+This chapter introduces machine learning through its simplest model. It starts with
+\code{std::vector}, the container every model in the book stores its training data and parameters
+in, and then shows why a traditional program is not well suited to mimicking human intelligence,
+and how machine learning differs from traditional programming in terms of input, output, and rules.
+The rest of the chapter is linear regression: the theory behind it, a model trained by hand for one
+epoch, and a first implementation in C++.
+
+Read \secref{c1:sec:vectors} to \secref{c1:sec:cpp} in order. The worked example in
+\secref{c1:sec:byhand} is the one to follow with a pencil, because the first exercise in
+\secref{c1:sec:exercises} asks you to do the same by hand for a different line; the rest of the
+exercises build the model as an interface and a class, with a test suite to check it against.
+
+\input{chapters/01/theory}
+\input{chapters/01/summary}
+\input{chapters/01/exercises}

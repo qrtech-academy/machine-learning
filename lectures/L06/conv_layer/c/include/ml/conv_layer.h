@@ -17,7 +17,7 @@ typedef struct conv_layer conv_layer_t;
  * @param[in] input_size Input size (assumed square).
  * @param[in] kernel_size Kernel size (assumed square).
  *
- * @return Pointer to the new convolutional layer, or nullptr in failure.
+ * @return Pointer to the new convolutional layer, or NULL on failure.
  */
 conv_layer_t* conv_layer_new(size_t input_size, size_t kernel_size);
 
@@ -27,8 +27,6 @@ conv_layer_t* conv_layer_new(size_t input_size, size_t kernel_size);
  *        Release allocated resources and set the corresponding pointer to null.
  *
  * @param[in] self Double pointer to the convolutional layer.
- *
- * @return Pointer to the new convolutional layer, or nullptr in failure.
  */
 void conv_layer_del(conv_layer_t** self);
 
@@ -106,7 +104,7 @@ bool conv_layer_backpropagate(conv_layer_t* self, const matrix_t* output_gradien
  * @brief Optimize parameters using computed gradients.
  *
  * @param[in] self Pointer to the convolutional layer.
- * @param[in] learning_rate Learning rate for parameter update.
+ * @param[in] learning_rate Learning rate for parameter update. Must be in range (0.0, 1.0).
  *
  * @return True on success, false on failure.
  */

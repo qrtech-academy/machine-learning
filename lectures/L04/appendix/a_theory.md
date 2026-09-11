@@ -158,18 +158,17 @@ These three steps map directly onto the theory from **L03** (see [appendix A](..
 
 ---
 
----
-
 ### Input Validation
 Check that training is possible before the training loop starts. Print an error message and return `false` immediately if any of the following conditions hold:
 
 | Condition | Explanation |
 |---|---|
-| `myTrainSetCount == 0` | Training can't be carried out without training data. |
 | `epochCount == 0` | Training must run for at least one epoch. |
 | `precisionThreshold <= 0.0 \|\| precisionThreshold >= 1.0` | Invalid threshold: must be in the range `(0.0, 1.0)`. A threshold of `1.0` or more can never be reached; `0.0` or less is reached by any network at all. |
 
 There's no learning rate among them: the network sets its own, and the layers check the rate they're
-handed on every call to `optimize()`.
+handed on every call to `optimize()`. Missing training data isn't among them either: it never
+reaches `train()`, because the constructor already terminates when there's no complete training
+set.
 
 ---

@@ -1,0 +1,499 @@
+% mlbook.sty - the design of "Machine Learning" as a book.
+%
+% Every visual decision lives here, so the chapters describe content and nothing else. The design
+% is the one the Modern Embedded C++ book uses, with three additions this course needs: the two
+% parts it is taught in, the mathematics its theory is written in, and a third kind of exercise,
+% worked out on paper, whose solution the book prints in its first appendix.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{mlbook}[2026/09/11 Machine Learning book design]
+
+% ------------------------------------------------------------------------------------------
+% Page. 7.5 x 9.25 in, a common trim for programming texts; the text block is wide enough for an
+% 84-column line of code at the listing size.
+% ------------------------------------------------------------------------------------------
+\RequirePackage[
+  paperwidth=7.5in, paperheight=9.25in,
+  inner=0.85in, outer=1.15in, top=0.95in, bottom=1.0in,
+  headheight=14pt, headsep=18pt, footskip=30pt]{geometry}
+
+% ------------------------------------------------------------------------------------------
+% Type. Palatino for the text and the mathematics, and DejaVu Sans Mono for code: a type name reads
+% the same in a sentence as in a listing.
+% ------------------------------------------------------------------------------------------
+\RequirePackage{amsmath}
+\RequirePackage{fontspec}
+\RequirePackage{unicode-math}
+\setmainfont{TeX Gyre Pagella}
+\setsansfont{TeX Gyre Heros}[Scale=MatchLowercase]
+% A space inside inline code may stretch a little, as a word space does; listings set their own
+% fixed columns and are not affected.
+\setmonofont{DejaVu Sans Mono}[Scale=0.84, HyphenChar=None, WordSpace={1,0.4,0.15}]
+\setmathfont{TeX Gyre Pagella Math}
+\RequirePackage[protrusion=true, expansion=true, tracking=true]{microtype}
+\SetTracking{encoding=*, shape=sc}{40}
+
+% ------------------------------------------------------------------------------------------
+% Colour.
+% ------------------------------------------------------------------------------------------
+\RequirePackage[table]{xcolor}
+\definecolor{accent}{HTML}{C00000}
+\definecolor{accent2}{HTML}{0050B3}
+\definecolor{accent3}{HTML}{2E7D32}
+\definecolor{muted}{HTML}{767676}
+\definecolor{ink}{HTML}{3A3A3A}
+\definecolor{fillaccent}{HTML}{F4D7D7}
+\definecolor{fillaccent2}{HTML}{D6E4F5}
+\definecolor{fillaccent3}{HTML}{D9EDDA}
+\definecolor{fillmuted}{HTML}{E8E8E8}
+\definecolor{codebg}{HTML}{F6F5F2}
+\definecolor{rule}{HTML}{BBBBBB}
+
+% ------------------------------------------------------------------------------------------
+% Structure: part pages, chapter openers, section heads, running heads.
+% ------------------------------------------------------------------------------------------
+\RequirePackage{titlesec}
+\RequirePackage{titletoc}
+
+\titleformat{\chapter}[display]
+  {\normalfont\raggedright}
+  {\color{accent}\large\scshape\lsstyle\MakeLowercase{\chaptertitlename}\enspace\thechapter}
+  {1.2ex}
+  {\fontsize{26}{30}\selectfont\bfseries}
+  [\vspace{1.4ex}{\color{rule}\titlerule[0.6pt]}]
+\titleformat{name=\chapter, numberless}[display]
+  {\normalfont\raggedright}
+  {}
+  {0pt}
+  {\fontsize{26}{30}\selectfont\bfseries}
+  [\vspace{1.4ex}{\color{rule}\titlerule[0.6pt]}]
+\titlespacing*{\chapter}{0pt}{0.35in}{0.3in}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\raggedright}
+  {\color{accent}\thesection}{0.7em}{}
+\titlespacing*{\section}{0pt}{3.2ex plus 1ex minus .2ex}{1.4ex plus .2ex}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\raggedright}
+  {\color{accent}\thesubsection}{0.7em}{}
+\titlespacing*{\subsection}{0pt}{2.6ex plus 1ex minus .2ex}{1.0ex plus .2ex}
+
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\itshape\raggedright}
+  {}{0em}{}
+\titlespacing*{\subsubsection}{0pt}{2ex plus .8ex minus .2ex}{0.6ex plus .2ex}
+
+\titleformat{\paragraph}[runin]
+  {\normalfont\normalsize\bfseries}
+  {}{0em}{}[.]
+\titlespacing*{\paragraph}{0pt}{1.4ex plus .5ex minus .2ex}{0.6em}
+
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{1}
+
+% Contents: parts set apart in small capitals, chapters bold with their number in the accent,
+% sections indented beneath, and every page number right-aligned in a box of its own, so a
+% three-digit one never meets the leaders.
+\titlecontents{part}[0pt]
+  {\addvspace{3ex}\scshape\lsstyle\color{accent}}
+  {\MakeLowercase{\partname}\enspace\thecontentslabel\quad}
+  {}
+  {\hfill}
+\titlecontents{chapter}[0pt]
+  {\addvspace{1.4ex}\bfseries}
+  {\makebox[2em][l]{\color{accent}\thecontentslabel}}
+  {}
+  {\hfill\makebox[2.2em][r]{\contentspage}}
+\titlecontents{section}[2em]
+  {\addvspace{0.2ex}}
+  {\makebox[2.6em][l]{\thecontentslabel}}
+  {}
+  {\titlerule*[0.6pc]{.}\makebox[2.2em][r]{\contentspage}}
+
+\RequirePackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\enspace #1}}
+\fancyhead[LE]{\small\thepage\qquad\scshape\lsstyle\MakeLowercase{\leftmark}}
+\fancyhead[RO]{\small\scshape\lsstyle\MakeLowercase{\rightmark}\qquad\thepage}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}}
+\RequirePackage{emptypage}
+
+% \bookpart{Title}{What it covers}: a part page, on a right-hand page of its own, with a short
+% account of the part beneath its title. The course is taught in two parts with a natural break
+% between them, and the book keeps that break.
+\newcommand{\bookpart}[2]{%
+  \cleardoublepage
+  \thispagestyle{empty}%
+  \refstepcounter{part}%
+  \addcontentsline{toc}{part}{\protect\numberline{\thepart}#1}%
+  \markboth{}{}%
+  \vspace*{1.6in}%
+  \begin{flushleft}
+    {\color{accent}\large\scshape\lsstyle\MakeLowercase{\partname}\enspace\thepart\par}
+    \vspace{1.2ex}
+    {\fontsize{26}{30}\selectfont\bfseries #1\par}
+    \vspace{1.4ex}{\color{rule}\rule{\linewidth}{0.6pt}}\par
+    \vspace{3ex}
+    \begin{minipage}{0.86\linewidth}\raggedright #2\end{minipage}
+  \end{flushleft}
+  \cleardoublepage}
+
+% ------------------------------------------------------------------------------------------
+% Text.
+% ------------------------------------------------------------------------------------------
+% Pages end where their text ends. The class default stretches every gap on a page to square
+% the bottom off, which a page with a long listing pushed to the next one cannot survive.
+\raggedbottom
+% With a ragged bottom there is no reason to leave one line of a paragraph alone on a page.
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+% Inline code is set in a monospaced face whose spaces cannot stretch, and a C++ name such as
+% ml::dense_layer::Interface cannot be hyphenated; a little emergency stretch lets the paragraph
+% builder loosen a line around one rather than push it into the margin.
+\setlength{\emergencystretch}{2.5em}
+\tolerance=1000
+\setlength{\parindent}{1.2em}
+\linespread{1.06}
+\RequirePackage[shortlabels]{enumitem}
+\setlist{itemsep=0.25ex, topsep=0.8ex, parsep=0pt}
+\setlist[itemize]{leftmargin=1.4em, label={\color{accent}\textbullet}}
+\setlist[itemize,2]{leftmargin=1.2em, label={\color{muted}\textendash}}
+\setlist[itemize,3]{leftmargin=1.2em, label={\color{muted}\textperiodcentered}}
+\setlist[enumerate]{leftmargin=1.6em, label={\bfseries\arabic*.}}
+
+% Inline code. \detokenize is what lets a name like myTrainOrder or an expression like
+% nextLayer.weights()[j][i] be written as it appears in the source, without escaping; mlbook.lua
+% undoes the two things \detokenize does to C++ (a doubled # and a space after \n). A literal % or
+% an unbalanced brace is written \%, \{ or \}. \file is for file names, which are long and need to
+% break at a slash. Robust, so it survives the trip through the contents and the running heads.
+\directlua{dofile(kpse.find_file("mlbook.lua"))}
+\DeclareRobustCommand{\code}[1]{%
+  {\ttfamily\directlua{mlbook_code("\luaescapestring{\detokenize{#1}}")}}}
+% A running head is set in small capitals by lowercasing it; code in a heading keeps its case,
+% because ml::conv_layer::MaxPool and ml::conv_layer::Maxpool are two different names.
+\ExplSyntaxOn
+\tl_put_right:Nn \l_text_case_exclude_arg_tl { \code }
+\ExplSyntaxOff
+\RequirePackage{xurl}
+\urlstyle{tt}
+% xurl lets a URL break anywhere, which a long link needs; a file name breaks only at a slash or
+% a dot, so no name is ever split in half.
+\DeclareUrlCommand{\file}{\urlstyle{tt}\def\UrlBreaks{\do\/\do\.}\def\UrlBigBreaks{}}
+
+% Section references in the terse form the lectures use: (appendix B) becomes (§1.2).
+\newcommand{\secref}[1]{\S\ref{#1}}
+\newcommand{\Secref}[1]{\S\ref{#1}}
+
+% A lead-in for the notes the lectures are full of: "Note!", "Important:", "In short:". A colon
+% follows the lead-in unless it already ends in an exclamation mark, as "Note!" does.
+\ExplSyntaxOn
+\NewDocumentCommand{\note}{O{Note}}
+  {\textbf{#1\str_if_eq:eeF{\str_item:nn{#1}{-1}}{!}{:}}\ }
+\ExplSyntaxOff
+
+% ------------------------------------------------------------------------------------------
+% Mathematics. The quantities the course computes with, named once, so that a learning rate is
+% set as one symbol rather than as the product of L and R.
+% ------------------------------------------------------------------------------------------
+\newcommand{\LR}{\mathit{LR}}
+\newcommand{\yref}{y_{\mathrm{ref}}}
+\newcommand{\yp}{y_{p}}
+\newcommand{\MAE}{\mathit{MAE}}
+% Display maths may break across a page, so a long hand calculation never leaves a page half
+% empty behind it.
+\allowdisplaybreaks[2]
+
+% ------------------------------------------------------------------------------------------
+% Tables. Rules only where they separate; never a vertical one.
+% ------------------------------------------------------------------------------------------
+\RequirePackage{booktabs}
+\RequirePackage{tabularx}
+\RequirePackage{array}
+\newcolumntype{L}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}{>{\centering\arraybackslash}p}
+\setlength{\aboverulesep}{0.5ex}
+\setlength{\belowrulesep}{0.5ex}
+\newcommand{\thead}[1]{\textbf{#1}}
+% A table set in the flow of the text, full measure, one size down.
+\newenvironment{booktable}[1]
+  {\par\smallskip\noindent\small\tabularx{\linewidth}{#1}\toprule}
+  {\bottomrule\endtabularx\par\smallskip}
+% The same, at its natural width and centred, for tables of short cells.
+\newenvironment{narrowtable}[1]
+  {\par\smallskip\begin{center}\small\begin{tabular}{#1}\toprule}
+  {\bottomrule\end{tabular}\end{center}\par\smallskip}
+
+% ------------------------------------------------------------------------------------------
+% Figures. Drawn in TikZ, in the same inks as the page, so a figure is vector and its labels are
+% set in the book's own faces.
+% ------------------------------------------------------------------------------------------
+\RequirePackage{graphicx}
+\RequirePackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, backgrounds, decorations.pathreplacing}
+\RequirePackage{float}
+\RequirePackage{caption}
+\captionsetup{font=small, labelfont={bf,color=accent}, labelsep=quad,
+  justification=centering, skip=6pt}
+% A figure drawn in figures/NAME.tex, placed where it is written.
+\newcommand{\bookfigure}[3]{%
+  \begin{figure}[H]
+    \centering
+    \input{figures/#1}
+    \caption{#2}\label{#3}
+  \end{figure}}
+
+% ------------------------------------------------------------------------------------------
+% Code. A tinted block with a coloured edge; the edge says which language it is. Red for C++,
+% charcoal for C, green for the Python-style pseudocode, blue for the shell and for make, grey
+% for what a program printed back.
+% ------------------------------------------------------------------------------------------
+\RequirePackage{listings}
+\RequirePackage[most]{tcolorbox}
+
+% listings knows C++98. Add what C++11 to C++20 made keywords, and the attributes' spelling is
+% left alone: [[nodiscard]] reads as punctuation around a name, which is what it is.
+\lstdefinelanguage{cpp17}[ISO]{C++}{
+  morekeywords={alignas, alignof, char16_t, char32_t, constexpr, decltype, noexcept, nullptr,
+    static_assert, thread_local, override, final, concept, requires, consteval, constinit},
+}
+
+% listings only knows the characters of an 8-bit encoding. Any other is typeset the moment it is
+% read, outside the line listings is assembling, so one that starts a line lands at the end of the
+% line before it: every line of a directory tree would lose its box drawing to the line above.
+% Every such character the course writes in a code block (the box drawing of a tree, an arrow in a
+% diagram, a Greek letter in a formula) is therefore registered the way listings registers its
+% own, as an active character that listings processes like any other symbol, one column wide.
+\def\mlbook@lstchar#1{%
+  \lst@ifactivechars\catcode`#1=\active\fi
+  \lccode`\~=`#1\lccode`\/=`#1\lowercase{\def~{\lst@ProcessOther/}}}
+\def\mlbook@lstchars#1{%
+  \ifx\relax#1\else\mlbook@lstchar{#1}\expandafter\mlbook@lstchars\fi}
+\lst@AddToHook{SelectCharTable}{\mlbook@lstchars ─│├└→↓×δΔσΣα≈²±⌊⌋\relax}
+
+\lstdefinestyle{base}{
+  basicstyle=\ttfamily\small,
+  columns=fixed,
+  keepspaces=true,
+  showstringspaces=false,
+  upquote=true,
+  tabsize=4,
+  breaklines=true,
+  breakatwhitespace=false,
+  extendedchars=true,
+  % A wrapped line is marked at both ends. Boxed, because LuaTeX will not take colour or maths
+  % loose inside the discretionary a line break is made of.
+  prebreak={\mbox{\textcolor{muted}{\tiny$\hookleftarrow$}}},
+  postbreak={\mbox{\textcolor{muted}{\tiny$\hookrightarrow$}\space}},
+  aboveskip=0pt, belowskip=0pt,
+  commentstyle=\color{muted},
+  stringstyle=\color{accent2},
+}
+\lstdefinestyle{cpp}{style=base, language=cpp17,
+  keywordstyle=\color{accent2!85!black}\bfseries,
+  directivestyle=\color{accent}}
+\lstdefinestyle{c}{style=base, language=C,
+  keywordstyle=\color{accent2!85!black}\bfseries,
+  directivestyle=\color{accent}}
+% The pseudocode in Chapter 10 is Python in all but one comment, which it writes C++'s way.
+% Its builtins, such as input, sum and max, are names in pseudocode like any other, so only the
+% language's own keywords are highlighted.
+\lstdefinestyle{python}{style=base, language=Python,
+  keywordstyle=\color{accent2!85!black}\bfseries, keywordstyle=[2]{}, morecomment=[l]{//}}
+\lstdefinestyle{shell}{style=base, language=bash,
+  keywordstyle={}, morekeywords={}, deletekeywords={test}}
+\lstdefinestyle{make}{style=base, language=make,
+  keywordstyle={}, morecomment=[l]{\#}}
+\lstdefinestyle{output}{style=base, language={}}
+
+% The padding is set without tcolorbox's boxsep, which would add a millimetre on every side: with
+% it, an 84-column line, the width of a clang-format separator comment in the lectures, would be
+% two columns too wide for the text block.
+\tcbset{
+  codeblock/.style={
+    enhanced, listing only, breakable,
+    colback=codebg, colframe=codebg, boxrule=0pt, arc=0pt, outer arc=0pt,
+    boxsep=0pt, left=8.5pt, right=3pt, top=6.8pt, bottom=6.8pt,
+    before skip=1.2ex plus 2pt, after skip=1.4ex plus 2pt,
+    borderline west={2pt}{0pt}{#1}},
+}
+\newtcblisting{cppcode}{codeblock=accent!70, listing options={style=cpp}}
+\newtcblisting{ccode}{codeblock=ink!80, listing options={style=c}}
+\newtcblisting{pycode}{codeblock=accent3!70, listing options={style=python}}
+\newtcblisting{shell}{codeblock=accent2!70, listing options={style=shell}}
+\newtcblisting{makecode}{codeblock=accent2!70, listing options={style=make}}
+\newtcblisting{console}{codeblock=muted!60, listing options={style=output}}
+
+% A source file typeset straight from the repository, so the book and the code cannot drift
+% apart. The argument is the path from the repository root, which is also what is printed.
+\newtcbinputlisting{\cppfile}[1]{codeblock=accent!70, listing options={style=cpp},
+  listing file={../#1},
+  title={\detokenize{#1}}, detach title,
+  before upper={\noindent{\scriptsize\ttfamily\color{muted}\tcbtitletext}\par\vspace{3pt}}}
+\newtcbinputlisting{\makefile}[1]{codeblock=accent2!70, listing options={style=make},
+  listing file={../#1},
+  title={\detokenize{#1}}, detach title,
+  before upper={\noindent{\scriptsize\ttfamily\color{muted}\tcbtitletext}\par\vspace{3pt}}}
+
+% ------------------------------------------------------------------------------------------
+% Boxes in the text.
+% ------------------------------------------------------------------------------------------
+% An aside: something true that the surrounding text is not about.
+\newtcolorbox{aside}[1][]{
+  enhanced, breakable,
+  colback=fillaccent2!45, colframe=fillaccent2!45, boxrule=0pt, arc=0pt,
+  left=10pt, right=10pt, top=6pt, bottom=6pt,
+  borderline west={2.5pt}{0pt}{accent2},
+  before skip=2ex, after skip=2ex,
+  fontupper=\small,
+  #1}
+% A warning: something that costs the reader an exercise if it is missed, such as a finished
+% reference implementation sitting in the repository.
+\newtcolorbox{warning}[1][]{
+  enhanced, breakable,
+  colback=fillaccent!45, colframe=fillaccent!45, boxrule=0pt, arc=0pt,
+  left=10pt, right=10pt, top=6pt, bottom=6pt,
+  borderline west={2.5pt}{0pt}{accent},
+  before skip=2ex, after skip=2ex,
+  fontupper=\small,
+  #1}
+% The box that opens a chapter, listing what is in it.
+\newtcolorbox{chapterbox}[1]{
+  enhanced, breakable,
+  colback=white, colframe=rule, boxrule=0.5pt, arc=0pt,
+  left=10pt, right=10pt, top=8pt, bottom=6pt,
+  fonttitle=\small\scshape\lsstyle, coltitle=accent, colbacktitle=white,
+  attach boxed title to top left={xshift=8pt, yshift=-2.2mm},
+  boxed title style={boxrule=0pt, arc=0pt, left=3pt, right=3pt, top=0pt, bottom=0pt},
+  title={#1},
+  before skip=2ex, after skip=2.5ex,
+  fontupper=\small}
+
+% ------------------------------------------------------------------------------------------
+% Every heading from here on ends with \@afterheading, so the paragraph after it starts flush
+% left, as it does after a \section.
+%
+% Exercises. The lectures group their exercises into sets, each building a program, a part of
+% one, or a calculation; a set is a heading here, and the exercises in it are numbered within the
+% chapter, so that Exercise 3.2 can never be mistaken for §3.2 or for another chapter's. Each
+% carries its kind: Code for what you write and compile, Calculation for what you work out on
+% paper, Reflection for what you answer in prose.
+% ------------------------------------------------------------------------------------------
+\RequirePackage{needspace}
+\newcounter{exercise}[chapter]
+\renewcommand{\theexercise}{\thechapter.\arabic{exercise}}
+\newcounter{exerciseset}[chapter]
+\newcommand{\kindtag}[2][fillmuted]{%
+  \tcbox[on line, colback=#1, colframe=#1, boxrule=0pt, arc=1.5pt,
+    left=3pt, right=3pt, top=1pt, bottom=1pt, boxsep=0pt]{%
+    \small\scshape\lsstyle\MakeLowercase{#2}}}
+% \exerciseset{Title}: the heading a group of exercises sits under. It asks for room for itself and
+% the start of its first exercise, which asks for room of its own and would otherwise be free to
+% leave the set's heading alone at the foot of a page.
+\newcommand{\exerciseset}[1]{%
+  \par\addvspace{4ex plus 1ex}\needspace{15\baselineskip}%
+  \refstepcounter{exerciseset}%
+  \noindent{\small\scshape\lsstyle\color{accent}exercise set \theexerciseset}\par
+  \nopagebreak\vspace{0.3ex}%
+  \noindent{\Large\bfseries #1}\par
+  \nopagebreak\vspace{0.4ex}{\color{rule}\hrule height 0.4pt}\par\nopagebreak\vspace{0.6ex}%
+  \@afterindentfalse\@afterheading}
+% \exercise[fill]{Title}{Kind}
+\newcommand{\exercise}[3][fillmuted]{%
+  \par\addvspace{3ex plus 1ex}\needspace{8\baselineskip}%
+  \refstepcounter{exercise}%
+  \noindent{\large\bfseries{\color{accent}Exercise~\theexercise}\quad #2}%
+  \hfill\kindtag[#1]{#3}\par\nopagebreak\vspace{0.8ex}\@afterindentfalse\@afterheading}
+% The three kinds, so that every exercise of a kind carries the same tag in the same colour.
+\newcommand{\codeexercise}[1]{\exercise{#1}{Code}}
+\newcommand{\calcexercise}[1]{\exercise[fillaccent3]{#1}{Calculation}}
+\newcommand{\reflexercise}[1]{\exercise[fillaccent2]{#1}{Reflection}}
+% The lettered parts of an exercise, a) to e), as the lectures letter them.
+\newenvironment{parts}
+  {\begin{enumerate}[label={\bfseries\alph*)}, leftmargin=1.8em, itemsep=0.8ex]}
+  {\end{enumerate}}
+% A part of an exercise with a heading of its own, for the parts the lectures give a title:
+% "a) Constructor", "Tasks", "Input validation".
+\newcommand{\task}[1]{\par\addvspace{1.6ex}\needspace{4\baselineskip}%
+  \noindent{\bfseries #1}\par\nopagebreak\vspace{0.3ex}\@afterindentfalse\@afterheading}
+
+% ------------------------------------------------------------------------------------------
+% Worked solutions. Every exercise that is answered on paper rather than in code has its solution
+% in Appendix A. \seesolution{c3:ex:1}, at the end of the exercise, points forward to it;
+% \solution{c3:ex:1}{Title} is the heading of the solution itself, labelled sol:c3:ex:1, and
+% points back.
+% ------------------------------------------------------------------------------------------
+\newcommand{\seesolution}[1]{%
+  \par\nopagebreak\smallskip
+  {\raggedleft\small\itshape\color{muted}The worked solution is on
+    page~\pageref{sol:#1}.\par}}
+% \solution{label}{Title}
+\newcommand{\solution}[2]{%
+  \par\addvspace{3.5ex plus 1ex}\needspace{8\baselineskip}%
+  \phantomsection\label{sol:#1}%
+  \noindent{\large\bfseries{\color{accent}Exercise~\ref*{#1}}\quad #2}%
+  \hfill\kindtag[fillaccent3]{Solution}\par\nopagebreak
+  {\small\itshape\color{muted}The exercise is on page~\pageref{#1}.\par}%
+  \nopagebreak\vspace{0.8ex}\@afterindentfalse\@afterheading}
+% \step{Title}: a titled step inside a worked solution, such as "Training set 2" or
+% "Backpropagation", set like a \task.
+\newcommand{\step}[1]{\task{#1}}
+
+% ------------------------------------------------------------------------------------------
+% The written papers. A question is numbered within its paper and carries its marks in the tag
+% an exercise carries its kind in; a part's marks are set flush right at the end of the part, the
+% way a printed paper sets them.
+% ------------------------------------------------------------------------------------------
+\newcounter{question}[chapter]
+% \question{Title}{Marks}
+\newcommand{\question}[2]{%
+  \par\addvspace{3.5ex plus 1ex}\needspace{6\baselineskip}%
+  \refstepcounter{question}%
+  \noindent{\large\bfseries{\color{accent}Question~\thequestion}\quad #1}%
+  \hfill\kindtag{#2 marks}\par\nopagebreak\vspace{0.8ex}\@afterindentfalse\@afterheading}
+% "mark" or "marks" after a number, which may be a half: 1 mark, 1.5 marks, 2 marks.
+\ExplSyntaxOn
+\cs_new:Npn \marksword #1 { \str_if_eq:nnTF {#1} {1} {mark} {marks} }
+\ExplSyntaxOff
+% \worth{N}: "(N marks)" at the right margin, on the part's last line if it fits.
+\newcommand{\worth}[1]{{\unskip\nobreak\hfil\penalty50\hskip1.5em\hbox{}\nobreak\hfill
+  \mbox{\small\itshape (#1~\marksword{#1})}\parfillskip=0pt\finalhyphendemerits=0\par}}
+% \qpart{a}: the lead-in of a lettered part of a question.
+\newcommand{\qpart}[1]{\par\addvspace{1.2ex}\noindent\textbf{(#1)}\enspace}
+% \credit{text}: a credit that is more than a number of marks ("2 marks; deduct 1 for ..."),
+% set flush right like \worth.
+\newcommand{\credit}[1]{{\unskip\nobreak\hfil\penalty50\hskip1.5em\hbox{}\nobreak\hfill
+  \mbox{\small\itshape (#1)}\parfillskip=0pt\finalhyphendemerits=0\par}}
+% \answersection{N}{Title}{Marks}: the heading of the answers to one question, set like the
+% paper's own \question one size up and numbered by the question it answers rather than by a
+% section counter; it is in the contents and the running head, and linkable as
+% \answerprefix:q:N, where each set of answers sets \answerprefix to its own.
+\newcommand{\answerprefix}{ans}
+\newcommand{\answersection}[3]{%
+  \par\addvspace{4.5ex plus 1ex}\needspace{8\baselineskip}%
+  \phantomsection\addcontentsline{toc}{section}{Question~#1: #2}%
+  \markright{Question~#1\enspace #2}%
+  \def\@currentlabel{#1}\label{\answerprefix:q:#1}%
+  \noindent{\Large\bfseries{\color{accent}Question~#1}\quad #2}\hfill\kindtag{#3 marks}\par
+  \nopagebreak\vspace{1.2ex}\@afterindentfalse\@afterheading}
+% \answerpart{a}{4}: the heading of the answer to one part, with what it is worth.
+\newcommand{\answerpart}[2]{%
+  \par\addvspace{2.2ex plus .6ex}\needspace{4\baselineskip}%
+  \noindent{\bfseries\color{accent}(#1)}\hfill\kindtag{#2~\marksword{#2}}%
+  \par\nopagebreak\vspace{0.5ex}\@afterindentfalse\@afterheading}
+
+% ------------------------------------------------------------------------------------------
+% Links. Coloured on screen, quiet enough to print.
+% ------------------------------------------------------------------------------------------
+\RequirePackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=accent2!80!black, urlcolor=accent2!80!black,
+  citecolor=accent2!80!black, pdfauthor={Erik Pihl},
+  pdftitle={Machine Learning},
+  pdfsubject={Licensed under CC BY-NC-SA 4.0; its code may also be used under the MIT License}}
+\RequirePackage{bookmark}
+\pdfstringdefDisableCommands{\def\code#1{#1}\def\S{§}}
+
+\endinput

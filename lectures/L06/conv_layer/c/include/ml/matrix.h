@@ -15,7 +15,7 @@ typedef struct matrix matrix_t;
  *
  * @param[in] size Size of the matrix.
  *
- * @return Pointer to the new matrix, or a nullptr on failure.
+ * @return Pointer to the new matrix, or NULL on failure.
  */
 matrix_t* matrix_new(size_t size);
 
@@ -83,7 +83,7 @@ void matrix_init(matrix_t* self);
  * @param[in] buffer Buffer holding the data to copy.
  * @param[in] bytes Size of the buffer in bytes.
  *
- * @return Pointer to the new matrix, or a nullptr on failure.
+ * @return Pointer to the new matrix, or NULL on failure.
  */
 matrix_t* matrix_copy(const void* buffer, size_t bytes);
 

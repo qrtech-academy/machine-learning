@@ -1,0 +1,490 @@
+% Section 4.4, from lectures/L04/appendix/b_exercises.md. Both sets are code; their solution is in
+% the repository.
+
+\section{Exercises}
+\label{c4:sec:exercises}\label{c4:app:b}
+
+\begin{aside}
+\textbf{How to work these.} Both sets extend one program, the \code{ml} codebase you started in
+\secref{c3:sec:exercises}: carry it forward into the lecture's exercises directory,
+\file{lectures/L04/appendix/exercises} in the companion repository, and build it with your own
+Makefile. Set~1 declares the neural network class; Set~2 completes it with a full training method.
+The network trains with an adaptive learning rate, following the same rule
+\code{ml::lin_reg::Adaptive} uses in Chapter~\ref{c2:ch:training}, so no learning rate has to be
+chosen anywhere in the program.
+
+\textbf{How to check your work.} The test suite is already in
+\file{lectures/L04/appendix/exercises/test}, and Exercise~\ref{c4:ex:14} runs it. It's cumulative:
+it carries the stub tests from Chapter~\ref{c3:ch:nn} over unchanged and adds component tests for
+\code{Shallow}, so it supersedes the suite from \secref{c3:sec:exercises} entirely. It tests the
+directory above it by default; \code{make ML_DIR=<path>} points it at a tree of your own elsewhere.
+
+The solution is published in the companion repository after the lecture, and
+\file{lectures/L04/README.md} links to it. Try each exercise yourself before looking at it.
+\end{aside}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{The Neural Network Class}
+\label{c4:set:1}
+You'll extend the codebase from Chapter~\ref{c3:ch:nn} with an interface and a class for a simple
+neural network consisting of a hidden layer and an output layer, built on top of the
+\code{dense_layer::Interface}/\code{Stub} pair you already have.
+
+\codeexercise{Directory structure}
+\label{c4:ex:1}
+Carry the code from Chapter~\ref{c3:ch:nn} forward into this lecture's exercises directory,
+\file{lectures/L04/appendix/exercises}, then extend the structure as follows:
+
+\begin{console}
+exercises/
+├── include/
+│   └── ml/
+│       ├── dense_layer/
+│       │   ├── interface.hpp
+│       │   └── stub.hpp
+│       ├── neural_network/
+│       │   ├── interface.hpp
+│       │   └── shallow.hpp
+│       ├── types.hpp
+│       └── utils.hpp
+├── source/
+│   ├── ml/
+│   │   ├── neural_network/
+│   │   │   └── shallow.cpp
+│   │   └── utils.cpp
+│   └── main.cpp
+├── test/                <- already here, see Exercise 4.14
+└── Makefile
+\end{console}
+
+\noindent Note that the sources now sit under \file{source/ml/}, mirroring \file{include/ml/}.
+Don't forget to add both \file{source/ml/neural_network/shallow.cpp} and
+\file{source/ml/utils.cpp} to your makefile.
+
+\codeexercise{Utility functions}
+\label{c4:ex:2}
+Some helpers don't belong to any one class. The first of them is needed in this chapter, and
+Chapter~\ref{c5:ch:dense} adds three more to the same pair of files, so give them a home now.
+
+\task{The header (\file{ml/utils.hpp})}
+In the namespace \code{ml}, declare a single function:
+\begin{itemize}
+  \item \textbf{\code{initRandGen()}:}
+  \begin{itemize}
+    \item Initializes the random number generator, once per program run.
+    \item Takes no arguments and returns nothing.
+    \item Should be marked \code{noexcept}.
+  \end{itemize}
+\end{itemize}
+
+\task{The implementation (\file{source/ml/utils.cpp})}
+Define \code{initRandGen()} in the same namespace:
+\begin{itemize}
+  \item Add a static local variable named \code{initialized} with an initial value of
+    \code{false}. Being static, it keeps its value between calls, which is what makes the seeding
+    happen only once.
+  \item If \code{initialized} is already \code{true}, return early.
+  \item Seed the generator with the current time by calling
+    \code{std::srand(std::time(nullptr))}. Include \code{<cstdlib>} and \code{<ctime>} for these.
+  \item Set \code{initialized} to \code{true} so the next call does nothing.
+\end{itemize}
+
+\textbf{Why a shared file rather than an anonymous namespace?} In Chapter~\ref{c2:ch:training} the
+same function started out in an anonymous namespace inside \file{fixed.cpp}, which was fine while
+one class needed it, and moved to a shared file the moment \code{Adaptive} needed it too. An
+anonymous namespace doesn't scale: it gives every \file{.cpp} its own private copy, each with its
+own \code{initialized} flag, so the generator gets reseeded once per file that asks for it.
+Seeding must happen once per \emph{program}. A single definition in \file{utils.cpp}, shared
+through \file{utils.hpp}, gives exactly that.
+
+\codeexercise{Interface for neural networks}
+\label{c4:ex:3}
+In the header file \file{ml/neural_network/interface.hpp}, add a namespace named
+\code{ml::neural_network}. In this namespace, implement an interface named \code{Interface}:
+\begin{itemize}
+  \item \textbf{\code{~Interface()}:} should be set to \code{default} and marked \code{virtual} and
+    \code{noexcept}.
+  \item \textbf{\code{predict(input)}:} pure virtual. \code{input}: read-only floating-point vector
+    of the input to base the prediction on. Returns a reference to a floating-point vector holding
+    the predicted value. Should be marked \code{noexcept} (\textbf{not} \code{const}, since the
+    layers' output is updated on every prediction).
+\end{itemize}
+
+\codeexercise{The Shallow class: declaration}
+\label{c4:ex:4}
+In the header file \file{ml/neural_network/shallow.hpp}, add the namespace
+\code{ml::neural_network}. Implement a subclass named \code{Shallow} that inherits \code{Interface}
+via public inheritance. The class should be marked \code{final}.
+\begin{itemize}
+  \item \textbf{\code{Shallow()}:} takes \code{hiddenLayer} and \code{outputLayer} (the network's
+    hidden layer and output layer, \code{ml::dense_layer::Interface&}), plus \code{trainInput} and
+    \code{trainOutput} (read-only, two-dimensional floating-point vectors holding the training
+    data's inputs and outputs). Should be marked \code{explicit} and \code{noexcept}.
+  \item \textbf{\code{~Shallow()}:} should be marked \code{default}, \code{noexcept}, and
+    \code{override}.
+  \item \textbf{\code{predict()}:} overrides the corresponding method in the interface. Should be
+    marked \code{noexcept} and \code{override}.
+  \item \textbf{\code{train(epochCount, precisionThreshold = 0.999999)}:} trains the network
+    (implemented in full in Set~2). \code{epochCount}: number of epochs to train (unsigned
+    integer). \code{precisionThreshold}: precision at which training stops early (floating-point
+    number). Default value: \code{0.999999} (99.9999\%). Returns \code{true} if training was
+    carried out, \code{false} otherwise. Should be marked \code{noexcept}.
+\end{itemize}
+There's no \code{learningRate} argument. The network picks its own rate while training and revises
+it as it goes, exactly as \code{ml::lin_reg::Adaptive} does in Chapter~\ref{c2:ch:training}, so
+there's nothing for the caller to guess at. The rule itself is written in
+Exercise~\ref{c4:ex:11}.
+
+The class should also have the following private methods, used to train in a randomized order:
+\begin{itemize}
+  \item \textbf{\code{initTrainOrder()}:} fills \code{myTrainOrder} (see below) with the indices
+    \code{0, 1, 2 ... N-1}, where \code{N} is the number of complete training sets. Takes that set
+    count as its only argument, returns nothing, and should be marked \code{noexcept}.
+  \item \textbf{\code{randomizeTrainOrder()}:} shuffles the contents of \code{myTrainOrder} into a
+    random order. For each index \code{i}, pick a random index \code{r} and swap
+    \code{myTrainOrder[i]} and \code{myTrainOrder[r]}. Takes no arguments, returns nothing, and
+    should be marked \code{noexcept}.
+\end{itemize}
+One more private method is needed by the training method, implemented in Set~2:
+\begin{itemize}
+  \item \textbf{\code{precision()}:} computes the network's precision over the whole training data.
+    Takes no arguments and returns a floating-point number. Should be marked \code{[[nodiscard]]}
+    and \code{noexcept}, but \textbf{not} \code{const}, unlike its namesake in
+    Chapter~\ref{c2:ch:training}: it calls \code{predict()}, which feeds both layers forward and
+    therefore changes their output.
+\end{itemize}
+Feel free to add more (private) methods as needed.
+
+\codeexercise{Removed constructors and operators}
+\label{c4:ex:5}
+Delete the class's default constructor, copy and move constructors, and the corresponding
+operators.
+
+\codeexercise{Private member variables}
+\label{c4:ex:6}
+Add the following private member variables to \code{Shallow}:
+\begin{itemize}
+  \item \textbf{\code{myHiddenLayer}:} reference to the network's hidden layer, obtained via the
+    constructor.
+  \item \textbf{\code{myOutputLayer}:} reference to the network's output layer, obtained via the
+    constructor.
+  \item \textbf{\code{myTrainInput}:} reference to the training data's input, obtained via the
+    constructor.
+  \item \textbf{\code{myTrainOutput}:} reference to the training data's output, obtained via the
+    constructor.
+  \item \textbf{\code{myTrainOrder}:} the indices of the training sets as unsigned integers
+    (\code{ml::MatrixU32}), in the order they'll be trained in. Initialized by the constructor and
+    reshuffled once per epoch.
+\end{itemize}
+No member is needed for the learning rate either. It's a local variable inside \code{train()}, so
+every call starts from the same initial rate rather than inheriting whatever the previous call
+ended on.
+
+No separate member is needed for the training set count. \code{myTrainOrder} holds one index per
+training set, so \code{myTrainOrder.size()} is that count, exactly as \code{myTrainOrder} replaced
+\code{mySetCount} in Chapter~\ref{c2:ch:training}.
+
+\codeexercise{Constructor and prediction}
+\label{c4:ex:7}
+Implement the following in \file{source/ml/neural_network/shallow.cpp}:
+
+\task{The constructor}
+\begin{itemize}
+  \item Initialize all member variables as described above.
+  \item Print an error message and call \code{std::terminate()} (from \code{<exception>}) if the
+    output layer's weight count doesn't match the hidden layer's node count. The two layers can
+    never be connected in that case, and the constructor has no way to return a failure code to the
+    caller.
+  \item Compute the number of complete training sets, i.e.\ the smaller of
+    \code{trainInput.size()} and \code{trainOutput.size()}. Print an error message and call
+    \code{std::terminate()} if it's 0, as in Chapters~\ref{c1:ch:linreg}
+    and~\ref{c2:ch:training}: a network without training data can never be trained.
+  \item Fill \code{myTrainOrder} by calling \code{initTrainOrder()} with that set count.
+  \item Call \code{initRandGen()} (from \file{ml/utils.hpp}, see Exercise~\ref{c4:ex:2}), so the
+    generator is seeded before the first shuffle. Doing it here rather than inside
+    \code{randomizeTrainOrder()} keeps the one-time setup out of a method called once per epoch.
+\end{itemize}
+
+\task{The method \code{predict()}}
+\begin{itemize}
+  \item Perform feedforward through the entire network:
+  \begin{enumerate}
+    \item Call \code{myHiddenLayer.feedforward(input)} with the given input.
+    \item Call \code{myOutputLayer.feedforward(myHiddenLayer.output())} with the hidden layer's
+      output as input.
+  \end{enumerate}
+  \item Return \code{myOutputLayer.output()} (a reference; no separate storage variable is needed
+    in \code{Shallow}).
+\end{itemize}
+
+\codeexercise{Training method (placeholder)}
+\label{c4:ex:8}
+Implement a temporary version of \code{train()} in \file{source/ml/neural_network/shallow.cpp} that
+simply returns \code{true}. The full implementation (feedforward, backpropagation, and optimization
+for each training set and epoch, plus the precision check that sets the learning rate) follows in
+Set~2.
+
+Give \code{precision()} a temporary body too, returning \code{0.0}, so the header and the source
+file stay in step until Exercise~\ref{c4:ex:10} fills it in.
+
+\codeexercise{Compiling and testing}
+\label{c4:ex:9}
+Write a \code{main()} function in \file{main.cpp} that:
+\begin{itemize}
+  \item Creates one \code{ml::dense_layer::Stub} instance for the hidden layer and one for the
+    output layer (e.g.\ 3 nodes/2 weights per node, and 1 node/3 weights per node respectively;
+    the number of weights in the output layer should match the number of nodes in the hidden
+    layer).
+  \item Creates an \code{ml::neural_network::Shallow} instance from these two layers and training
+    data of your choice (e.g.\ a 2-bit XOR pattern).
+  \item Performs a prediction for each training set's input, and prints the input and predicted
+    output in the terminal.
+\end{itemize}
+Compile and test-run the program. You should get the following output (the dense layers are still
+stubs, so the prediction is always 0.5):
+
+\begin{console}
+--------------------------------------------------------------------------------
+Input: 0 0, predicted output: 0.5
+Input: 0 1, predicted output: 0.5
+Input: 1 0, predicted output: 0.5
+Input: 1 1, predicted output: 0.5
+--------------------------------------------------------------------------------
+\end{console}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Training the Neural Network}
+\label{c4:set:2}
+You'll complete the class \code{ml::neural_network::Shallow} you just built by implementing a full
+training method: first the precision it measures itself by, then the rule that turns that
+measurement into a learning rate, and finally the training loop that uses both.
+
+\codeexercise{Precision calculation}
+\label{c4:ex:10}
+Implement the private method \code{precision()} in \file{source/ml/neural_network/shallow.cpp}. It
+measures how close the network currently is to its training data, the same mean absolute error
+(MAE) the models in Chapter~\ref{c2:ch:training} measure, computed over vectors rather than single
+values:
+\begin{itemize}
+  \item Declare an error sum and a value count, both starting at zero.
+  \item For each training set index \code{x} in \code{myTrainOrder}:
+  \begin{itemize}
+    \item Call \code{predict(myTrainInput[x])} and keep the returned reference.
+    \item For every output node \code{i}, add \code{std::abs(myTrainOutput[x][i] - prediction[i])}
+      to the error sum and raise the value count by one.
+  \end{itemize}
+  \item Compute the MAE by dividing the error sum by the value count.
+  \item Return \code{1.0 - MAE}.
+\end{itemize}
+Include \code{<cmath>} in \file{shallow.cpp} for \code{std::abs}.
+
+\textbf{Why the value count rather than the set count?} Chapter~\ref{c2:ch:training} divides by the
+number of training sets, because a linear regression model produces exactly one value per set. Here
+a set holds one value per output node, so dividing by the set count alone would report an error
+that grows with the width of the output layer. Dividing by the number of values added gives the
+average error \emph{per value}, which is what \code{1.0 - MAE} is meant to be read against, and the
+two are identical for the single-output network you're building.
+
+\textbf{Why indexing \code{myTrainOutput[x][i]} per output node is safe.} \code{train()} only calls
+\code{precision()} at the end of a complete epoch, and every epoch has already passed each training
+output through \code{myOutputLayer.backpropagate()}, which returns \code{false} when the row's
+length doesn't match the layer's node count. A row of the wrong length therefore ends training
+before \code{precision()} is ever reached.
+
+\codeexercise{The learning rate rule}
+\label{c4:ex:11}
+The learning rate is the one training parameter with no sensible default, so the network sets its
+own, using the precision it just computed. Add a function named \code{updateLearningRate()} in an
+anonymous namespace in \file{shallow.cpp}, exactly as Chapter~\ref{c2:ch:training} does in
+\file{adaptive.cpp}:
+
+\begin{cppcode}
+void updateLearningRate(double& learningRate, double& prevPrecision,
+                        double currentPrecision) noexcept;
+\end{cppcode}
+
+\noindent It takes the current learning rate and the previous precision by reference, since it
+updates both, and the precision just measured by value. Give each of the four values it needs a
+named constant: a maximum learning rate of \code{0.25}, a minimum of \code{0.01}, a smallest
+expected improvement of \code{0.1}, and a step of \code{0.05}.
+
+The rule works on the difference between the two precisions, i.e.\ how much the network improved
+since the last evaluation:
+\begin{itemize}
+  \item \textbf{Improved by at least the expected minimum:} leave the learning rate alone. It's
+    working.
+  \item \textbf{Improved, but by less than that:} raise the learning rate by the step. Progress has
+    stalled, so take bigger steps.
+  \item \textbf{Didn't improve at all:} lower the learning rate by the step. The network is
+    overshooting, so take smaller steps.
+\end{itemize}
+As in Chapter~\ref{c2:ch:training}, keep the limits out of the branches and apply them once
+afterwards with \code{learningRate = std::clamp(learningRate, minLearningRate, maxLearningRate)}.
+It needs \code{<algorithm>}, which \file{shallow.cpp} already includes for the constructor's
+\code{std::min()}.
+
+Store the precision just measured in \code{prevPrecision} before returning, so the next call has
+something to compare against.
+
+\textbf{The clamp's minimum is the one value that differs from Chapter~\ref{c2:ch:training}}, which
+uses \code{1e-6}. The purpose the minimum is given there is that ``a model that keeps missing can
+still creep towards the line rather than stopping dead'', and in a network \code{1e-6} doesn't
+deliver it: the parameter updates it allows are far too small to measure, so the precision drifts
+\emph{down} by a fraction of a millionth from one evaluation to the next, the rule reads that as
+another failure to improve, and the rate stays at the floor for the rest of the run. Two unlucky
+evaluations in a row are enough to reach it from the initial rate, and the network never learns
+anything afterwards. Measured on the 2-bit XOR pattern, once the real \code{Dense} layer of
+Chapter~\ref{c5:ch:dense} has replaced the stub, a floor of \code{1e-6} kills roughly one run in
+six that way. With \code{0.01} the rate recovers on its own, since a network that is still moving
+improves sooner or later, and the rule raises the rate again the moment it does.
+
+\codeexercise{Training method}
+\label{c4:ex:12}
+Replace the temporary version of \code{train()} in \file{source/ml/neural_network/shallow.cpp}
+with a full implementation.
+
+\task{Input validation}
+\begin{itemize}
+  \item Return \code{false} if \code{epochCount == 0}, or if \code{precisionThreshold} falls outside
+    the range \code{(0.0, 1.0)}:
+  \begin{itemize}
+    \item A threshold of \code{1.0} or more can never be reached, since the precision is
+      \code{1.0 - MAE} and the mean absolute error can't be negative. Training would always run
+      the full epoch count.
+    \item A threshold of \code{0.0} or less accepts a network whose mean absolute error is
+      \code{1.0} or worse, which defeats the purpose of the check.
+  \end{itemize}
+  \item There's no learning rate to validate, since the caller no longer supplies one. The layers
+    still check the rate they're handed on every call to \code{optimize()}, and the rule above
+    keeps it between \code{0.01} and \code{0.25}, well inside the \code{(0.0, 1.0)} the layers
+    demand.
+  \item The training set count doesn't need checking here. The constructor already guaranteed at
+    least one complete set, so \code{myTrainOrder} is never empty.
+  \item As in Chapters~\ref{c1:ch:linreg} and~\ref{c2:ch:training}, \code{train()} reports invalid
+    arguments through its return value. Only a constructor calls \code{std::terminate()}, because it
+    has no way to return a failure code to the caller.
+\end{itemize}
+
+\task{Starting from scratch}
+\begin{itemize}
+  \item Once the arguments are known to be valid, and before the first epoch, reset both layers by
+    calling \code{myHiddenLayer.initParams()} and \code{myOutputLayer.initParams()}. The method is
+    part of \code{ml::dense_layer::Interface} from Chapter~\ref{c3:ch:nn}, so the network can call
+    it without knowing which kind of layer it holds: \code{Stub} implements it as an empty method,
+    and \code{Dense} implements it in Chapter~\ref{c5:ch:dense} by drawing new values.
+  \item Training therefore always starts from freshly initialized parameters. Calling
+    \code{train()} a second time trains a new network rather than continuing the old one, which is
+    what makes retraining a network that ended up badly trained worth doing at all: with the
+    parameters carried over, a second call would resume from the same bad state it just failed in.
+  \item This is a deliberate departure from \code{ml::lin_reg::Fixed} in Chapter~\ref{c1:ch:linreg},
+    whose \code{train()} continues from the current parameters so that a model can be trained in
+    stages. That only makes sense while the caller sets the learning rate. Here the schedule
+    restarts from the initial rate on every call, so the rate the network picks would no longer
+    match the parameters it's applied to.
+  \item Do the reset \textbf{after} the argument checks, so a rejected call leaves a trained network
+    exactly as it was.
+\end{itemize}
+
+\task{Training}
+\begin{itemize}
+  \item Give the evaluation interval (\code{100}) and the initial learning rate (\code{0.1}) named
+    constants.
+  \item Declare the learning rate and the previous precision as local variables, initialized to the
+    initial learning rate and \code{0.0}. Being local means every call starts from the initial rate
+    again, rather than inheriting whatever the previous call ended on.
+  \item Iterate the desired number of epochs with a for loop:
+    \code{for (std::size_t epoch{}; epoch < epochCount; ++epoch)}.
+  \item At the start of every epoch, call \code{randomizeTrainOrder()}. As in
+    Chapter~\ref{c2:ch:training}, reshuffling each epoch keeps the network from learning anything
+    from the order the training data happens to be stored in.
+  \item For each epoch, iterate through the training sets in the order \code{myTrainOrder} gives
+    rather than sequentially, e.g.\ with a range-based for loop over \code{myTrainOrder}. Note that
+    the loop variable is the index into the training data, not the counter itself.
+  \item For each training set index \code{x}, perform the following three steps:
+  \begin{enumerate}
+    \item \textbf{Feedforward:} call \code{predict(myTrainInput[x])}. This performs feedforward
+      through both the hidden layer and the output layer.
+    \item \textbf{Backpropagation:}
+    \begin{itemize}
+      \item Compute the error in the output layer:\newline
+        \code{myOutputLayer.backpropagate(myTrainOutput[x])}.
+      \item Compute the error in the hidden layer from the output layer's error and
+        weights:\newline \code{myHiddenLayer.backpropagate(myOutputLayer)}.
+    \end{itemize}
+    \item \textbf{Optimization:}
+    \begin{itemize}
+      \item Optimize the hidden layer, passing the current learning rate:\newline
+        \code{myHiddenLayer.optimize(myTrainInput[x], learningRate)}.
+      \item Optimize the output layer based on the hidden layer's output:\newline
+        \code{myOutputLayer.optimize(myHiddenLayer.output(), learningRate)}.
+    \end{itemize}
+  \end{enumerate}
+\end{itemize}
+Each of the four layer calls above returns \code{bool} (see Chapter~\ref{c3:ch:nn}). Return
+\code{false} as soon as any of them fails: a dimension mismatch means the network is wired wrong,
+and training on from there would only produce meaningless numbers.
+
+\task{Evaluating the training progress}
+\begin{itemize}
+  \item Every hundredth epoch, except the first, compute the precision once and keep it in a local
+    variable:
+  \begin{itemize}
+    \item Stop training and return \code{true} if it reaches or exceeds \code{precisionThreshold},
+      printing the achieved precision and the number of epochs it took. Report the number of epochs
+      completed, not the loop index, so the first epoch reads as 1 rather than 0.
+    \item Otherwise, pass it to \code{updateLearningRate()}.
+  \end{itemize}
+  \item Chapter~\ref{c2:ch:training} evaluates every tenth epoch, since a linear regression model
+    reaches its threshold in tens of epochs. A network needs thousands, so a tenth-epoch evaluation
+    would scan the whole training data hundreds of times for a picture that has barely changed.
+    Every hundredth keeps that overhead down without letting the learning rate go unexamined for
+    long.
+  \item Note that the precision is computed once per evaluation and then used twice. Calling
+    \code{precision()} a second time inside \code{updateLearningRate()} would feed every training
+    set through the network again for a value that's already in hand.
+\end{itemize}
+
+\task{Return value}
+\code{false} on invalid arguments or a failed layer call, otherwise \code{true} once the threshold
+is reached or the epochs run out.
+
+\codeexercise{Compiling and testing}
+\label{c4:ex:13}
+Update \file{main.cpp} so \code{train()} is called (with an epoch count of your choice, and the
+default precision threshold) before prediction is performed. Check the return value of
+\code{train()}: print an error message and exit the program with an error code if training fails.
+
+Keep using \code{ml::dense_layer::Stub} for the hidden layer and output layer until a concrete dense
+layer implementation exists (see Chapter~\ref{c5:ch:dense}).
+
+Compile and test-run the program. Don't worry if the network doesn't predict correctly; the dense
+layers are still stubs and therefore don't actually train. What matters is that the code compiles
+and runs without errors; a concrete implementation of \code{Dense} is added in
+Chapter~\ref{c5:ch:dense}.
+
+The early-stop line stays absent for the same reason: the stub reports the same output whatever
+it's fed, so the precision sits at whatever that fixed output happens to score and never moves.
+Every run trains for the full epoch count. Your \code{train()} isn't wrong; there's simply nothing
+there to learn until Chapter~\ref{c5:ch:dense}.
+
+\codeexercise{Running the tests}
+\label{c4:ex:14}
+An updated test suite is available in \file{lectures/L04/appendix/exercises/test}. It's cumulative:
+it carries the stub tests from Chapter~\ref{c3:ch:nn} over unchanged and adds component tests for
+\code{Shallow} on top, so it supersedes the suite from \secref{c3:sec:exercises} entirely.
+
+Once you've carried your code forward into this lecture's exercises directory, build and run it:
+
+\begin{shell}
+make -C test
+\end{shell}
+
+\noindent All 28 test cases should pass. The ones worth reading check that a prediction reads the
+output layer \emph{live} rather than from a stored copy, that training performs exactly one
+feedforward per training set per epoch, and that the precision is evaluated on every hundredth
+epoch and no other. Nothing else can tell a correct training loop from one that runs a single pass:
+both line up dimensionally and both return \code{true}.
+
+The test suite's README, \file{lectures/L04/appendix/exercises/test/README.md}, has more
+information, including the mistakes this suite deliberately can't catch and what it would take to
+catch them.

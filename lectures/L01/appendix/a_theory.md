@@ -490,7 +490,7 @@ int main()
     const Matrix1d trainOut{1.0, 4.0, 7.0, 10.0, 13.0};
     LinReg linReg{};
 
-    // Train the model, terminate on failure.
+    // Train the model, return -1 on failure.
     if (!linReg.train(trainIn, trainOut, epochCount, learningRate))
     {
         std::printf("Training failed!\n");

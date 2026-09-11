@@ -154,9 +154,11 @@ $$\Delta c_4 = -1.37 * 0.1 = -0.137, \quad \Delta c_5 = -0.41 * 0.1 = -0.041$$
 
 $$b_4 = 0.1 + (-0.137) = -0.037, \quad b_5 = 0.6 + (-0.041) = 0.559$$
 
-Output-layer weights (selection):
+Output-layer weights, scaled by the hidden layer's outputs $y_1 = 0.3$, $y_2 = 0.4$ and $y_3 = 1.2$:
 
-$$w_7 = 0.1 + (-0.137) * 0.3 = 0.0589, \quad w_9 = 1.0 + (-0.137) * 1.2 = 0.8356$$
+$$w_7 = 0.1 + (-0.137) * 0.3 = 0.0589, \quad w_8 = 0.1 + (-0.137) * 0.4 = 0.0452, \quad w_9 = 1.0 + (-0.137) * 1.2 = 0.8356$$
+
+$$w_{10} = 0.3 + (-0.041) * 0.3 = 0.2877, \quad w_{11} = 0.0 + (-0.041) * 0.4 = -0.0164, \quad w_{12} = 0.6 + (-0.041) * 1.2 = 0.5508$$
 
 $$\Delta c_1 = -0.026, \quad \Delta c_2 = -0.0137, \quad \Delta c_3 = -0.1616$$
 
@@ -164,9 +166,11 @@ Hidden-layer biases:
 
 $$b_1 = 0.074, \quad b_2 = 0.0863, \quad b_3 = 0.5384$$
 
-Hidden-layer weights (selection):
+Hidden-layer weights, scaled by the inputs $x_1 = 1$ and $x_2 = 0$, so the three weights on $x_2$ keep their values:
 
-$$w_1 = 0.174, \quad w_3 = 0.2863, \quad w_5 = 0.3384$$
+$$w_1 = 0.2 + (-0.026) * 1 = 0.174, \quad w_3 = 0.3 + (-0.0137) * 1 = 0.2863, \quad w_5 = 0.5 + (-0.1616) * 1 = 0.3384$$
+
+$$w_2 = 0.9, \quad w_4 = 0.8, \quad w_6 = 0.4$$
 
 #### 4. Verification (via feedforward)
 
@@ -174,7 +178,9 @@ With the new parameters and X1X2 = 10:
 
 $$y_1 \approx 0.248, \quad y_2 \approx 0.3726, \quad y_3 \approx 0.8768$$
 
-$$Y_1 = y_4 \approx 0.727, \quad Y_2 = y_5 \approx 1.107$$
+$$Y_1 = y_4 = \sigma(-0.037 + 0.248 * 0.0589 + 0.3726 * 0.0452 + 0.8768 * 0.8356) \approx 0.727$$
+
+$$Y_2 = y_5 = \sigma(0.559 + 0.248 * 0.2877 + 0.3726 * (-0.0164) + 0.8768 * 0.5508) \approx 1.107$$
 
 $$\delta_4 \approx 0 - 0.727 = -0.727, \quad \delta_5 \approx 1 - 1.107 = -0.107$$
 
@@ -280,7 +286,7 @@ of it.
 ---
 
 ### 1. Directory structure
-Set up the following structure in this lecture's [exercises](./exercises/) directory:
+Set up the following structure in this lecture's [exercises](../exercises/) directory:
 
 ```
 exercises/
@@ -327,8 +333,8 @@ to do about the failure. As in **L01** and **L02**, `std::terminate()` is reserv
 constructor, which has no way to return a failure code to the caller:
 * **`feedforward(input)`:** performs feedforward.
     * `input`: read-only floating-point vector of input data.
-* **`backpropagate(output)`** (output layer): computes error from reference values.
-    * `output`: read-only floating-point vector of reference values.
+* **`backpropagate(reference)`** (output layer): computes error from reference values.
+    * `reference`: read-only floating-point vector of reference values.
 * **`backpropagate(nextLayer)`** (hidden layer): computes error from the next layer.
     * `nextLayer`: reference to the next layer (`const Interface&`).
 * **`optimize(input, learningRate)`:** updates bias and weights.
@@ -469,7 +475,7 @@ returns `false` rather than terminating.
 ---
 
 ### 4. Running the tests
-A test suite for the stub is available in [exercises/test](./exercises/test/). It's already in
+A test suite for the stub is available in [exercises/test](../exercises/test/). It's already in
 place next to the code you just wrote. Build and run it from the exercises directory:
 
 ```bash
@@ -487,7 +493,7 @@ logic the stub has, and the network you write in **L04** is tested entirely agai
 whose `feedforward()` accepted an input of any size would let every L04 test pass without proving
 anything.
 
-See the [test suite's README](./exercises/test/README.md) for more information, including which of
+See the [test suite's README](../exercises/test/README.md) for more information, including which of
 these tests carry over unchanged to your real `Dense` layer in **L05**.
 
 ---

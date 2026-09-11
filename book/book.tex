@@ -1,0 +1,52 @@
+% Machine Learning - the book.
+%
+% Built with LuaLaTeX; see the Makefile. The design is in mlbook.sty, the front matter in front/,
+% each chapter in chapters/NN/, one file per appendix of the lecture it is typeset from, and the
+% back matter in back/: the worked solutions to the exercises answered on paper, then the two
+% written papers from exam/. The solutions to the code exercises are not printed; the chapters
+% point to them in the repository.
+\documentclass[10pt, twoside, openright]{book}
+\usepackage{mlbook}
+
+\begin{document}
+
+\frontmatter
+\input{front/title}
+\tableofcontents
+\input{front/preface}
+
+\mainmatter
+\bookpart{Linear Regression and Neural Networks}{%
+  Chapters~1 to~5, taught as lectures L01 to L05. A linear regression model, trained by hand and
+  then in software, and taught to stop training on its own and to pick its own learning rate;
+  then neural networks, with feedforward, backpropagation and optimization worked through on
+  paper before a network is built from interfaces. The part ends with a dense layer written from
+  scratch, which is the first layer in the book that actually learns.}
+\input{chapters/01/chapter}
+\input{chapters/02/chapter}
+\input{chapters/03/chapter}
+\input{chapters/04/chapter}
+\input{chapters/05/chapter}
+
+\bookpart{Convolutional Neural Networks}{%
+  Chapters~6 to~10, taught as lectures L06 to L10. Why a network built only from dense layers
+  handles images badly, and the convolutional, pooling and flatten layers that handle them well;
+  each worked through by hand, written once as a simple struct, and then rebuilt behind an
+  interface in a polymorphic pipeline. The part ends with every layer real, a network that tells
+  four hand-drawn digits apart, a review of the whole book, and what changes when a network like
+  it has to run on a microcontroller.}
+\input{chapters/06/chapter}
+\input{chapters/07/chapter}
+\input{chapters/08/chapter}
+\input{chapters/09/chapter}
+\input{chapters/10/chapter}
+
+\appendix
+\input{back/solutions/solutions}
+\input{back/exam/about}
+\input{back/exam/paper_a}
+\input{back/exam/paper_b}
+\input{back/exam/answers_a}
+\input{back/exam/answers_b}
+
+\end{document}

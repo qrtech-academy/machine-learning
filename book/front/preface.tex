@@ -1,0 +1,158 @@
+% Preface: the README's About the Course and Written Examinations sections, the course plan and
+% lecture content from info/README.md, and what the lectures take for granted, as the front matter
+% of a book.
+
+\chapter{Preface}
+\markboth{Preface}{Preface}
+
+This book covers the fundamentals of machine learning, and it covers them by building them. Every
+model in it is implemented from scratch in C++, without an external machine learning library, so
+that nothing happens inside it that you have not written yourself:
+\begin{itemize}
+  \item Linear regression and gradient-based optimization.
+  \item Neural networks: feedforward, backpropagation, and activation functions.
+  \item Convolutional neural networks (CNNs) for image classification: kernels, pooling, and
+    flatten layers.
+  \item Implementing machine learning algorithms from scratch in C++.
+\end{itemize}
+
+\textbf{Along the way you will train models by hand as well as in software.} Every algorithm the
+book implements is first worked through on paper, with numbers small enough to follow, and then
+written as code that reproduces those numbers. The code you write adds up to:
+\begin{itemize}
+  \item A linear regression model trained with a fixed learning rate, and a second one that picks
+    its own.
+  \item A simple neural network, built on a dense layer written from scratch.
+  \item Convolutional, pooling, and flatten layers, first as simple structs and then as classes
+    behind an interface, wired together into a network that tells four hand-drawn digits apart.
+\end{itemize}
+
+\section*{What you should be able to do at the end}
+Having worked through the book, you should be able to:
+\begin{itemize}
+  \item Implement basic machine learning algorithms from scratch in C++.
+  \item Train and evaluate neural networks, both by hand and in software.
+  \item Reason about design choices and limitations.
+\end{itemize}
+
+\section*{What you are assumed to know}
+The subject of this book is \textbf{machine learning}, not C++. It introduces
+\code{std::vector}, the one container every model in it is built on, in \secref{c1:sec:vectors},
+and uses the rest of C++17 without introducing it: classes and structs, public inheritance and
+pure virtual interfaces, references and \code{const}, the keywords \code{explicit},
+\code{noexcept}, \code{final}, \code{override} and \code{[[nodiscard]]}, deleted copy and move
+operations, and, from Chapter~\ref{c8:ch:conv} on, \code{std::unique_ptr} and a factory. You should
+also be at home in a terminal, compiling a program with \code{g++} and building one with
+\code{make}.
+
+The mathematics asks for less than it may look. Everything the book computes is sums, products and
+differences, plus the derivatives of the three activation functions it implements, and every one of
+those derivatives is given. A calculator is all the hand calculations need.
+
+\section*{How the book is organised}
+The book is typeset from a ten-lecture course, and each chapter is one lecture. The course is taught
+in two parts with a natural break between them, and the book keeps the break: Part~I builds up from
+linear regression to a neural network with a dense layer written from scratch, and Part~II builds a
+convolutional neural network one layer type at a time, closing with a review that ties linear
+regression, neural networks, and CNNs together.
+
+\begin{booktable}{@{}p{5.2em}p{3.6em}L@{}}
+  \thead{Chapter} & \thead{Lecture} & \thead{Topic} \\
+  \midrule
+  \multicolumn{3}{@{}l}{\textit{Part I: Linear Regression and Neural Networks}} \\
+  1 & \file{L01} & Linear regression (part I) \\
+  2 & \file{L02} & Linear regression (part II) \\
+  3 & \file{L03} & Neural networks (part I) \\
+  4 & \file{L04} & Neural networks (part II) \\
+  5 & \file{L05} & Dense layer \\
+  \midrule
+  \multicolumn{3}{@{}l}{\textit{Part II: Convolutional Neural Networks}} \\
+  6 & \file{L06} & Convolutional neural networks (part I) \\
+  7 & \file{L07} & Convolutional neural networks (part II) \\
+  8 & \file{L08} & Convolutional neural networks (part III) \\
+  9 & \file{L09} & Convolutional neural networks (part IV) \\
+  10 & \file{L10} & Flatten layer and course review \\
+\end{booktable}
+
+A chapter's sections are its lecture's appendices, in the same order and with the same
+subsections, so a chapter here and a lecture directory in the repository can be read side by side.
+Every chapter opens with what is in it, works through the material, closes with a review of what
+you should now be able to explain, and ends with its exercises. The appendices hold the worked
+solutions to the exercises answered on paper, and the two written papers described below.
+
+\section*{What the exercises look like}
+The exercises come in \textbf{sets}. A set builds one program, or one part of a larger one, or
+works through one calculation, and each exercise in a set adds a piece of it. Every exercise is
+labelled with its kind:
+
+\begin{booktable}{@{}p{7.4em}L@{}}
+  \thead{Kind} & \thead{What it asks of you} \\
+  \midrule
+  \kindtag{Code} & Write C++, compile it, and check it against the lecture's test suite, which
+    specifies the behaviour the exercise asks for, case by case. \\
+  \kindtag[fillaccent3]{Calculation} & Work it out on paper: train a model by hand, trace an image
+    through a layer, or count what a network has to store. \\
+  \kindtag[fillaccent2]{Reflection} & Answer in prose: recognise a layer from its algorithm, or
+    decide whether a claim about one is true, and say why. \\
+\end{booktable}
+
+\textbf{The solutions to the Calculation and Reflection exercises are in this book}, in
+Appendix~\ref{sol:ch:solutions}, worked through step by step, and every such exercise ends with the
+page its solution is on. Work each one before you turn to it; a hand calculation you have only read
+teaches you much less than one you got wrong first.
+
+\textbf{The solutions to the Code exercises are not in this book.} They are published in the
+companion repository, lecture by lecture, and each lecture's README says where. Clone the repository
+(see \emph{Setting up} below) and you can run a reference program beside your own.
+
+\section*{Two written papers, and what they are not}
+Nothing in the course this book comes from is marked. Assessment is the exercises after every
+chapter, the test suite most of them ship with, and the self-assessment exercises in
+\secref{c10:sec:exercises}, each of which checks a component you built or a number you computed
+beside it.
+
+Appendices~\ref{exam:ch:about} to \ref{ansb:ch:answers} hold two four-hour papers with worked
+solutions, and they check something else: \textbf{your theoretical knowledge, on paper, with
+nothing in front of you.} Nine questions each, mixing theory with code, and every derivation the
+chapters make asked for without the chapter open beside you.
+
+\textbf{They exist purely so that you can test your own knowledge after working through the book.
+They gate nothing, they are not a qualification, and no part of the book requires them.}
+
+\textbf{Take one after the last chapter.} Both papers draw on all ten chapters, so sitting one
+partway through examines material you have not read yet.
+
+\section*{Setting up}
+Everything in this book runs in a Linux terminal: on Linux itself, or on Windows through WSL. You
+need three things:
+\begin{itemize}
+  \item \textbf{GCC and G++}, with C++17 support, to compile the programs.
+  \item \textbf{Linux or WSL}, to compile and run them in a terminal environment.
+  \item \textbf{An editor}; Visual Studio Code is the one the course uses, available at
+    \url{https://code.visualstudio.com/download}.
+\end{itemize}
+Chapter~\ref{c7:ch:layers} also points to reference implementations of its layers in Python, which
+run with \code{python3}. For a small program you want to try without installing anything, an online
+compiler such as \url{https://www.onlinegdb.com/online_c_compiler} works too, with the language
+switched to C++17.
+
+Then clone the companion repository, together with the test framework it keeps as a submodule:
+
+\begin{shell}
+git clone --recursive https://github.com/qrtech-academy/machine-learning.git
+\end{shell}
+
+\noindent (In a clone made without \code{--recursive}, run \code{git submodule update --init}
+once.) Three commands at its root cover the repository as a whole:
+
+\begin{shell}
+make build               # Build every lecture demo that has a Makefile.
+make test                # Build and run every test suite that has a solution to run against.
+make format-check        # Check the formatting of every C++ and Python file.
+\end{shell}
+
+\noindent You write your exercise solutions in the repository, and each chapter's exercises say
+where. Each lecture's test suite already knows where that is and runs with a single \code{make}:
+its tests use nothing but the public interface the exercises specify, so any implementation that
+follows the specification passes, however it is written on the inside, and a test that fails names
+the assertion, the two values involved, and the file and line it came from.

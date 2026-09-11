@@ -1,0 +1,38 @@
+% Chapter 6, typeset from lectures/L06: the README is the opener and the closing review, each
+% numbered section of appendix A is a section, in the same order and with the same subsections,
+% and appendices B and C are the exercises.
+
+\chapter{Convolutional Neural Networks}
+\label{c6:ch:cnn}
+
+{\large\itshape Why an image is not just a long vector, and the layers that treat it as an
+image.\par}
+
+\begin{chapterbox}{In this chapter}
+\begin{itemize}
+  \item Why networks built only from dense layers aren't well suited to image classification.
+  \item The structure of a convolutional neural network (CNN): convolutional, pooling, flatten,
+    and dense layers.
+  \item Feature extraction via kernels.
+  \item Feeding an input through a small CNN by hand, then backpropagating through it and
+    optimizing its kernel.
+  \item Starting a convolutional layer in software: the \code{ml::ConvLayer} struct.
+\end{itemize}
+\end{chapterbox}
+
+This chapter opens the second part of the book, and the network it builds towards is one that
+classifies images. It explains why a regular neural network, built only from dense layers, handles
+images badly, and how a convolutional neural network is structured instead: which layer types it
+is built from, what each of them is for, and how a kernel slides across an image to extract its
+features. By the end of it you should be able to feed an input through a small CNN by hand, and to
+have started implementing a convolutional layer in software.
+
+Read \secref{c6:sec:images} and \secref{c6:sec:cnn} first. The first exercise set in
+\secref{c6:sec:exercises} then works a small CNN through by hand, feedforward first and then
+backpropagation and optimization, and the second starts the struct \code{ml::ConvLayer}, which runs
+the same numbers in C++. You don't need to finish that struct in this chapter:
+Chapter~\ref{c7:ch:layers} finishes it, compiles it, and runs it for the first time.
+
+\input{chapters/06/theory}
+\input{chapters/06/summary}
+\input{chapters/06/exercises}

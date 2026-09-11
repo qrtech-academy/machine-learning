@@ -1,0 +1,32 @@
+% Section 9.1, from lectures/L09/README.md: the objectives, the evaluation questions, and the next
+% lecture.
+
+\needspace{10\baselineskip}
+\section{Review}
+\label{c9:sec:review}
+
+\subsection*{What you should be able to do now}
+After this chapter, you should:
+\begin{itemize}
+  \item Have created a concrete subclass \code{MaxPool} that inherits
+    \code{ml::conv_layer::Interface}.
+  \item Have implemented \code{feedforward()}, \code{backpropagate()}, and \code{optimize()} for
+    \code{MaxPool}.
+\end{itemize}
+
+\needspace{6\baselineskip}
+\subsection*{Questions to test yourself}
+You should be able to explain:
+\begin{enumerate}
+  \item How does your \code{ml::conv_layer::MaxPool} implementation know which positions the
+    gradients should be propagated back to during backpropagation?
+  \item What differences exist between a max pooling layer and a conv or dense layer, in terms of
+    trainable parameters?
+  \item Why can \code{Conv} and \code{MaxPool} share a single interface
+    (\code{conv_layer::Interface}) despite one having trainable parameters and the other not?
+\end{enumerate}
+
+\needspace{6\baselineskip}
+\subsection*{Looking ahead}
+Chapter~\ref{c10:ch:flatten} implements the flatten layer, and wires the complete CNN together as
+the book's capstone.

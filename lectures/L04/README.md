@@ -24,7 +24,7 @@
 
 ### After the lecture
 * Complete the exercises in [appendix B](./appendix/b_exercises.md): declaring the neural network class and implementing its training method, with the adaptive learning rate from **L02** carried over to it.
-* Verify your implementation with the [test suite](./appendix/exercises/test/README.md).
+* Verify your implementation with the [test suite](./exercises/test/README.md).
 * Solutions will be available a few days after the lecture.
 
 ---

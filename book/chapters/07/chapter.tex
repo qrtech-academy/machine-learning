@@ -1,0 +1,36 @@
+% Chapter 7, typeset from lectures/L07: the README is the opener and the closing review, and its
+% three appendices, one per layer, are the exercises. The lecture has no theory appendix of its
+% own; the theory is Chapter 6's.
+
+\chapter{Convolution, Pooling and Flatten Layers}
+\label{c7:ch:layers}
+
+{\large\itshape Three layer types, each written once as a simple struct.\par}
+
+\begin{chapterbox}{In this chapter}
+\begin{itemize}
+  \item Finishing the conv layer struct, \code{ml::ConvLayer}, started in Chapter~\ref{c6:ch:cnn}.
+  \item A max pooling layer struct, \code{ml::MaxPoolLayer}.
+  \item A flatten layer struct, \code{ml::FlattenLayer}.
+  \item Weight sharing: the same kernel across the entire image.
+  \item Reference implementations in Python and C, and encapsulation via opaque structs.
+\end{itemize}
+\end{chapterbox}
+
+This chapter turns the three layer types that extract features from an image into code. After it,
+you should be able to implement a simple conv, max pooling, and flatten layer in software. Each is
+a struct in a demo program of its own, kept as simple as possible: public member variables, no
+getters or setters, and no deleted copy and move operations, so that nothing stands between you and
+the arithmetic of \secref{c6:sec:cnn} and Exercises~\ref{c6:ex:1} and~\ref{c6:ex:2}. The next three
+chapters rebuild the same layers as classes behind an interface, in a real network.
+
+The exercises in \secref{c7:sec:exercises} are the whole of the chapter. The first set finishes the
+\code{ml::ConvLayer} you started in Exercise~\ref{c6:ex:3} and runs it for the first time; the second
+and third add \code{ml::MaxPoolLayer} and \code{ml::FlattenLayer}. The companion repository holds a
+reference implementation of each layer in Python, which you can test-run with the command
+\code{python3 <name>_demo.py} in its directory, and a more developed one in C, which demonstrates
+encapsulation via an opaque struct whose accessor functions are only exposed through the
+corresponding header file.
+
+\input{chapters/07/summary}
+\input{chapters/07/exercises}

@@ -1,0 +1,86 @@
+% Section 10.1, from lectures/L10/appendix/b_review.md.
+
+\section{Course Review}
+\label{c10:sec:course}\label{c10:app:b}
+Every layer built in this book, from Chapter~\ref{c1:ch:linreg}'s linear regression up through the
+CNN layers of Chapters~\ref{c6:ch:cnn} to~\ref{c10:ch:flatten}, follows the same three-step
+pattern: \textbf{feedforward} (compute a prediction from an input), \textbf{backpropagate} (compute
+how wrong that prediction was, and route the blame backward), and \textbf{optimize} (adjust
+trainable parameters to reduce that error next time). What changes from layer to layer is
+\emph{what} the parameters are, \emph{how} the feedforward sum is computed, and \emph{whether} there
+are trainable parameters at all.
+
+\subsection{Every layer type, side by side}
+\label{c10:sec:sidebyside}
+The first table says what each layer type is and where the book builds it; the second what each of
+its three methods does.
+
+\begin{booktable}{@{}>{\raggedright\arraybackslash}p{9.6em}p{6.4em}L@{}}
+  \thead{Layer} & \thead{Chapters} & \thead{Trainable parameters} \\
+  \midrule
+  \code{Fixed} (linear regression) & 1, 2 & weight $k$, bias $m$ \\
+  \code{Dense} & 3 to 5 & weights and a bias per node \\
+  \code{Conv} & 6 to 8 & one shared kernel and a bias \\
+  \code{MaxPool} & 6, 7, 9 & none \\
+  \code{Flatten} & 6, 7, 10 & none \\
+\end{booktable}
+
+\begin{booktable}{@{}p{4.2em}LLL@{}}
+  \thead{Layer} & \thead{Feedforward} & \thead{Backpropagate} & \thead{Optimize} \\
+  \midrule
+  \code{Fixed} & \code{y = k*x + m} & \code{δ = y_ref - y_p} & \code{k,m += δ * LR * (x or 1)} \\
+  \addlinespace
+  \code{Dense} & \code{y = σ(b + Σ w*x)} & \code{Δe = δ * σ'(s)} per node &
+    \code{w += Δe * LR * input}, \code{b += Δe * LR} \\
+  \addlinespace
+  \code{Conv} & same as \code{Dense}, but local (a small window) and shared (the same kernel at
+    every position) & gradients accumulated across every position the kernel visited, then applied
+    once & \code{kernel,bias += gradient * LR} \\
+  \addlinespace
+  \code{MaxPool} & passes the largest value in each block forward & routes the incoming gradient
+    only to the position that held the max value; everywhere else gets \code{0} & no-op: nothing to
+    update \\
+  \addlinespace
+  \code{Flatten} & reshapes 2D to 1D & reshapes 1D to 2D (the exact inverse) & doesn't exist in the
+    interface: there's nothing to optimize \\
+\end{booktable}
+
+A few things worth noticing across the rows:
+\begin{itemize}
+  \item \textbf{Only \code{Conv} and \code{Dense} have trainable parameters.} \code{MaxPool} and
+    \code{Flatten} are purely structural: they reshape or downsample data, but never learn anything
+    themselves.
+  \item \textbf{\code{Conv} is \code{Dense} with two constraints added}: locality (each output only
+    looks at a small window of the input) and weight sharing (the same kernel is reused everywhere
+    instead of a unique weight per input and output pair). That's the entire conceptual jump from
+    Chapter~\ref{c5:ch:dense} to Chapters~\ref{c6:ch:cnn} and~\ref{c7:ch:layers}: see
+    \secref{c6:sec:images} if you want the full ``why'' behind those two constraints.
+  \item \textbf{\code{Fixed} is a \code{Dense} layer with one node, no activation function, and no
+    hidden layer around it.} The same \emph{error, adjustment, update} shape from
+    Chapter~\ref{c1:ch:linreg} reappears, unchanged in spirit, all the way through the CNN layers.
+\end{itemize}
+
+\subsection{The full pipeline}
+\label{c10:sec:pipeline}
+\code{ml::cnn::Cnn}, in \file{lectures/L10/cnn_demo}, the finished reference implementation, wires
+four of these layer types together into one working classifier. This is the same pipeline you built
+up yourself as \code{cnn_work} across Chapters~\ref{c8:ch:conv} to~\ref{c10:ch:flatten}; worth
+comparing the two if anything in your own version doesn't behave the way you expect:
+
+\begin{console}
+input → Conv → MaxPool → Flatten → Dense → prediction
+\end{console}
+
+\noindent\textbf{Feedforward} runs left to right, each layer consuming the previous layer's
+\code{output()}.
+
+\textbf{Backpropagation} runs right to left: the target vector goes into the \code{backpropagate()}
+of \code{Dense} first, and each earlier layer is then fed the next layer's
+\code{inputGradients()}: \code{Dense → Flatten → MaxPool → Conv}.
+
+\textbf{Optimization} updates every layer's parameters (\code{Conv} and \code{Dense} only) using the
+gradients already computed by \code{backpropagate()}.
+
+\file{lectures/L10/cnn_demo/README.md} has the full method-by-method breakdown, including the exact
+formulas used in the C++ implementation; \secref{c8:sec:pipeline} is the same breakdown for
+\code{cnn_work}.

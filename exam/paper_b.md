@@ -93,9 +93,9 @@ State what the model risks learning if it is not, and what the shuffle is theref
 **(b)** `initRandGen()` uses a `static` local variable. State what that variable is for, and what
 would happen without it.
 
-In L02 the function lived in an anonymous namespace inside `fixed.cpp`; in L04 it moved to a shared
-`ml/utils.cpp`. State exactly what breaks in the L02 arrangement once a second `.cpp` file needs the
-generator. (3 marks)
+In L02 the function first lived in an anonymous namespace inside `fixed.cpp`, and moved to a shared
+`ml/utils.cpp` once a second model needed it. State exactly what would have broken in the first
+arrangement once a second `.cpp` file needed the generator. (3 marks)
 
 **(c)** The model's precision is computed as $1.0 - MAE$. A model predicts as follows:
 
@@ -336,8 +336,8 @@ trainable parameters.
 two designs is the stronger one. (3 marks)
 
 **(d)** Every fault above leaves a network that compiles, runs, and returns `true` from every call.
-State the symptom a user of the finished CNN actually sees, and name the L10 test that would fail.
-(2 marks)
+State the symptom a user of the finished CNN actually sees. Then, for each of the three faults,
+name a test in the L10 suite that fails because of it, or state that none does. (2 marks)
 
 ---
 

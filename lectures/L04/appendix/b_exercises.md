@@ -12,7 +12,7 @@ You'll extend the codebase from last lecture with an interface and a class for a
 ---
 
 ### 1. Directory structure
-Carry last lecture's code forward into this lecture's [exercises](./exercises/) directory, then
+Carry last lecture's code forward into this lecture's [exercises](../exercises/) directory, then
 extend the structure as follows:
 
 ```
@@ -62,11 +62,12 @@ Define `initRandGen()` in the same namespace:
   `<cstdlib>` and `<ctime>` for these.
 * Set `initialized` to `true` so the next call does nothing.
 
-**Why a shared file rather than an anonymous namespace?** In **L02** the same function lived in an
-anonymous namespace inside `fixed.cpp`, which was fine when one class needed it. It doesn't scale:
-an anonymous namespace gives every `.cpp` its own private copy, each with its own `initialized`
-flag, so the generator gets reseeded once per file that asks for it. Seeding must happen once per
-*program*. A single definition in `utils.cpp`, shared through `utils.hpp`, gives exactly that.
+**Why a shared file rather than an anonymous namespace?** In **L02** the same function started out
+in an anonymous namespace inside `fixed.cpp`, which was fine while one class needed it, and moved
+to a shared file the moment `Adaptive` needed it too. An anonymous namespace doesn't scale: it
+gives every `.cpp` its own private copy, each with its own `initialized` flag, so the generator gets
+reseeded once per file that asks for it. Seeding must happen once per *program*. A single
+definition in `utils.cpp`, shared through `utils.hpp`, gives exactly that.
 
 ---
 
@@ -306,7 +307,7 @@ The early-stop line stays absent for the same reason: the stub reports the same 
 ---
 
 ### 5. Running the tests
-An updated test suite is available in [exercises/test](./exercises/test/). It's cumulative: it
+An updated test suite is available in [exercises/test](../exercises/test/). It's cumulative: it
 carries the **L03** stub tests over unchanged and adds component tests for `Shallow` on top, so it
 supersedes the L03 suite entirely.
 
@@ -316,13 +317,13 @@ Once you've carried your code forward into this lecture's exercises directory, b
 make -C test
 ```
 
-All 27 test cases should pass. The ones worth reading check that a prediction reads the output
+All 28 test cases should pass. The ones worth reading check that a prediction reads the output
 layer *live* rather than from a stored copy, that training performs exactly one feedforward per
 training set per epoch, and that the precision is evaluated on every hundredth epoch and no other.
 Nothing else can tell a correct training loop from one that runs a single pass: both line up
 dimensionally and both return `true`.
 
-See the [test suite's README](./exercises/test/README.md) for more information, including the
+See the [test suite's README](../exercises/test/README.md) for more information, including the
 mistakes this suite deliberately can't catch and what it would take to catch them.
 
 ---

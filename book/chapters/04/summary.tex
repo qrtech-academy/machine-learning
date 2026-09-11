@@ -1,0 +1,39 @@
+% Section 4.3, from lectures/L04/README.md: the objectives, the evaluation questions, and the next
+% lecture.
+
+\needspace{10\baselineskip}
+\section{Review}
+\label{c4:sec:review}
+
+\subsection*{What you should be able to do now}
+After this chapter, you should:
+\begin{itemize}
+  \item Have created an interface for a neural network.
+  \item Be able to connect components via interfaces.
+  \item Have implemented a concrete class for a simple neural network, including a fully working
+    training method.
+  \item Be able to explain how a model can set its own learning rate, and why a training method
+    that resets its parameters first is worth having.
+\end{itemize}
+
+\needspace{6\baselineskip}
+\subsection*{Questions to test yourself}
+You should be able to explain:
+\begin{enumerate}
+  \item Why is it beneficial to define an interface for the neural network rather than
+    implementing a class directly?
+  \item Without looking at the code, can you describe how the components in the network are
+    connected via interfaces?
+  \item Can you explain the flow from input to prediction in your implementation, step by step?
+  \item Why doesn't \code{feedforward()} return the layer's output, and how does the rest of the
+    network access it instead?
+  \item Why is the precision evaluated every hundredth epoch here, rather than every tenth as in
+    Chapter~\ref{c2:ch:training}, and what does the network do with the number?
+  \item Why does \code{train()} reset both layers before its first epoch, and what would calling it
+    twice do without that reset?
+\end{enumerate}
+
+\needspace{6\baselineskip}
+\subsection*{Looking ahead}
+Chapter~\ref{c5:ch:dense} implements a real dense layer in software, replacing the stub used since
+Chapter~\ref{c3:ch:nn}.

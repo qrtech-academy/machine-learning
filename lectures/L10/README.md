@@ -40,7 +40,7 @@ questions covering the whole course.
 * To wrap up the course, read [appendix D](./appendix/d_embedded_constraints.md) for a discussion of
 what changes when a network like the one you've built during this course has to run on a
 resource-constrained target, and complete the memory-footprint and fixed-point exercises there.
-* Verify your implementation with the [test suite](./appendix/exercises/test/README.md). It's the
+* Verify your implementation with the [test suite](./exercises/test/README.md). It's the
 final suite of the course, and the first one that can test the network as a whole.
 
 ---

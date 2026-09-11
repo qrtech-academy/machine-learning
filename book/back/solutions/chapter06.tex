@@ -1,0 +1,198 @@
+% Section A.3, the solutions to the hand-training exercises in Chapter 6, from the walk-through in
+% lectures/L06/appendix/b_exercises.md.
+
+\section{Chapter 6: Convolutional Neural Networks}
+\label{sol:sec:c6}
+
+\solution{c6:ex:1}{Feedforward}
+The whole feedforward pass is worked through below, step by step.
+
+\step{a) Padding the input image}
+The kernel is $2 \times 2$, so $n = 2 / 2 = 1$: one zero on each side. The padded image $P$ is
+$6 \times 6$:
+\[
+  P = \begin{bmatrix}
+    0 & 0 & 0 & 0 & 0 & 0 \\
+    0 & 1 & 1 & 1 & 1 & 0 \\
+    0 & 1 & 0 & 0 & 1 & 0 \\
+    0 & 1 & 0 & 0 & 1 & 0 \\
+    0 & 1 & 1 & 1 & 1 & 0 \\
+    0 & 0 & 0 & 0 & 0 & 0
+  \end{bmatrix}
+\]
+
+\step{b) Feedforward through the conv layer}
+Output cell $(i, j)$ is computed from the $2 \times 2$ window of $P$ whose top-left corner is at
+$(i, j)$, for $i$ and $j$ from 0 to 3. Two cells as examples, the top-left and the bottom-right:
+\begin{align*}
+  \text{sum}(0,0) &= 0 \cdot 0.2 + 0 \cdot 0.4 + 0 \cdot 0.6 + 1 \cdot 0.8 + 0.5 = 1.3 \\
+  \text{sum}(3,3) &= 0 \cdot 0.2 + 1 \cdot 0.4 + 1 \cdot 0.6 + 1 \cdot 0.8 + 0.5 = 2.3
+\end{align*}
+Once the kernel and bias have been applied across the entire image, we get the following conv
+output ($4 \times 4$):
+\[
+  \begin{bmatrix}
+    1.3 & 1.9 & 1.9 & 1.9 \\
+    1.7 & 1.7 & 1.1 & 1.9 \\
+    1.7 & 1.3 & 0.5 & 1.7 \\
+    1.7 & 2.1 & 1.9 & 2.3
+  \end{bmatrix}
+\]
+Every sum is positive, the smallest being 0.5, so ReLU passes each of them through unchanged: the
+pre-activation sums and the output are the same matrix here.
+
+\step{c) The max pooling layer (feedforward)}
+We split the conv layer's output into four pools.
+
+\textbf{Top-left corner:} max value 1.9, at $(0, 1)$:
+\[
+  \begin{bmatrix} 1.3 & 1.9 \\ 1.7 & 1.7 \end{bmatrix}
+\]
+\textbf{Top-right corner:} the max value 1.9 occurs in three places; we pass forward the first
+instance, at $(0, 2)$:
+\[
+  \begin{bmatrix} 1.9 & 1.9 \\ 1.1 & 1.9 \end{bmatrix}
+\]
+\textbf{Bottom-left corner:} max value 2.1, at $(3, 1)$:
+\[
+  \begin{bmatrix} 1.7 & 1.3 \\ 1.7 & 2.1 \end{bmatrix}
+\]
+\textbf{Bottom-right corner:} max value 2.3, at $(3, 3)$:
+\[
+  \begin{bmatrix} 0.5 & 1.7 \\ 1.9 & 2.3 \end{bmatrix}
+\]
+The max pooling layer's output is therefore:
+\[
+  \begin{bmatrix} 1.9 & 1.9 \\ 2.1 & 2.3 \end{bmatrix}
+\]
+
+\step{d) Flatten (feedforward)}
+The max pooling layer's output is flattened, row by row, into a vector so it can be fed to the next
+layer:
+\[
+  [1.9, 1.9, 2.1, 2.3]
+\]
+
+\solution{c6:ex:2}{Backpropagation and optimization}
+The dense layer sends back the gradients $[10, 20, 30, 40]$.
+
+\step{a) Flatten (backpropagation)}
+The gradients from the dense layer are reshaped back into a matrix, row by row, the exact inverse
+of the flatten in Exercise~\ref{c6:ex:1}:
+\[
+  \begin{bmatrix} 10 & 20 \\ 30 & 40 \end{bmatrix}
+\]
+
+\step{b) Max pool (backpropagation)}
+Each gradient goes to the position its pool's maximum came from, found in
+Exercise~\ref{c6:ex:1}, and the remaining positions get 0.
+
+\textbf{Top-left corner:} gradient 10 is propagated to the max value 1.9 (top right):
+\[
+  \begin{bmatrix} 0 & 10 \\ 0 & 0 \end{bmatrix}
+\]
+\textbf{Top-right corner:} gradient 20 is propagated to the first occurrence of the max value 1.9
+(top left):
+\[
+  \begin{bmatrix} 20 & 0 \\ 0 & 0 \end{bmatrix}
+\]
+\textbf{Bottom-left corner:} gradient 30 is propagated to the max value 2.1 (bottom right):
+\[
+  \begin{bmatrix} 0 & 0 \\ 0 & 30 \end{bmatrix}
+\]
+\textbf{Bottom-right corner:} gradient 40 is propagated to the max value 2.3 (bottom right):
+\[
+  \begin{bmatrix} 0 & 0 \\ 0 & 40 \end{bmatrix}
+\]
+Assembling all the pools' gradients into a single matrix gives us the gradient matrix that arrives
+at the conv layer's output:
+\[
+  \text{grad} = \begin{bmatrix}
+    0 & 10 & 20 & 0 \\
+    0 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 0 \\
+    0 & 30 & 0 & 40
+  \end{bmatrix}
+\]
+
+\step{c) Conv layer (backpropagation)}
+Every pre-activation sum from Exercise~\ref{c6:ex:1} is positive and the activation is ReLU, so
+$\sigma'(s) = 1$ at every position, and multiplying each incoming gradient by it changes nothing.
+
+\textbf{Bias gradient:} the sum of all values in the gradient matrix:
+\[
+  \text{biasGradient} = 0 + 10 + 20 + 0 + 0 + 0 + 0 + 0 + 0 + 0 + 0 + 0 + 0 + 30 + 0 + 40 = 100
+\]
+
+\textbf{Kernel gradients:} only four gradients are non-zero, at $(0, 1)$, $(0, 2)$, $(3, 1)$ and
+$(3, 3)$, so each kernel element gets four terms, one per non-zero gradient, reading the padded
+input $P$ from part (a) at that kernel element's offset:
+\begin{align*}
+  k_{00} &= P[0][1] \cdot 10 + P[0][2] \cdot 20 + P[3][1] \cdot 30 + P[3][3] \cdot 40 \\
+         &= 0 \cdot 10 + 0 \cdot 20 + 1 \cdot 30 + 0 \cdot 40 = 30 \\
+  k_{01} &= P[0][2] \cdot 10 + P[0][3] \cdot 20 + P[3][2] \cdot 30 + P[3][4] \cdot 40 \\
+         &= 0 \cdot 10 + 0 \cdot 20 + 0 \cdot 30 + 1 \cdot 40 = 40 \\
+  k_{10} &= P[1][1] \cdot 10 + P[1][2] \cdot 20 + P[4][1] \cdot 30 + P[4][3] \cdot 40 \\
+         &= 1 \cdot 10 + 1 \cdot 20 + 1 \cdot 30 + 1 \cdot 40 = 100 \\
+  k_{11} &= P[1][2] \cdot 10 + P[1][3] \cdot 20 + P[4][2] \cdot 30 + P[4][4] \cdot 40 \\
+         &= 1 \cdot 10 + 1 \cdot 20 + 1 \cdot 30 + 1 \cdot 40 = 100
+\end{align*}
+The kernel gradients are therefore:
+\[
+  \begin{bmatrix} 30 & 40 \\ 100 & 100 \end{bmatrix}
+\]
+
+\textbf{Input gradients (padded input):} each non-zero gradient spreads the kernel's weights,
+multiplied by that gradient, over the $2 \times 2$ patch of a new $6 \times 6$ matrix $dX$ it came
+from. Only four gradients are non-zero, so only their contributions need computing:
+\begin{itemize}
+  \item From \code{grad[0,1] = 10}: \code{dX(0,1) += 2}, \code{dX(0,2) += 4}, \code{dX(1,1) += 6},
+    \code{dX(1,2) += 8}.
+  \item From \code{grad[0,2] = 20}: \code{dX(0,2) += 4}, \code{dX(0,3) += 8}, \code{dX(1,2) += 12},
+    \code{dX(1,3) += 16}.
+  \item From \code{grad[3,1] = 30}: \code{dX(3,1) += 6}, \code{dX(3,2) += 12}, \code{dX(4,1) += 18},
+    \code{dX(4,2) += 24}.
+  \item From \code{grad[3,3] = 40}: \code{dX(3,3) += 8}, \code{dX(3,4) += 16}, \code{dX(4,3) += 24},
+    \code{dX(4,4) += 32}.
+\end{itemize}
+After summing all contributions, we get the padded input gradient matrix:
+\[
+  dX = \begin{bmatrix}
+    0 & 2 & 8 & 8 & 0 & 0 \\
+    0 & 6 & 20 & 16 & 0 & 0 \\
+    0 & 0 & 0 & 0 & 0 & 0 \\
+    0 & 6 & 12 & 8 & 16 & 0 \\
+    0 & 18 & 24 & 24 & 32 & 0 \\
+    0 & 0 & 0 & 0 & 0 & 0
+  \end{bmatrix}
+\]
+Removing the padding, the outermost row and column on every side, leaves a $4 \times 4$ matrix
+matching the original image; this is the gradient with respect to the input, which is passed further
+back through the network:
+\[
+  \begin{bmatrix}
+    6 & 20 & 16 & 0 \\
+    0 & 0 & 0 & 0 \\
+    6 & 12 & 8 & 16 \\
+    18 & 24 & 24 & 32
+  \end{bmatrix}
+\]
+
+\step{d) Optimization}
+Finally, the kernel and bias are updated using the learning rate $\LR = 0.001$:
+\begin{align*}
+  k_{00} &= 0.2 + 0.001 \cdot 30 = 0.23 &
+  k_{01} &= 0.4 + 0.001 \cdot 40 = 0.44 \\
+  k_{10} &= 0.6 + 0.001 \cdot 100 = 0.70 &
+  k_{11} &= 0.8 + 0.001 \cdot 100 = 0.90 \\
+  \text{bias} &= 0.5 + 0.001 \cdot 100 = 0.6
+\end{align*}
+\textbf{Updated kernel:}
+\[
+  \begin{bmatrix} 0.23 & 0.44 \\ 0.70 & 0.90 \end{bmatrix}
+\]
+\textbf{Updated bias:} 0.6.
+
+These are the values the demo in Exercise~\ref{c6:ex:3} prints in its \emph{expected} column: the
+conv output from Exercise~\ref{c6:ex:1}, and the input gradients, the kernel and the bias from this
+one.

@@ -1,0 +1,365 @@
+% Section 10.4, from lectures/L10/appendix/a_flatten_layer.md (Sets 1 to 3),
+% lectures/L10/appendix/c_exercises.md (Sets 4 to 6), and the exercise of
+% lectures/L10/appendix/d_embedded_constraints.md (Set 7). The solutions to Sets 4 to 6 and to
+% Exercise 10.18 are in Appendix A; the solutions to the code are in the repository.
+
+\section{Exercises}
+\label{c10:sec:exercises}
+
+\begin{aside}
+\textbf{How to work these.} Sets~1 to~3 finish \code{cnn_work}, \file{lectures/L08/cnn_work}: keep
+working in the same project, where \file{flatten.hpp} and \file{flatten.cpp} are already in place as
+placeholders. Sets~4 to~6 are for self-assessment, reviewing the whole book: Set~4 tests whether you
+can recognize a layer type from its algorithm alone, Set~5 tests implementation-level
+understanding (shapes, parameter counts, and what has to be remembered for backpropagation), and
+Set~6 is a short set of exam-style conceptual questions. Everything you need to answer them is in
+the earlier chapters. Set~7 takes the network off the laptop, as \secref{c10:sec:embedded}
+describes: one exercise on paper, one in code.
+
+\textbf{How to check your work.} The test suite in \file{lectures/L10/appendix/exercises/test}
+points back at \code{cnn_work}; Exercise~\ref{c10:ex:9} runs it, and \code{make ML_DIR=<path>}
+points it at a tree of your own elsewhere. The worked solutions to Sets~4 to~6 and to
+Exercise~\ref{c10:ex:18} are in Appendix~\ref{sol:ch:solutions}.
+
+The finished reference implementation of the whole pipeline is published in the companion
+repository as \file{lectures/L10/cnn_demo}, and this is the chapter it's there for: compare your
+\code{cnn_work} against it once your own version runs.
+\end{aside}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Declaring the Flatten Layer}
+\label{c10:set:1}\label{c10:app:a}
+You'll finish \code{cnn_work} (from Chapters~\ref{c8:ch:conv} and~\ref{c9:ch:maxpool}),
+implementing a concrete class \code{Flatten}, replacing the temporary stub class
+\code{ml::flatten_layer::Stub} currently used for the flatten layer in \file{factory.cpp}. This is
+the same logic you already worked through by hand in \secref{c6:sec:exercises} and implemented as
+the standalone struct \code{ml::FlattenLayer} in Chapter~\ref{c7:ch:layers}: here you're adapting
+that same logic to satisfy \code{cnn_work}'s polymorphic \code{flatten_layer::Interface}. Once this
+is done, every layer in \code{cnn_work} is real, and you'll wire the whole pipeline together for
+the first time.
+
+\codeexercise{The \code{Flatten} class, declaration}
+\label{c10:ex:1}
+In the header file \file{include/ml/flatten_layer/flatten.hpp} (currently a placeholder), add a
+class named \code{Flatten} that inherits \code{ml::flatten_layer::Interface}, typeset below
+straight from the repository:
+\begin{itemize}
+  \item Use public inheritance and mark the class \code{final}.
+  \item Override every method from the interface, including the destructor (which can be
+    \code{= default}).
+\end{itemize}
+
+\cppfile{lectures/L08/cnn_work/include/ml/flatten_layer/interface.hpp}
+
+\note Unlike \code{Conv} and \code{MaxPool}, \code{flatten_layer::Interface} declares \textbf{no
+\code{optimize()} method at all}: not because it was left out, but because a flatten layer has
+nothing to optimize and the interface simply doesn't ask for it. Don't add one.
+
+\codeexercise{Removed constructors and operators}
+\label{c10:ex:2}
+Delete the default constructor, copy constructor, move constructor, copy assignment operator, and
+move assignment operator.
+
+\codeexercise{Private member variables}
+\label{c10:ex:3}
+Add the following private member variables to \code{Flatten}:
+\begin{itemize}
+  \item \textbf{\code{myInputGradients}}: the unflattened gradients; what \code{inputGradients()}
+    returns (\code{Matrix2d}).
+  \item \textbf{\code{myOutput}}: the flattened output; what \code{output()} returns
+    (\code{Matrix1d}, not \code{Matrix2d}; note the interface's \code{output()} returns a 1D vector
+    here, unlike \code{Conv} and \code{MaxPool}).
+\end{itemize}
+
+\codeexercise{Constructor}
+\label{c10:ex:4}
+Implement the constructor:
+
+\begin{cppcode}
+explicit Flatten(std::size_t inputSize) noexcept;
+\end{cppcode}
+
+\begin{itemize}
+  \item Print an error message and call \code{std::terminate()} if \code{inputSize} is \code{0}.
+  \item Size \code{myInputGradients} to \code{inputSize} (a square \code{inputSize × inputSize}
+    matrix), and \code{myOutput} to \code{inputSize * inputSize} (see \code{ml::initMatrix()}).
+\end{itemize}
+
+\codeexercise{\code{feedforward()}}
+\label{c10:ex:5}
+Implement \code{bool feedforward(const Matrix2d& input) noexcept}:
+\begin{itemize}
+  \item Return \code{false} if the size of \code{input} doesn't match the size of
+    \code{myInputGradients} (\code{ml::matchDimensions()}), or if \code{input} isn't square
+    (\code{ml::isMatrixSquare()}).
+  \item Row-major flatten: for every position \code{(i, j)} in \code{input}, write it to
+    \code{myOutput[i * inputSize + j]}, where \code{inputSize = myInputGradients.size()}.
+  \item Return \code{true}.
+\end{itemize}
+
+\codeexercise{\code{backpropagate()}}
+\label{c10:ex:6}
+Implement \code{bool backpropagate(const Matrix1d& outputGradients) noexcept}:
+\begin{itemize}
+  \item Return \code{false} if the size of \code{outputGradients} doesn't match the size of
+    \code{myOutput}.
+  \item The exact inverse of \code{feedforward()}: set
+    \code{myInputGradients[i][j] = outputGradients[i * inputSize + j]} for every position
+    \code{(i, j)}.
+  \item Return \code{true}.
+\end{itemize}
+
+\codeexercise{Trivial accessors}
+\label{c10:ex:7}
+Implement the four accessors from the interface:
+\begin{itemize}
+  \item \textbf{\code{inputSize()}}: returns \code{myInputGradients.size()}.
+  \item \textbf{\code{outputSize()}}: returns \code{myOutput.size()}.
+  \item \textbf{\code{inputGradients()}}: returns \code{myInputGradients}.
+  \item \textbf{\code{output()}}: returns \code{myOutput}.
+\end{itemize}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Wiring It In}
+\label{c10:set:2}
+
+\codeexercise{Wiring the CNN together}
+\label{c10:ex:8}
+\begin{enumerate}
+  \item Make sure \file{source/ml/flatten_layer/flatten.cpp} is listed in \code{cnn_work}'s
+    \file{Makefile} under \code{SRC_FILES}. It already is, as it has been since
+    Chapter~\ref{c8:ch:conv}: the placeholder compiles to nothing.
+  \item In \file{source/ml/factory/factory.cpp}, find \code{Factory::flattenLayer()}: it currently
+    returns a \code{flatten_layer::Stub} (marked with a \code{//! @todo} comment). Replace that with
+    your new class:
+\begin{cppcode}
+return std::make_unique<flatten_layer::Flatten>(inputSize);
+\end{cppcode}
+  \item Run \code{make}. Every layer in \code{cnn_work} (\code{Conv}, \code{MaxPool},
+    \code{Flatten}, and \code{Dense}, already done back in Chapter~\ref{c5:ch:dense}) is now real.
+    The output of \code{predict()} is finally meaningful, and \code{train()} actually trains a
+    working CNN end to end. Compare the predictions against the placeholder output you first saw
+    from \code{cnn_work} in Chapter~\ref{c8:ch:conv}.
+  \item Compare notes against \file{lectures/L10/cnn_demo}, the finished reference implementation
+    sitting right alongside this lecture's material: if your \code{cnn_work} doesn't train the way
+    you expect, this is a good place to check your work against.
+\end{enumerate}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Running the Tests}
+\label{c10:set:3}
+
+\codeexercise{Running the tests}
+\label{c10:ex:9}
+The final test suite is available in \file{lectures/L10/appendix/exercises/test}. It's cumulative:
+it carries the conv and max pooling layer tests over unchanged and adds unit tests for
+\code{Flatten}, plus \textbf{component tests for the network as a whole}.
+
+Build and run it from this lecture's \file{appendix} directory:
+
+\begin{shell}
+make -C exercises/test
+\end{shell}
+
+\noindent There's nothing to copy: \code{ML_DIR} already points back at the \code{cnn_work}
+codebase you started in Chapter~\ref{c8:ch:conv}. All 73 test cases should pass, in about a second.
+
+The component tests are new in this chapter, and they're the reason this suite couldn't exist
+earlier: they build a whole network through the real factory and train it, so they only pass once
+\code{Conv}, \code{MaxPool} and \code{Flatten} are all real.
+\code{LearnsToRecognizeAllFourDigits} trains on the digits 0 to 3 and checks the right output node
+wins for each; the closest thing this book has to a final exam for your code.
+
+Two things worth knowing before you start:
+\begin{itemize}
+  \item The one flatten layer test to read is \code{BackpropagateUndoesFeedforward}. What really
+    has to hold is that \code{backpropagate()} undoes exactly what \code{feedforward()} did; if the
+    two disagree, gradients land on the wrong pixels and the conv layer quietly learns from noise,
+    so the network still runs, it just never gets good. Note though that
+    Exercise~\ref{c10:ex:5} mandates \textbf{row-major} order, and \code{FeedforwardIsRowMajor} and
+    \code{BackpropagateIsRowMajor} check it, so a self-consistent column-major implementation still
+    fails those two.
+  \item If \code{LearnsToRecognizeAllFourDigits} fails but every unit test passes, the layers are
+    individually right and something about how they're wired together is wrong. Start with
+    \code{BackpropagationReachesTheConvLayerThroughEveryLayer}, which chains the four layers by hand
+    and checks the gradients survive the trip back.
+\end{itemize}
+The test suite's README, \file{lectures/L10/appendix/exercises/test/README.md}, has more
+information, including how the convergence thresholds were measured.
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Recognize the Layer}
+\label{c10:set:4}\label{c10:app:c}
+
+\reflexercise{Six feedforward algorithms}
+\label{c10:ex:10}
+Below are six feedforward algorithms, written as pseudocode. For each one, decide which layer type
+it describes: a linear regression layer, a dense layer, a conv layer, a max pooling layer, or a
+flatten layer.
+
+\task{A}
+\begin{pycode}
+output = k * input + m
+\end{pycode}
+
+\task{B}
+\begin{pycode}
+for n in nodes:
+    sum = bias[n]
+    for i in inputs:
+        sum += weight[n][i] * input[i]
+    output[n] = activation(sum)
+\end{pycode}
+
+\task{C}
+\begin{pycode}
+for row in range(outputHeight):
+    for col in range(outputWidth):
+        sum = bias
+        for kr in range(kernelSize):
+            for kc in range(kernelSize):
+                sum += kernel[kr][kc] * input[row + kr][col + kc]
+        output[row][col] = activation(sum)
+\end{pycode}
+
+\task{D}
+\begin{pycode}
+for row in range(outputHeight):
+    for col in range(outputWidth):
+        window = input[row * poolSize : row * poolSize + poolSize,
+                        col * poolSize : col * poolSize + poolSize]
+        output[row][col] = max(window)
+\end{pycode}
+
+\task{E}
+\begin{pycode}
+output = reshape(input, (1, height * width))
+\end{pycode}
+
+\task{F}
+\begin{pycode}
+sum = bias[0]
+for i in inputs:
+    sum += weight[0][i] * input[i]
+output[0] = sum   // no activation function applied
+\end{pycode}
+\seesolution{c10:ex:10}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Implementation Questions}
+\label{c10:set:5}
+Consider the following network, processing a single-channel \textbf{8\,×\,8} input image:
+
+\begin{console}
+input (8×8)
+  → conv layer (one 3×3 kernel, stride 1, zero-padded)
+  → max pooling layer (2×2, stride 2)
+  → flatten layer
+  → dense layer (10 nodes)
+\end{console}
+
+\calcexercise{Tracing shapes}
+\label{c10:ex:11}
+What is the shape of the data after each layer (conv, max pooling, flatten, dense)?
+\seesolution{c10:ex:11}
+
+\calcexercise{Counting trainable parameters}
+\label{c10:ex:12}
+How many trainable parameters does each layer have? What is the total for the whole network?
+\seesolution{c10:ex:12}
+
+\reflexercise{What max pooling has to remember}
+\label{c10:ex:13}
+The max pooling layer has no trainable parameters, yet it still needs to store something during
+\code{feedforward()} so that \code{backpropagate()} works correctly. What does it need to remember,
+and why?
+\seesolution{c10:ex:13}
+
+\calcexercise{Conv vs.\ dense, parameter count}
+\label{c10:ex:14}
+A dense layer connecting the flattened 8\,×\,8 image (64 values) directly to a single output node
+would need 64 weights + 1 bias = 65 trainable parameters just to combine the whole image once. The
+conv layer in the network above combines local pixel neighborhoods using only how many trainable
+parameters? Why is the difference so large?
+\seesolution{c10:ex:14}
+
+\reflexercise{Flatten in reverse}
+\label{c10:ex:15}
+During \code{feedforward()}, a flatten layer reshapes a \textbf{3\,×\,4} matrix into a
+\textbf{1\,×\,12} vector. During \code{backpropagate()}, it receives a \textbf{1\,×\,12} gradient
+vector from the next layer. What shape does it reshape that gradient vector back into, and why?
+\seesolution{c10:ex:15}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Exam-Style Questions}
+\label{c10:set:6}
+
+\reflexercise{True or false?}
+\label{c10:ex:16}
+For each statement, decide if it's true or false, and briefly justify your answer.
+\begin{enumerate}
+  \item A max pooling layer has trainable parameters that are updated during \code{optimize()}.
+  \item The same kernel (the same weights) is reused at every spatial position in a conv layer.
+  \item A flatten layer's \code{backpropagate()} performs the exact same reshape operation as its
+    \code{feedforward()}.
+  \item A dense layer with exactly one node, no activation function, and no hidden layer around it
+    behaves identically to a linear regression layer.
+  \item Adding more filters (kernels) to a conv layer increases its trainable parameter count, but
+    doesn't by itself change the width or height of its output.
+\end{enumerate}
+\seesolution{c10:ex:16}
+
+\reflexercise{Short answer}
+\label{c10:ex:17}
+\begin{enumerate}[start=6]
+  \item In one or two sentences, explain why swapping a dense layer for a conv layer generally
+    means far fewer trainable parameters for the same size of input image.
+  \item A student claims: \emph{``Max pooling layers slow down training because they have so many
+    weights to update.''} Is this correct? Why or why not?
+  \item Most layer types in this book implement the same three methods: \code{feedforward()},
+    \code{backpropagate()}, and \code{optimize()}. What does \code{optimize()} do for a max pooling
+    layer, which has no trainable parameters? And why does the flatten layer's interface not
+    declare \code{optimize()} at all, rather than declaring it and leaving it empty?
+\end{enumerate}
+\seesolution{c10:ex:17}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Off the Laptop}
+\label{c10:set:7}
+Two of the constraints from \secref{c10:sec:embedded}, worked through by hand: memory footprint on
+paper, and fixed-point arithmetic in code.
+
+\calcexercise{Memory footprint}
+\label{c10:ex:18}
+Using the layer sizes from the network you built in Chapters~\ref{c4:ch:network}
+and~\ref{c5:ch:dense} (or any other layer configuration of your choice):
+\begin{enumerate}
+  \item Compute the total number of trainable values (weights and biases) across all layers.
+  \item Compute the memory footprint at \code{double} (8 bytes), \code{float} (4 bytes), and
+    \code{int8} (1 byte) per value.
+  \item Compare your numbers against the example in \secref{c10:sec:memory} of a layer sized for
+    28\,×\,28 pixel images (785\,KB, 392.5\,KB and 98.125\,KB). Which of the three precisions would
+    plausibly fit into a microcontroller with 64\,KB of RAM? With 512\,KB?
+\end{enumerate}
+\seesolution{c10:ex:18}
+
+\codeexercise{Fixed-point conversion}
+\label{c10:ex:19}
+Take the \code{predict()} method from Chapter~\ref{c1:ch:linreg}'s \code{ml::lin_reg::Fixed} class
+($y = k \cdot x + m$):
+\begin{enumerate}
+  \item Add \code{toFixed()}, \code{toDouble()}, and \code{fixedMultiply()} as shown in
+    \secref{c10:sec:fixedpoint} (an addition helper isn't needed: plain integer \code{+} already
+    works for Q16.16 values).
+  \item Implement a free function
+    \code{Fixed16_16 predictFixed(Fixed16_16 weight, Fixed16_16 bias, Fixed16_16 input)} that
+    computes the same prediction as \code{predict()}, but entirely in Q16.16 fixed-point using
+    \code{fixedMultiply()} for the multiplication.
+  \item In \code{main()}, pick a few \code{(weight, bias, input)} triples, convert them to
+    fixed-point, run both \code{predict()} (floating-point) and \code{predictFixed()}
+    (fixed-point), convert the fixed-point result back with \code{toDouble()}, and print both side
+    by side.
+  \item Confirm the two results agree to within roughly 0.0001 for each test case. If they don't,
+    double-check the \code{>>} shift in \code{fixedMultiply()}: it's the step most likely to be off
+    by a factor of \code{kOne}.
+\end{enumerate}

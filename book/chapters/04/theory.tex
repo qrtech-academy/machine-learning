@@ -1,0 +1,183 @@
+% Sections 4.1 and 4.2, from lectures/L04/appendix/a_theory.md: one section per numbered section
+% of the appendix.
+
+\section{Neural Network Architecture}
+\label{c4:sec:architecture}\label{c4:app:a}
+
+\subsection{Overview}
+Chapter~\ref{c3:ch:nn} built a \code{dense_layer::Interface} and a placeholder implementation of
+it, \code{dense_layer::Stub}. This chapter adds the piece that actually uses them: a small neural
+network class, \code{neural_network::Shallow}, completing the structure:
+
+\begin{console}
+ml::dense_layer::Interface   (built in Chapter 3)
+└── ml::dense_layer::Stub    (built in Chapter 3)
+
+ml::neural_network::Interface   (Interface for neural networks)
+└── ml::neural_network::Shallow (Neural network with a single hidden layer)
+        ├── ml::dense_layer::Interface& myHiddenLayer
+        └── ml::dense_layer::Interface& myOutputLayer
+\end{console}
+
+\noindent \code{ml::dense_layer::Stub} continues to serve as a placeholder throughout this chapter.
+Once a concrete implementation is created in Chapter~\ref{c5:ch:dense}, the stub is replaced
+without needing to change any of the code you write in this one.
+
+\subsection{The network's structure}
+\code{Shallow} holds references to two dense layers and connects them during prediction:
+
+\begin{console}
+input → myHiddenLayer.feedforward(input)
+               ↓
+       myHiddenLayer.output()
+               ↓
+       myOutputLayer.feedforward(...)
+               ↓
+       myOutputLayer.output()  →  prediction
+\end{console}
+
+\noindent \code{Shallow} doesn't own the layers; it receives them as references via the
+constructor. This makes it easy to swap out layers without changing the network class, which is
+exactly what happens in Chapter~\ref{c5:ch:dense} when the stub is replaced with a real
+implementation.
+
+% ------------------------------------------------------------------------------------------
+\section{Training Loop}
+\label{c4:sec:training}
+
+\subsection{Overview}
+You'll implement the method \code{train()} in \code{ml::neural_network::Shallow}. The method
+carries out the complete training process, repeated for every training set and epoch:
+\begin{itemize}
+  \item Feedforward:
+  \begin{itemize}
+    \item Computes outputs for every node in the network.
+    \item The output from the last layer forms the network's prediction.
+    \item Must be computed forward (from input to output).
+  \end{itemize}
+  \item Backpropagate:
+  \begin{itemize}
+    \item Computes gradients (simplified error) for every node in the network.
+    \item Must be computed backward (from output to input).
+  \end{itemize}
+  \item Optimization:
+  \begin{itemize}
+    \item Adjusts the trainable parameters (weights and biases) based on the computed error,
+      together with the learning rate the network currently holds.
+    \item Computation can happen in either direction.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Structure of the training loop}
+The training loop can be summarized as follows:
+
+\begin{console}
+Reset both layers' trainable parameters
+
+For each epoch:
+    For each training set x:
+        1. Feedforward: compute predictions
+        2. Backpropagation: compute error
+        3. Optimization: update weights and biases
+
+    Every hundredth epoch:
+        4. Measure the precision, and stop early or set a new learning
+           rate from it
+\end{console}
+
+\noindent The order matters:
+\begin{itemize}
+  \item Backpropagation depends on the result of feedforward.
+  \item Optimization depends on the result of backpropagation.
+\end{itemize}
+The reset at the top is what makes a second call to \code{train()} train a new network rather than
+continue the old one, and step~4 is what frees the caller from having to pick a learning rate. Both
+are covered in the exercises, in \secref{c4:sec:exercises}.
+
+\subsection{Step 1: Feedforward}
+Call \code{predict(myTrainInput[x])}. This performs feedforward through both layers and returns
+the output layer's output.
+
+\begin{console}
+predict(input)
+  → myHiddenLayer.feedforward(input)
+  → myOutputLayer.feedforward(myHiddenLayer.output())
+\end{console}
+
+\subsection{Step 2: Backpropagation}
+Compute the error backward: always start with the output layer.
+
+\textbf{The output layer} compares its output against the reference value:
+
+\begin{console}
+myOutputLayer.backpropagate(myTrainOutput[x])
+\end{console}
+
+\noindent\textbf{The hidden layer} computes its error from the output layer's error and weights:
+
+\begin{console}
+myHiddenLayer.backpropagate(myOutputLayer)
+\end{console}
+
+\noindent The order is crucial: the hidden layer's calculation depends on the output layer having
+already computed its error.
+
+\subsection{Step 3: Optimization}
+Update the weights and biases in both layers using the errors computed in step~2.
+
+\begin{console}
+myHiddenLayer.optimize(myTrainInput[x], learningRate)
+myOutputLayer.optimize(myHiddenLayer.output(), learningRate)
+\end{console}
+
+\noindent The hidden layer's input is the original input. The output layer's input is the hidden
+layer's output (the one computed during feedforward). \code{learningRate} is the network's own, a
+local variable in \code{train()} rather than an argument, revised in step~4 below.
+
+\subsection{Step 4: Evaluation}
+Once every hundredth epoch, measure how close the network is to its training data and act on the
+number:
+
+\begin{console}
+precision = 1.0 - MAE (over every value of every training set)
+
+precision >= precisionThreshold  ->  stop training, the network is done
+otherwise                        ->  updateLearningRate(): raise the rate when
+                                     progress has stalled, lower it when the
+                                     network is overshooting
+\end{console}
+
+\noindent The learning rate is therefore never supplied by the caller. It starts at \code{0.1} and
+is revised from one evaluation to the next, exactly as in \code{ml::lin_reg::Adaptive} from
+Chapter~\ref{c2:ch:training}, which evaluates every tenth epoch instead: a linear regression model
+converges in tens of epochs, a network in thousands.
+
+\subsection{Connection to the theory}
+These three steps map directly onto the theory from Chapter~\ref{c3:ch:nn} (see
+\secref{c3:sec:nn}):
+
+\begin{booktable}{@{}p{7.6em}p{11em}L@{}}
+  \thead{Step} & \thead{Theory (\secref{c3:sec:nn})} & \thead{Code} \\
+  \midrule
+  Feedforward & $y = \sigma(b + \sum w_i x_i)$ & \code{feedforward(input)} \\
+  Backpropagation & $\Delta e = \delta \cdot y'$ & \code{backpropagate(...)} \\
+  Optimization & $w = w + \Delta e \cdot L \cdot x$ & \code{optimize(input, learningRate)} \\
+\end{booktable}
+
+\subsection{Input validation}
+Check that training is possible before the training loop starts. Print an error message and return
+\code{false} immediately if any of the following conditions hold:
+
+\begin{booktable}{@{}p{13.5em}L@{}}
+  \thead{Condition} & \thead{Explanation} \\
+  \midrule
+  \code{epochCount == 0} & Training must run for at least one epoch. \\
+  \code{precisionThreshold <= 0.0 || precisionThreshold >= 1.0} & Invalid threshold: must be in
+    the range \code{(0.0, 1.0)}. A threshold of \code{1.0} or more can never be reached;
+    \code{0.0} or less is reached by any network at all. \\
+\end{booktable}
+
+There's no learning rate among them: the network sets its own, and the layers check the rate
+they're handed on every call to \code{optimize()}. Missing training data isn't among them either:
+it never reaches \code{train()}, because the constructor already terminates when there's no
+complete training set.

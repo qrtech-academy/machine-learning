@@ -18,7 +18,7 @@ typedef struct max_pool_layer max_pool_layer_t;
  * @param[in] pool_size Pool size (assumed square). The input size must be evenly divisible by
  *                      it.
  *
- * @return Pointer to the new max pooling layer, or nullptr in failure.
+ * @return Pointer to the new max pooling layer, or NULL on failure.
  */
 max_pool_layer_t* max_pool_layer_new(size_t input_size, size_t pool_size);
 
@@ -28,8 +28,6 @@ max_pool_layer_t* max_pool_layer_new(size_t input_size, size_t pool_size);
  *        Release allocated resources and set the corresponding pointer to null.
  *
  * @param[in] self Double pointer to the max pooling layer.
- *
- * @return Pointer to the new max pooling layer, or nullptr in failure.
  */
 void max_pool_layer_del(max_pool_layer_t** self);
 

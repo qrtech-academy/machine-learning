@@ -1,0 +1,251 @@
+% Section 6.4, from lectures/L06/appendix/b_exercises.md (Set 1) and c_conv_layer.md (Set 2). The
+% hand-training example's walk-through is the worked solution in Appendix A; the conv layer is
+% finished in Chapter 7, and its reference implementations are in the repository.
+
+\section{Exercises}
+\label{c6:sec:exercises}
+
+\begin{aside}
+\textbf{How to work these.} Set~1 is a calculation: work it on paper, Exercise~\ref{c6:ex:1}
+first, since Exercise~\ref{c6:ex:2} backpropagates through the values it produces. Set~2 is a
+program, and it isn't new: the file \file{lectures/L06/conv_layer/cpp/conv_demo.cpp} in the
+companion repository already holds a skeleton of the struct you write, its helper functions, and
+the \code{main()} that uses it, with a Makefile beside it. Get as far as you can with it here;
+Chapter~\ref{c7:ch:layers} finishes it.
+
+\textbf{How to check your work.} The worked solutions to Set~1 are in
+Appendix~\ref{sol:ch:solutions}. Set~2 has no test suite; instead, the demo runs the numbers of
+Set~1 and prints each result next to the value the hand calculation arrives at, so your
+implementation is checked against your own arithmetic.
+
+The same layer is implemented in the repository twice more, as references: in Python, in
+\file{lectures/L06/conv_layer/python}, and in C, in \file{lectures/L06/conv_layer/c}, where the
+layer is encapsulated behind an opaque struct whose accessor functions are only exposed through its
+header. Try the exercise yourself before looking at them.
+\end{aside}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Hand-Training a CNN}
+\label{c6:set:1}\label{c6:app:b}
+We have the following convolutional neural network:
+\begin{itemize}
+  \item Input: \textbf{$4 \times 4$}.
+  \item Conv layer:
+  \begin{itemize}
+    \item Kernel: \textbf{$2 \times 2$}.
+    \item Stride = 1 (the kernel moves one pixel at a time).
+    \item Zero-padding (we add zeros around the image so its size is preserved despite the
+      extraction).
+    \item Activation: \textbf{ReLU} (all negative values are replaced with zero).
+    \item Learning rate: $\LR = 0.001$, i.e.\ 0.1\%.
+  \end{itemize}
+  \item Max pool:
+  \begin{itemize}
+    \item Pool size = 2.
+    \item Stride = 2 (the pools are non-overlapping).
+  \end{itemize}
+  \item Flatten: $2 \times 2 \rightarrow 1 \times 4$.
+\end{itemize}
+The two exercises below work the whole training process through, step by step: feedforward
+through all three layers, then backpropagation and optimization.
+
+\calcexercise{Feedforward}
+\label{c6:ex:1}
+Assume we have the following input image, resembling the digit 0 made up of ones:
+\[
+  \begin{bmatrix}
+    1 & 1 & 1 & 1 \\
+    1 & 0 & 0 & 1 \\
+    1 & 0 & 0 & 1 \\
+    1 & 1 & 1 & 1
+  \end{bmatrix}
+\]
+We use a kernel (a filter of weights) and a bias, with simple, fixed values chosen to make the
+calculations easy to follow:
+\[
+  \text{kernel} = \begin{bmatrix} 0.2 & 0.4 \\ 0.6 & 0.8 \end{bmatrix}, \qquad
+  \text{bias} = 0.5
+\]
+
+\task{a) Padding the input image}
+The first step is \emph{zero-padding}: we add zeros around the image so its size is preserved even
+after the kernel filter has been applied. This way, the conv layer's output has the same dimensions
+as the input, $4 \times 4$ in this case.
+
+The number of zeros $n$ we add on each side is computed as
+\[
+  n = \text{kernel\_size} / 2,
+\]
+where \code{kernel_size} is the size of the kernel, 2 in this example, i.e.\ one zero on each side.
+Give the padded image, which is $6 \times 6$.
+
+In general, sliding a $K \times K$ kernel with stride $s$ over an $N \times N$ image padded by $p$
+on each side gives an output of size $\lfloor (N + 2p - K)/s \rfloor + 1$. For an \textbf{odd}
+kernel that lands exactly on $N$, which is the case this padding rule is designed for. For the
+\textbf{even} $2 \times 2$ kernel used here it comes out one larger, $5 \times 5$, because
+\code{n = kernel_size / 2} pads symmetrically for a kernel that has no centre. The layer keeps only
+the first $4 \times 4$ window positions, i.e.\ $i$ and $j$ both run from 0 to 3, which is what makes
+the output match the input size. Work out that $4 \times 4$ below and you have exactly what the code
+produces.
+
+\task{b) Feedforward through the conv layer}
+For each position in the image, compute the sum of the element-wise multiplication between the
+kernel and the corresponding part of the padded image, plus the bias, then apply ReLU (all negative
+values are replaced with zero):
+
+\begin{console}
+sum = a * k00 + b * k01 + c * k10 + d * k11 + bias
+output = ReLU(sum)
+\end{console}
+
+\noindent where:
+\begin{itemize}
+  \item \textbf{a, b, c, d} are pixel values from the current $2 \times 2$ section of the image.
+  \item \textbf{k} stands for kernel (the filter), e.g.\ \code{k00} means the value at row 0,
+    column 0 of the kernel matrix, i.e.\ the top-left corner.
+  \item \textbf{bias} is a constant value added to the sum.
+\end{itemize}
+Apply the kernel and bias across the entire image, and give the conv output ($4 \times 4$).
+
+\task{c) The max pooling layer (feedforward)}
+The max pooling layer looks for the largest value in each $2 \times 2$ pool (non-overlapping) of the
+conv layer's output. The purpose is to downsample the image: we remove detail while keeping the most
+important features, which reduces the amount of data and makes the model less sensitive to small
+variations.
+
+Split the conv layer's output into its four pools, and give the largest value of each, and the
+position it was found at. Where a pool holds its maximum more than once, pass forward the first
+instance. Then give the max pooling layer's output ($2 \times 2$).
+
+\task{d) Flatten (feedforward)}
+Flatten the max pooling layer's output into a vector, so it can be fed to the next layer.
+\seesolution{c6:ex:1}
+
+\calcexercise{Backpropagation and optimization}
+\label{c6:ex:2}
+Assume the dense layer sends back the following gradients:
+\[
+  [10, 20, 30, 40]
+\]
+
+\task{a) Flatten (backpropagation)}
+Reshape the gradients from the dense layer back into a matrix.
+
+\task{b) Max pool (backpropagation)}
+Propagate the gradients back to the correct positions in the max pooling layer, i.e.\ to the spots
+where the max values were located in each pool. If a pool holds its max value more than once, the
+gradient is propagated back to the first position; the remaining positions get a gradient of 0.
+Give the gradient for each pool, and then all four assembled into a single $4 \times 4$ matrix.
+
+\task{c) Conv layer (backpropagation)}
+Now compute the gradient for the bias and the kernel from the error propagated back.
+
+One step is invisible here. Strictly, each incoming gradient is first multiplied by the activation
+function's derivative at that position, $\sigma'(s)$, where $s$ is the pre-activation sum from
+feedforward. Every sum in this example is positive and the activation is ReLU, so every derivative
+is 1 and the multiplication changes nothing. It is not optional in code: the \code{Conv} class you
+write in Chapter~\ref{c8:ch:conv} applies it explicitly, in the \code{backpropagate()} specified in
+\secref{c8:sec:exercises}.
+
+\textbf{Bias gradient:} the sum of all values in the gradient matrix.
+
+\textbf{Kernel gradients:} for each kernel element, sum the product of the corresponding patch in
+the padded input image and the gradient matrix. For each position $(i, j)$ in the gradient matrix,
+the corresponding $2 \times 2$ patch is extracted from the padded input image $P$, and each kernel
+element is multiplied by the corresponding value in the patch and summed over all positions:
+\[
+  \text{kernelGradient}[a][c] = \sum_{i,j} P[i+a][j+c] \cdot \text{grad}[i][j]
+\]
+Most gradients are zero, so only the positions where the gradient is non-zero need computing.
+
+\textbf{Input gradients (padded input):} compute how the error propagates back to the input by, for
+each position in the gradient matrix, ``spreading'' the kernel's weights multiplied by the gradient
+value at the right spot into a new $6 \times 6$ matrix, and summing overlapping positions. Then
+remove the padding, which leaves a $4 \times 4$ matrix matching the original image: the gradient
+with respect to the input, which is passed further back through the network.
+
+\task{d) Optimization}
+Finally, update the kernel and bias using the learning rate $\LR$:
+
+\begin{console}
+kernel = kernel + LR * kernelGradient
+bias   = bias   + LR * biasGradient
+\end{console}
+
+\noindent Give the updated kernel and the updated bias.
+\seesolution{c6:ex:2}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{A Simple Conv Layer in C++}
+\label{c6:set:2}\label{c6:app:c}
+
+\codeexercise{The \code{ml::ConvLayer} struct}
+\label{c6:ex:3}
+A struct named \code{ml::ConvLayer} should be added to
+\file{lectures/L06/conv_layer/cpp/conv_demo.cpp} to implement a simple conv layer. To keep things as
+simple as possible, we implement a struct and skip get/set methods, deletion of copy and move
+constructors, and so on.
+
+You don't need to finish this now: get as far as you can with \code{feedforward()} and
+\code{backpropagate()}; you'll finish the struct (and compile and run it for the first time) in
+Chapter~\ref{c7:ch:layers}. See Exercise~\ref{c7:ex:1} for the wrap-up steps once you're done.
+
+\code{ConvLayer} zero-pads its input (\code{pad = kernelSize / 2}) so the output is the
+\textbf{same size as the input}, not smaller. This is why \code{outputGradients} in the example below
+is a $4 \times 4$ matrix, matching the $4 \times 4$ \code{input}: your \code{feedforward()} and
+\code{backpropagate()} need to pad and unpad internally to make that size match up. The struct
+skeleton in \file{conv_demo.cpp} sketches two private helper methods for exactly that, along with
+every member variable you need.
+
+The general output size is $\lfloor (N + 2p - K)/s \rfloor + 1$, which lands exactly on $N$ for an
+odd kernel. The $2 \times 2$ kernel used here is even, so the padded image admits $5 \times 5$ window
+positions; loop \code{i} and \code{j} from 0 to \code{inputSize - 1} and the extra row and column
+simply go unused. Exercise~\ref{c6:ex:1} works the same point through by hand.
+
+The demo runs the \emph{same} numbers you worked through by hand in Exercises~\ref{c6:ex:1}
+and~\ref{c6:ex:2}: the same input image, the same kernel and bias, and the same gradients coming
+back from the max pooling layer. It prints each result next to the value the hand calculation
+arrives at, so you can check your implementation against your own hand calculations rather than
+guessing whether the output looks reasonable.
+
+That's also why the kernel and bias are assigned right after the layer is created: the constructor
+randomizes them, and the demo overwrites them so every run prints the same numbers.
+
+Study the code in the \code{main()} function. Your implementation should be written so this code
+works:
+
+\begin{cppcode}
+// Create a convolutional layer: 4x4 input, 2x2 kernel.
+constexpr std::size_t inputSize{4U};
+constexpr std::size_t kernelSize{2U};
+ml::ConvLayer convLayer{inputSize, kernelSize};
+
+// Use appendix B's kernel and bias instead of the randomized ones.
+convLayer.kernel = Matrix2d{{0.2, 0.4}, {0.6, 0.8}};
+convLayer.bias   = 0.5;
+
+// Input image from appendix B, resembling the digit 0 made up of ones.
+const Matrix2d input{{1, 1, 1, 1},
+                     {1, 0, 0, 1},
+                     {1, 0, 0, 1},
+                     {1, 1, 1, 1}};
+
+// Perform feedforward (convolution). Expect the conv output from appendix B.
+convLayer.feedforward(input);
+
+// Gradients the max pooling layer sends back in appendix B.
+const Matrix2d outputGradients{{0, 10, 20, 0},
+                               {0,  0,  0, 0},
+                               {0,  0,  0, 0},
+                               {0, 30,  0, 40}};
+
+// Perform backpropagation. Expect the input gradients from appendix B.
+convLayer.backpropagate(outputGradients);
+
+// Perform optimization. Expect the updated kernel and bias from appendix B.
+convLayer.optimize(0.001);
+\end{cppcode}
+
+\noindent The comments name appendix B of the lecture, which is Set~1 here. Each of
+\code{feedforward()}, \code{backpropagate()} and \code{optimize()} returns a \code{bool}; the demo
+checks it and aborts with a message on failure.

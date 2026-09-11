@@ -117,7 +117,7 @@ struct LinReg
     }
 
 private:
-     // -----------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------
     static MatrixU32 trainOrderMatrix(const std::uint32_t setCount) noexcept
     {
         MatrixU32 order(setCount);
@@ -166,7 +166,7 @@ int main()
     const Matrix1d trainOut{1.0, 4.0, 7.0, 10.0, 13.0};
     LinReg linReg{};
 
-    // Train the model, terminate on failure.
+    // Train the model, return -1 on failure.
     if (!linReg.train(trainIn, trainOut, epochCount, learningRate))
     {
         std::printf("Training failed!\n");
@@ -372,7 +372,7 @@ int main()
     const Matrix1d trainOut{1.0, 4.0, 7.0, 10.0, 13.0};
     LinReg linReg{};
 
-    // Train the model, terminate on failure.
+    // Train the model, return -1 on failure.
     if (!linReg.train(trainIn, trainOut, epochCount, learningRate))
     {
         std::printf("Training failed!\n");

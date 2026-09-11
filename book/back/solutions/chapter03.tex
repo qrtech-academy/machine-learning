@@ -1,0 +1,186 @@
+% Section A.2, the solutions to the hand-training exercises in Chapter 3, from the solutions that
+% follow each example in lectures/L03/appendix/b_exercises.md.
+
+\section{Chapter 3: Neural Networks}
+\label{sol:sec:c3}
+
+% ------------------------------------------------------------------------------------------
+\solution{c3:ex:1}{Odd parity, first training set}
+All calculations are shown below. Every node uses ReLU, so $\sigma(s) = s$ for a positive weighted
+sum, and its derivative $\sigma'(s)$ is 1 for every positive sum and 0 otherwise.
+
+\step{Feedforward}
+\begin{align*}
+  x_1 &= X_1 = 0, \quad x_2 = X_2 = 1 \\
+  y_1 &= \sigma(b_1 + x_1 w_1 + x_2 w_2) = \sigma(0.2 + 0 \cdot 0.5 + 1 \cdot 0.6) = \sigma(0.8)
+    = 0.8 \\
+  y_2 &= \sigma(b_2 + x_1 w_3 + x_2 w_4) = \sigma(0.4 + 0 \cdot 0.3 + 1 \cdot 0.8) = \sigma(1.2)
+    = 1.2 \\
+  y_3 &= \sigma(b_3 + y_1 w_5 + y_2 w_6) = \sigma(0.6 + 0.8 \cdot 0.1 + 1.2 \cdot 0.9)
+    = \sigma(1.76) = 1.76 \\
+  Y &= y_3 = 1.76
+\end{align*}
+
+\step{Backpropagation}
+\begin{align*}
+  \delta_3 &= Y_{\mathrm{train}} - y_3 = 1 - 1.76 = -0.76 \\
+  e_3 &= \delta_3 \cdot \sigma'(s_3) = -0.76 \cdot 1 = -0.76 \\
+  \delta_1 &= e_3 w_5 = -0.76 \cdot 0.1 = -0.076 \\
+  \delta_2 &= e_3 w_6 = -0.76 \cdot 0.9 = -0.684 \\
+  e_1 &= \delta_1 \cdot \sigma'(s_1) = -0.076 \cdot 1 = -0.076 \\
+  e_2 &= \delta_2 \cdot \sigma'(s_2) = -0.684 \cdot 1 = -0.684
+\end{align*}
+
+\step{Optimization}
+\begin{align*}
+  \Delta c_3 &= e_3 \cdot \LR = -0.76 \cdot 0.1 = -0.076 \\
+  b_3 &= b_3 + \Delta c_3 = 0.6 + (-0.076) = 0.524 \\
+  w_5 &= w_5 + \Delta c_3 \cdot y_1 = 0.1 + (-0.076) \cdot 0.8 = 0.0392 \\
+  w_6 &= w_6 + \Delta c_3 \cdot y_2 = 0.9 + (-0.076) \cdot 1.2 = 0.8088 \\[1ex]
+  \Delta c_1 &= e_1 \cdot \LR = -0.076 \cdot 0.1 = -0.0076 \\
+  \Delta c_2 &= e_2 \cdot \LR = -0.684 \cdot 0.1 = -0.0684 \\[1ex]
+  b_1 &= 0.2 + (-0.0076) = 0.1924 \\
+  w_1 &= 0.5 + (-0.0076) \cdot 0 = 0.5 \\
+  w_2 &= 0.6 + (-0.0076) \cdot 1 = 0.5924 \\[1ex]
+  b_2 &= 0.4 + (-0.0684) = 0.3316 \\
+  w_3 &= 0.3 + (-0.0684) \cdot 0 = 0.3 \\
+  w_4 &= 0.8 + (-0.0684) \cdot 1 = 0.7316
+\end{align*}
+
+\step{Verification (via feedforward)}
+With the new parameters and the same inputs $X_1X_2 = 01$:
+\begin{align*}
+  y_1 &= \sigma(0.1924 + 0 \cdot 0.5 + 1 \cdot 0.5924) = \sigma(0.7848) = 0.7848 \\
+  y_2 &= \sigma(0.3316 + 0 \cdot 0.3 + 1 \cdot 0.7316) = \sigma(1.0632) = 1.0632 \\
+  y_3 &= \sigma(0.524 + 0.7848 \cdot 0.0392 + 1.0632 \cdot 0.8088) \approx \sigma(1.41) = 1.41 \\
+  Y &= y_3 \approx 1.41, \quad \delta_3 = 1 - 1.41 = -0.41
+\end{align*}
+The deviation decreased from $-0.76$ to $-0.41$. With further rounds of training and a lower
+learning rate (e.g.\ 0.01), the deviation could be brought much closer to zero.
+
+% ------------------------------------------------------------------------------------------
+\solution{c3:ex:2}{Inverting two inputs}
+All calculations are shown below. Every weighted sum in this example is positive, so every ReLU
+derivative is 1 and each computed error $e$ equals its deviation $\delta$.
+
+\step{Feedforward}
+\begin{align*}
+  x_1 &= 1, \quad x_2 = 0 \\
+  y_1 &= \sigma(0.1 + 1 \cdot 0.2 + 0 \cdot 0.9) = 0.3 \\
+  y_2 &= \sigma(0.1 + 1 \cdot 0.3 + 0 \cdot 0.8) = 0.4 \\
+  y_3 &= \sigma(0.7 + 1 \cdot 0.5 + 0 \cdot 0.4) = 1.2 \\
+  y_4 &= \sigma(0.1 + 0.3 \cdot 0.1 + 0.4 \cdot 0.1 + 1.2 \cdot 1.0) = \sigma(1.37) = 1.37 \\
+  y_5 &= \sigma(0.6 + 0.3 \cdot 0.3 + 0.4 \cdot 0.0 + 1.2 \cdot 0.6) = \sigma(1.41) = 1.41 \\
+  Y_1 &= y_4 = 1.37, \quad Y_2 = y_5 = 1.41
+\end{align*}
+
+\step{Backpropagation}
+\begin{align*}
+  \delta_4 &= 0 - 1.37 = -1.37, \quad e_4 = -1.37 \\
+  \delta_5 &= 1 - 1.41 = -0.41, \quad e_5 = -0.41 \\
+  \delta_1 &= e_4 w_7 + e_5 w_{10} = -1.37 \cdot 0.1 + (-0.41) \cdot 0.3 = -0.26 \\
+  \delta_2 &= e_4 w_8 + e_5 w_{11} = -1.37 \cdot 0.1 + (-0.41) \cdot 0.0 = -0.137 \\
+  \delta_3 &= e_4 w_9 + e_5 w_{12} = -1.37 \cdot 1.0 + (-0.41) \cdot 0.6 = -1.616 \\
+  e_1 &= -0.26, \quad e_2 = -0.137, \quad e_3 = -1.616
+\end{align*}
+
+\step{Optimization}
+\begin{align*}
+  \Delta c_4 &= -1.37 \cdot 0.1 = -0.137, \quad \Delta c_5 = -0.41 \cdot 0.1 = -0.041 \\
+  b_4 &= 0.1 + (-0.137) = -0.037, \quad b_5 = 0.6 + (-0.041) = 0.559
+\end{align*}
+Output-layer weights, scaled by the hidden layer's outputs $y_1 = 0.3$, $y_2 = 0.4$ and
+$y_3 = 1.2$:
+\begin{align*}
+  w_7 &= 0.1 + (-0.137) \cdot 0.3 = 0.0589, & w_{10} &= 0.3 + (-0.041) \cdot 0.3 = 0.2877 \\
+  w_8 &= 0.1 + (-0.137) \cdot 0.4 = 0.0452, & w_{11} &= 0.0 + (-0.041) \cdot 0.4 = -0.0164 \\
+  w_9 &= 1.0 + (-0.137) \cdot 1.2 = 0.8356, & w_{12} &= 0.6 + (-0.041) \cdot 1.2 = 0.5508
+\end{align*}
+Hidden-layer biases:
+\begin{align*}
+  \Delta c_1 &= -0.026, & \Delta c_2 &= -0.0137, & \Delta c_3 &= -0.1616 \\
+  b_1 &= 0.074, & b_2 &= 0.0863, & b_3 &= 0.5384
+\end{align*}
+Hidden-layer weights, scaled by the inputs $x_1 = 1$ and $x_2 = 0$, so the three weights on $x_2$
+keep their values:
+\begin{align*}
+  w_1 &= 0.2 + (-0.026) \cdot 1 = 0.174, & w_2 &= 0.9 + (-0.026) \cdot 0 = 0.9 \\
+  w_3 &= 0.3 + (-0.0137) \cdot 1 = 0.2863, & w_4 &= 0.8 + (-0.0137) \cdot 0 = 0.8 \\
+  w_5 &= 0.5 + (-0.1616) \cdot 1 = 0.3384, & w_6 &= 0.4 + (-0.1616) \cdot 0 = 0.4
+\end{align*}
+
+\step{Verification (via feedforward)}
+With the new parameters and $X_1X_2 = 10$:
+\begin{align*}
+  y_1 &\approx 0.248, \quad y_2 \approx 0.3726, \quad y_3 \approx 0.8768 \\
+  Y_1 &= y_4 = \sigma(-0.037 + 0.248 \cdot 0.0589 + 0.3726 \cdot 0.0452 + 0.8768 \cdot 0.8356)
+    \approx 0.727 \\
+  Y_2 &= y_5 = \sigma(0.559 + 0.248 \cdot 0.2877 + 0.3726 \cdot (-0.0164) + 0.8768 \cdot 0.5508)
+    \approx 1.107 \\
+  \delta_4 &\approx 0 - 0.727 = -0.727, \quad \delta_5 \approx 1 - 1.107 = -0.107
+\end{align*}
+The deviations are lower than before (from $-1.37$ and $-0.41$). With further rounds of training and
+a lower learning rate (e.g.\ 0.01), the deviation could be brought much closer to zero.
+
+% ------------------------------------------------------------------------------------------
+\solution{c3:ex:3}{Odd parity, after one epoch}
+All calculations are shown below.
+
+\step{Feedforward}
+\begin{align*}
+  x_1 &= X_1 = 1, \quad x_2 = X_2 = 1 \\
+  y_1 &= \sigma(b_1 + x_1 w_1 + x_2 w_2) = \sigma(0.1 + 1 \cdot 0.5 + 1 \cdot 0.4) = \sigma(1.0)
+    = 1.0 \\
+  y_2 &= \sigma(b_2 + x_1 w_3 + x_2 w_4) = \sigma(-0.4 + 1 \cdot (-0.2) + 1 \cdot 0.1)
+    = \sigma(-0.5) = 0 \\
+  y_3 &= \sigma(b_3 + y_1 w_5 + y_2 w_6) = \sigma(-0.2 + 1.0 \cdot 0.7 + 0 \cdot 0.8)
+    = \sigma(0.5) = 0.5 \\
+  Y &= y_3 = 0.5
+\end{align*}
+
+\step{Backpropagation}
+\begin{align*}
+  \delta_3 &= Y_{\mathrm{train}} - y_3 = 0 - 0.5 = -0.5 \\
+  e_3 &= \delta_3 \cdot \sigma'(s_3) = -0.5 \cdot 1 = -0.5 \\
+  \delta_1 &= e_3 w_5 = -0.5 \cdot 0.7 = -0.35 \\
+  \delta_2 &= e_3 w_6 = -0.5 \cdot 0.8 = -0.4 \\
+  e_1 &= \delta_1 \cdot \sigma'(s_1) = -0.35 \cdot 1 = -0.35 \\
+  e_2 &= \delta_2 \cdot \sigma'(s_2) = -0.4 \cdot 0 = 0
+\end{align*}
+Note that $s_2 = -0.5$, which means $\sigma'(s_2) = 0$ since the derivative of ReLU is zero for
+weighted sums $\leq 0$. Node 2 therefore doesn't contribute to the error and won't be updated in
+this step.
+
+\step{Optimization}
+\begin{align*}
+  \Delta c_3 &= e_3 \cdot \LR = -0.5 \cdot 0.1 = -0.05 \\
+  b_3 &= b_3 + \Delta c_3 = -0.2 + (-0.05) = -0.25 \\
+  w_5 &= w_5 + \Delta c_3 \cdot y_1 = 0.7 + (-0.05) \cdot 1.0 = 0.65 \\
+  w_6 &= w_6 + \Delta c_3 \cdot y_2 = 0.8 + (-0.05) \cdot 0 = 0.8 \\[1ex]
+  \Delta c_1 &= e_1 \cdot \LR = -0.35 \cdot 0.1 = -0.035 \\
+  \Delta c_2 &= e_2 \cdot \LR = 0 \cdot 0.1 = 0 \\[1ex]
+  b_1 &= 0.1 + (-0.035) = 0.065 \\
+  w_1 &= 0.5 + (-0.035) \cdot 1 = 0.465 \\
+  w_2 &= 0.4 + (-0.035) \cdot 1 = 0.365 \\[1ex]
+  b_2 &= -0.4 + 0 = -0.4 \\
+  w_3 &= -0.2 + 0 \cdot 1 = -0.2 \\
+  w_4 &= 0.1 + 0 \cdot 1 = 0.1
+\end{align*}
+Since $\Delta c_2 = 0$, $b_2$, $w_3$, and $w_4$ remain completely unchanged.
+
+\step{Verification (via feedforward)}
+With the new parameters and the same inputs $X_1X_2 = 11$:
+\begin{align*}
+  y_1 &= \sigma(0.065 + 1 \cdot 0.465 + 1 \cdot 0.365) = \sigma(0.895) = 0.895 \\
+  y_2 &= \sigma(-0.4 + 1 \cdot (-0.2) + 1 \cdot 0.1) = \sigma(-0.5) = 0 \\
+  y_3 &= \sigma(-0.25 + 0.895 \cdot 0.65 + 0 \cdot 0.8) = \sigma(0.332) = 0.332 \\
+  Y &= y_3 \approx 0.332, \quad \delta_3 = 0 - 0.332 = -0.332
+\end{align*}
+
+\step{Did the error decrease?}
+The deviation decreased from $-0.5$ to $-0.332$, so the error got smaller. The node that produced
+$y_2 = 0$, however, remained completely unchanged since the derivative of ReLU is zero where the
+input is $\leq 0$, an example of the so-called ``dying ReLU'' problem. If this kept happening over
+several consecutive epochs, that node could never be relearned. To counteract this,
+\textbf{Leaky ReLU} could be used instead of ReLU, since it allows a weak signal (and therefore a
+non-zero derivative) even when the input is negative.

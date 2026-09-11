@@ -1,0 +1,288 @@
+% Section 7.2, from lectures/L07/appendix/a_conv_layer.md (Set 1), b_max_pool_layer.md (Set 2) and
+% c_flatten_layer.md (Set 3). The reference implementations in Python and C are in the repository.
+
+\section{Exercises}
+\label{c7:sec:exercises}
+
+\begin{aside}
+\textbf{How to work these.} Each set is one demo program that is already in the companion
+repository, with a skeleton of the struct you write, its helper functions, the \code{main()} that
+uses it, and a Makefile: \file{lectures/L06/conv_layer/cpp/conv_demo.cpp} for Set~1, which you
+started in Exercise~\ref{c6:ex:3}, \file{lectures/L07/max_pool_layer/cpp/max_pool_demo.cpp} for
+Set~2, and \file{lectures/L07/flatten_layer/cpp/flatten_demo.cpp} for Set~3. Until you switch the
+body of \code{main()} on, as each set's last exercise describes, that body is compiled out, and with
+it every use of the struct, so the program builds while the struct is still incomplete.
+
+\textbf{How to check your work.} These three have no test suite. The conv layer's demo prints each
+result next to the value Exercises~\ref{c6:ex:1} and~\ref{c6:ex:2} arrive at by hand. For the other
+two, run the Python reference beside your program: it feeds the same input through the same layer
+and prints the same matrices, so compare the numbers rather than the formatting.
+
+The reference implementations are published in the repository beside each C++ demo, in Python in
+\file{python} and in C in \file{c}; the C versions keep each layer behind an opaque struct whose
+accessor functions are only exposed through its header. Try each exercise yourself before looking
+at them.
+\end{aside}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Finishing the Conv Layer}
+\label{c7:set:1}\label{c7:app:a}
+You started implementing \code{ml::ConvLayer} in Exercise~\ref{c6:ex:3}: finish it here. The full
+task description and the target \code{main()} usage are both in Exercise~\ref{c6:ex:3}; this set
+only covers the wrap-up steps for compiling and running it for the first time, in
+\file{lectures/L06/conv_layer/cpp/conv_demo.cpp}.
+
+\codeexercise{Compiling and running the program}
+\label{c7:ex:1}
+As usual, the program can be run by typing the command \code{make} in the terminal:
+
+\begin{shell}
+make
+\end{shell}
+
+\noindent Once the implementation is complete, uncomment the compiler flag \code{CXX_FLAGS} in the
+Makefile, \file{lectures/L06/conv_layer/cpp/Makefile}. That is, change the following:
+
+\begin{makecode}
+# TODO: Uncomment this line once the implementation is finished.
+#CXX_FLAGS := -std=c++17 -Wall -Werror -DCONV_LAYER_IMPLEMENTED
+\end{makecode}
+
+\noindent to
+
+\begin{makecode}
+CXX_FLAGS := -std=c++17 -Wall -Werror -DCONV_LAYER_IMPLEMENTED
+\end{makecode}
+
+\noindent You can then also remove the conditional-compilation guard \code{CONV_LAYER_IMPLEMENTED}
+from \file{conv_demo.cpp} if you like. In that case, change the following:
+
+\begin{cppcode}
+/**
+ * @brief Create and demonstrate a simple convolutional layer.
+ *
+ * @return 0 on success, -1 on failure.
+ */
+int main()
+{
+//! @todo Remove this guard (and/or uncomment the compiler flags in the makefile) once the
+//        implementation is finished.
+#ifdef CONV_LAYER_IMPLEMENTED
+
+    // Function content.
+    return 0;
+
+//! @todo Remove this guard (and/or uncomment the compiler flags in the makefile) once the
+//        implementation is finished.
+#endif /** CONV_LAYER_IMPLEMENTED */
+}
+\end{cppcode}
+
+\noindent to
+
+\begin{cppcode}
+/**
+ * @brief Create and demonstrate a simple convolutional layer.
+ *
+ * @return 0 on success, -1 on failure.
+ */
+int main()
+{
+    // Function content.
+    return 0;
+}
+\end{cppcode}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{A Simple Max Pooling Layer}
+\label{c7:set:2}\label{c7:app:b}
+
+\codeexercise{The \code{ml::MaxPoolLayer} struct}
+\label{c7:ex:2}
+A struct named \code{ml::MaxPoolLayer} should be added to
+\file{lectures/L07/max_pool_layer/cpp/max_pool_demo.cpp} to implement a simple max pooling layer.
+To keep things as simple as possible, we implement a struct and skip get/set methods, deletion of
+copy and move constructors, and so on.
+
+Study the code in the \code{main()} function. Your implementation should be written so this code
+works to create and use a max pooling layer named \code{poolLayer}:
+
+\begin{cppcode}
+// Create a max pooling layer: 4x4 input, 2x2 pooling regions, produces 2x2 output.
+constexpr std::size_t inputSize{4U};
+constexpr std::size_t poolSize{2U};
+ml::MaxPoolLayer poolLayer{inputSize, poolSize};
+
+// Example 4x4 input matrix (could represent an image or feature map).
+const Matrix2d input{{2, 1, 6, 1},
+                     {3, 0, 4, 6},
+                     {1, 2, 4, 5},
+                     {3, 4, 7, 7}};
+
+// Perform feedforward (pooling).
+poolLayer.feedforward(input);
+
+// Example output gradients (same shape as pooling output, used for backpropagation demo).
+const Matrix2d outputGradients{{1, 2},
+                               {3, 4}};
+// Perform backpropagation.
+poolLayer.backpropagate(outputGradients);
+\end{cppcode}
+
+\codeexercise{Compiling and running the program}
+\label{c7:ex:3}
+As usual, the program can be run by typing the command \code{make} in the terminal:
+
+\begin{shell}
+make
+\end{shell}
+
+\noindent Once the implementation is complete, uncomment the compiler flag \code{CXX_FLAGS} in the
+Makefile, \file{lectures/L07/max_pool_layer/cpp/Makefile}. That is, change the following:
+
+\begin{makecode}
+# TODO: Uncomment this line once the implementation is finished.
+#CXX_FLAGS := -std=c++17 -Wall -Werror -DMAX_POOL_LAYER_IMPLEMENTED
+\end{makecode}
+
+\noindent to
+
+\begin{makecode}
+CXX_FLAGS := -std=c++17 -Wall -Werror -DMAX_POOL_LAYER_IMPLEMENTED
+\end{makecode}
+
+\noindent You can then also remove the conditional-compilation guard
+\code{MAX_POOL_LAYER_IMPLEMENTED} from \file{max_pool_demo.cpp} if you like. In that case, change
+the following:
+
+\begin{cppcode}
+/**
+ * @brief Create and demonstrate a simple max pooling layer.
+ *
+ * @return 0 on success, -1 on failure.
+ */
+int main()
+{
+//! @todo Remove this guard (and/or uncomment the compiler flags in the makefile) once the
+//        implementation is finished.
+#ifdef MAX_POOL_LAYER_IMPLEMENTED
+
+    // Function content.
+    return 0;
+
+//! @todo Remove this guard (and/or uncomment the compiler flags in the makefile) once the
+//        implementation is finished.
+#endif /** MAX_POOL_LAYER_IMPLEMENTED */
+}
+\end{cppcode}
+
+\noindent to
+
+\begin{cppcode}
+/**
+ * @brief Create and demonstrate a simple max pooling layer.
+ *
+ * @return 0 on success, -1 on failure.
+ */
+int main()
+{
+    // Function content.
+    return 0;
+}
+\end{cppcode}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{A Simple Flatten Layer}
+\label{c7:set:3}\label{c7:app:c}
+
+\codeexercise{The \code{ml::FlattenLayer} struct}
+\label{c7:ex:4}
+A struct named \code{ml::FlattenLayer} should be added to
+\file{lectures/L07/flatten_layer/cpp/flatten_demo.cpp} to implement a simple flatten layer. To keep
+things as simple as possible, we implement a struct and skip get/set methods, deletion of copy and
+move constructors, and so on.
+
+Study the code in the \code{main()} function. Your implementation should be written so this code
+works to create and use a flatten layer named \code{flattenLayer}:
+
+\begin{cppcode}
+// Create a flatten layer: 4x4 input, produces 1x16 output.
+constexpr std::size_t inputSize{4U};
+ml::FlattenLayer flattenLayer{inputSize};
+
+// Example 4x4 input matrix (could represent an image or feature map).
+const Matrix2d input{{2, 1, 6, 1},
+                     {3, 0, 4, 6},
+                     {1, 2, 4, 5},
+                     {3, 4, 7, 7}};
+
+// Perform feedforward (flatten the input).
+flattenLayer.feedforward(input);
+
+// Example output gradients (same shape as flattened output, used for backpropagation demo).
+const Matrix1d outputGradients{1, 2, 3, 4, 8, 7, 6, 5, 0, 2, 4, 8, 9, 7, 5, 3};
+
+// Perform backpropagation (unflatten the output gradients).
+flattenLayer.backpropagate(outputGradients);
+\end{cppcode}
+
+\codeexercise{Compiling and running the program}
+\label{c7:ex:5}
+As usual, the program can be run by typing the command \code{make} in the terminal:
+
+\begin{shell}
+make
+\end{shell}
+
+\noindent Once the implementation is complete, uncomment the compiler flag \code{CXX_FLAGS} in the
+Makefile, \file{lectures/L07/flatten_layer/cpp/Makefile}. That is, change the following:
+
+\begin{makecode}
+# TODO: Uncomment this line once the implementation is finished.
+#CXX_FLAGS := -std=c++17 -Wall -Werror -DFLATTEN_LAYER_IMPLEMENTED
+\end{makecode}
+
+\noindent to
+
+\begin{makecode}
+CXX_FLAGS := -std=c++17 -Wall -Werror -DFLATTEN_LAYER_IMPLEMENTED
+\end{makecode}
+
+\noindent You can then also remove the conditional-compilation guard
+\code{FLATTEN_LAYER_IMPLEMENTED} from \file{flatten_demo.cpp} if you like. In that case, change the
+following:
+
+\begin{cppcode}
+/**
+ * @brief Create and demonstrate a simple flatten layer.
+ *
+ * @return 0 on success, -1 on failure.
+ */
+int main()
+{
+//! @todo Remove this guard (and/or uncomment the compiler flags in the makefile) once the
+//        implementation is finished.
+#ifdef FLATTEN_LAYER_IMPLEMENTED
+    // Function content.
+    return 0;
+
+//! @todo Remove this guard (and/or uncomment the compiler flags in the makefile) once the
+//        implementation is finished.
+#endif /** FLATTEN_LAYER_IMPLEMENTED */
+}
+\end{cppcode}
+
+\noindent to
+
+\begin{cppcode}
+/**
+ * @brief Create and demonstrate a simple flatten layer.
+ *
+ * @return 0 on success, -1 on failure.
+ */
+int main()
+{
+    // Function content.
+    return 0;
+}
+\end{cppcode}

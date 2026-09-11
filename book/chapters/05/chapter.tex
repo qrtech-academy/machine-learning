@@ -1,0 +1,34 @@
+% Chapter 5, typeset from lectures/L05: the README is the opener and the closing review, each
+% numbered section of appendix A is a section, in the same order and with the same subsections,
+% and appendix B is the exercises.
+
+\chapter{The Dense Layer}
+\label{c5:ch:dense}
+
+{\large\itshape The stub replaced by a layer that learns.\par}
+
+\begin{chapterbox}{In this chapter}
+\begin{itemize}
+  \item Implementing a dense layer in software, using the code from Chapter~\ref{c4:ch:network}:
+  \begin{itemize}
+    \item A concrete subclass \code{Dense}, taking over from the existing stub class.
+    \item A handful of activation functions.
+  \end{itemize}
+  \item Completing the implementation: feedforward, backpropagation, and optimization.
+\end{itemize}
+\end{chapterbox}
+
+This chapter replaces the stub the network has been wired to since Chapter~\ref{c3:ch:nn} with a
+dense layer that computes something. You'll create a concrete subclass that inherits the existing
+dense layer interface, implement all of its methods, including \code{initParams()},
+\code{feedforward()}, \code{backpropagate()}, and \code{optimize()}, and then test it with the
+complete neural network from Chapter~\ref{c4:ch:network}. There's no learning rate to adjust while
+you do: the network sets its own, and stops as soon as it reaches its precision threshold.
+
+\Secref{c5:sec:architecture} describes the dense layer's architecture, and \secref{c5:sec:math} maps
+the feedforward, backpropagation, and optimization equations from \secref{c3:sec:nn} onto the code.
+The exercises in \secref{c5:sec:exercises} declare the class and implement it, method by method.
+
+\input{chapters/05/theory}
+\input{chapters/05/summary}
+\input{chapters/05/exercises}

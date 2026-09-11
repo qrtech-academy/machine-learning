@@ -1,0 +1,13 @@
+% The course's copy of a figure: the book's drawing, in the book's fonts and inks, on a page cut to
+% its size with a 10pt margin. `make png` defines \pngfigure as the figure's name and renders the
+% result to the PNG the lecture shows, so the lecture and the book show one drawing.
+\documentclass{book}
+\usepackage{mlbook}
+\begin{document}
+\setbox0\hbox{\input{figures/\pngfigure}}
+\pdfvariable horigin 0pt
+\pdfvariable vorigin 0pt
+\pagewidth=\dimexpr\wd0+20pt\relax
+\pageheight=\dimexpr\ht0+\dp0+20pt\relax
+\shipout\hbox{\kern10pt\vbox{\kern10pt\hbox{\box0}\kern10pt}}
+\end{document}

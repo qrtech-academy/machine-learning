@@ -29,7 +29,7 @@ real, at the end of L10. In the meantime,
 [dense.hpp](./cnn_work/include/ml/dense_layer/dense.hpp)/[dense.cpp](./cnn_work/source/ml/dense_layer/dense.cpp)
 are left in the project, already fully implemented, as a working example of what a finished layer
 class looks like.
-* Verify your implementation with the [test suite](./appendix/exercises/test/README.md).
+* Verify your implementation with the [test suite](./exercises/test/README.md).
 * **Spoiler warning.** [L10's `cnn_demo`](../L10/cnn_demo) is the finished reference copy of
 this project, and it contains working `Conv`, `MaxPool` and `Flatten` classes; i.e. the answers
 to this lecture's exercise and the next two. It's there for L10, where you compare your own

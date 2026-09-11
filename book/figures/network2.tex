@@ -1,0 +1,61 @@
+% A network with two inputs, three hidden nodes and two output nodes: the network trained by hand in
+% the second example of L03's appendix B.
+%
+% Redrawn from lectures/L03/appendix/images/network2.png, which is rendered from this file (see the
+% comment at the end). Each weight is labelled on its connection near the node it belongs to, which
+% is the node whose weighted sum it is part of.
+\begin{tikzpicture}[
+    x=1cm, y=1cm, font=\small,
+    unit/.style={circle, draw=ink, line width=0.6pt, minimum size=1.05cm, inner sep=0pt},
+    input/.style={unit, fill=fillmuted},
+    hidden/.style={unit, fill=fillaccent2},
+    output/.style={unit, fill=fillaccent},
+    link/.style={draw=ink, line width=0.5pt},
+    weight/.style={pos=0.74, fill=white, inner sep=1pt, font=\footnotesize, text=ink},
+    bias/.style={font=\footnotesize, text=ink, above, inner sep=1.5pt},
+  ]
+  \node[input]  (x1) at (0, 1.25)   {$x_1$};
+  \node[input]  (x2) at (0, -1.25)  {$x_2$};
+  \node[hidden] (y1) at (3.3, 2.5)  {$y_1$};
+  \node[hidden] (y2) at (3.3, 0)    {$y_2$};
+  \node[hidden] (y3) at (3.3, -2.5) {$y_3$};
+  \node[output] (y4) at (6.6, 1.25)  {$y_4$};
+  \node[output] (y5) at (6.6, -1.25) {$y_5$};
+
+  % The network's inputs and outputs.
+  \draw[link] (-1.2, 1.25) node[left] {$X_1$} -- (x1);
+  \draw[link] (-1.2, -1.25) node[left] {$X_2$} -- (x2);
+  \draw[link] (y4) -- (7.8, 1.25) node[right] {$Y_1$};
+  \draw[link] (y5) -- (7.8, -1.25) node[right] {$Y_2$};
+
+  % Every node after the input layer has a bias.
+  \foreach \n/\b in {y1/1, y2/2, y3/3, y4/4, y5/5} {
+    \draw[link] (\n.north) -- ++(0, 0.3) node[bias] {$b_{\b}$};
+  }
+
+  % Input layer to hidden layer.
+  \draw[link] (x1) -- (y1) node[weight] {$w_1$};
+  \draw[link] (x2) -- (y1) node[weight] {$w_2$};
+  \draw[link] (x1) -- (y2) node[weight] {$w_3$};
+  \draw[link] (x2) -- (y2) node[weight] {$w_4$};
+  \draw[link] (x1) -- (y3) node[weight] {$w_5$};
+  \draw[link] (x2) -- (y3) node[weight] {$w_6$};
+
+  % Hidden layer to output layer.
+  \draw[link] (y1) -- (y4) node[weight] {$w_7$};
+  \draw[link] (y2) -- (y4) node[weight] {$w_8$};
+  % These two cross just short of where the others are labelled, so they are labelled nearer
+  % their nodes.
+  \draw[link] (y3) -- (y4) node[weight, pos=0.87] {$w_9$};
+  \draw[link] (y1) -- (y5) node[weight, pos=0.87] {$w_{10}$};
+  \draw[link] (y2) -- (y5) node[weight] {$w_{11}$};
+  \draw[link] (y3) -- (y5) node[weight] {$w_{12}$};
+
+  % Layer names.
+  \foreach \x/\name in {0/input layer, 3.3/hidden layer, 6.6/output layer} {
+    \node[font=\scriptsize\scshape, text=muted] at (\x, -3.55) {\name};
+  }
+\end{tikzpicture}
+
+% The lecture's PNG is this drawing: `make -C book png` redraws
+% lectures/L03/appendix/images/network2.png from it, through figures/png.tex.

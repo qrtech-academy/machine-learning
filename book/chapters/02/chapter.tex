@@ -1,0 +1,35 @@
+% Chapter 2, typeset from lectures/L02: the README is the opener and the closing review, each
+% numbered section of appendix A is a section, in the same order and with the same subsections,
+% and appendix B is the exercises.
+
+\chapter{Training Order, Precision and Learning Rate}
+\label{c2:ch:training}
+
+{\large\itshape A training loop that knows when to stop, and a model that picks its own learning
+rate.\par}
+
+\begin{chapterbox}{In this chapter}
+\begin{itemize}
+  \item Further implementation of regression models in software, including randomizing the
+    training order and computing precision.
+  \item A second regression model, which adapts its own learning rate while training.
+  \item Concepts and implementation techniques that prepare you for the neural networks of
+    Chapter~\ref{c3:ch:nn}.
+\end{itemize}
+\end{chapterbox}
+
+This chapter extends the linear regression implementation from Chapter~\ref{c1:ch:linreg} in two
+ways: first with a randomized training order, so the model no longer sees its training sets in the
+same sequence every epoch, and then with a precision calculation, which tells the model when it is
+sufficiently trained and lets it stop long before the epochs run out. The exercises then use that
+same precision to build a second model, one that raises or lowers its own learning rate depending
+on how much it is still improving.
+
+Read \secref{c2:sec:order} and \secref{c2:sec:precision} in order; each extends the struct from
+\secref{c1:sec:cpp} one step further. The exercises in \secref{c2:sec:exercises} carry the class you
+wrote in Chapter~\ref{c1:ch:linreg} forward through the same two steps, and then add the adaptive
+model beside it.
+
+\input{chapters/02/theory}
+\input{chapters/02/summary}
+\input{chapters/02/exercises}

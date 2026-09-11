@@ -196,7 +196,7 @@ struct ConvLayer final
     /**
      * @brief Perform optimization.
      *
-     * @param[in] learningRate Learning rate to use. Must be in range (0.0, 1.0].
+     * @param[in] learningRate Learning rate to use. Must be in range (0.0, 1.0).
      *
      * @return True on success, false on failure.
      */

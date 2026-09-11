@@ -28,7 +28,7 @@
 ### After the lecture
 * Complete the exercises in [appendix B](./appendix/b_exercises.md): declaring a concrete implementation that inherits `ml::dense_layer::Interface`, then implementing `feedforward()`, `backpropagate()`, and `optimize()`.
 * Test the implementation by training the neural network on existing training data, adjusting the number of epochs as needed. There's no learning rate to adjust: the network sets its own, and stops as soon as it reaches its precision threshold.
-* Verify your implementation with the [test suite](./appendix/exercises/test/README.md).
+* Verify your implementation with the [test suite](./exercises/test/README.md).
 * Solutions will be available a few days after the lecture.
 
 ---

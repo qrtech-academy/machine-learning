@@ -1,0 +1,31 @@
+% Section 7.1, from lectures/L07/README.md: the objectives, the evaluation questions, and the next
+% lecture.
+
+\needspace{10\baselineskip}
+\section{Review}
+\label{c7:sec:review}
+
+\subsection*{What you should be able to do now}
+After this chapter, you should:
+\begin{itemize}
+  \item Be able to implement a simple conv, max pooling, and flatten layer in software.
+\end{itemize}
+
+\needspace{6\baselineskip}
+\subsection*{Questions to test yourself}
+You should be able to explain:
+\begin{enumerate}
+  \item Which parts of your \code{ml::ConvLayer} implementation correspond to feedforward and
+    backpropagation, respectively?
+  \item Why do we use the same kernel (the same weights) across the entire image instead of unique
+    weights per position?
+  \item How does your \code{ml::MaxPoolLayer} implementation know which positions the gradients
+    should be propagated back to during backpropagation?
+  \item Why is a flatten layer needed between the convolutional and pooling layers and the dense
+    layer?
+\end{enumerate}
+
+\needspace{6\baselineskip}
+\subsection*{Looking ahead}
+Chapter~\ref{c8:ch:conv} implements the conv layer in the real, polymorphic CNN pipeline,
+\file{cnn_work}, replacing the stub it starts out with.

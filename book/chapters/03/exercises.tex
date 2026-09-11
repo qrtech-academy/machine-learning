@@ -1,0 +1,389 @@
+% Section 3.4, from lectures/L03/appendix/b_exercises.md. The solutions to the three hand-training
+% examples, which the appendix gives inline, are in Appendix A; the solution to the code is in the
+% repository.
+
+\section{Exercises}
+\label{c3:sec:exercises}\label{c3:app:b}
+
+\begin{aside}
+\textbf{How to work these.} Set~1 is three calculations: work them on paper with the equations
+from \secref{c3:sec:nn} and a calculator, one training set at a time. Set~2 starts a new \code{ml}
+codebase in this lecture's exercises directory, \file{lectures/L03/appendix/exercises} in the
+companion repository, and is built with a Makefile you write yourself.
+
+\textbf{How to check your work.} The worked solutions to Set~1 are in
+Appendix~\ref{sol:ch:solutions}. Set~2 comes with a test suite, already in
+\file{lectures/L03/appendix/exercises/test}, which Exercise~\ref{c3:ex:7} runs. It tests the
+directory above it by default; \code{make ML_DIR=<path>} points it at a tree of your own elsewhere.
+
+The solution to Set~2 is published in the companion repository after the lecture;
+\file{lectures/L03/README.md} links to it. Try each exercise yourself before looking at it.
+\end{aside}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Hand-Training a Neural Network}
+\label{c3:set:1}
+
+\calcexercise{Odd parity, first training set}
+\label{c3:ex:1}
+The neural network in Figure~\ref{fig:network1} should be trained to predict a high output $Y$
+when an odd number of the inputs $X_1$ and $X_2$ are high, and output $Y = 0$ otherwise:
+
+\bookfigure{network1}{The network in Exercises~\ref{c3:ex:1} and~\ref{c3:ex:3}: two inputs, two
+hidden nodes and one output node.}{fig:network1}
+
+\noindent The first training set: inputs $X_1X_2 = 01$, $Y = 1$.
+
+\task{Starting parameters}
+\begin{align*}
+  b_1 &= 0.2, & b_2 &= 0.4, & b_3 &= 0.6 \\
+  w_1 &= 0.5, & w_2 &= 0.6, & w_3 &= 0.3 \\
+  w_4 &= 0.8, & w_5 &= 0.1, & w_6 &= 0.9
+\end{align*}
+Learning rate: $\LR = 0.1$. Activation function: ReLU for all nodes.
+
+Train the network on the first training set: perform feedforward, backpropagation, and
+optimization. Then feed the same input forward again with the new parameters, and compare the
+deviation against the one you started with.
+\seesolution{c3:ex:1}
+
+\calcexercise{Inverting two inputs}
+\label{c3:ex:2}
+Consider the neural network in Figure~\ref{fig:network2}:
+
+\bookfigure{network2}{The network in Exercise~\ref{c3:ex:2}: two inputs, three hidden nodes and
+two output nodes.}{fig:network2}
+
+\noindent The network should be trained to predict outputs $Y_1Y_2$ that form the inverse of inputs
+$X_1X_2$:
+
+\begin{narrowtable}{@{}cc@{}}
+  $X_1X_2$ & $Y_1Y_2$ \\
+  \midrule
+  00 & 11 \\
+  01 & 10 \\
+  10 & 01 \\
+  11 & 00 \\
+\end{narrowtable}
+
+\noindent First training set: $X_1X_2 = 10$, $Y_1Y_2 = 01$.
+
+\task{Starting parameters: hidden layer}
+\begin{align*}
+  b_1 &= 0.1, & b_2 &= 0.1, & b_3 &= 0.7 \\
+  w_1 &= 0.2, & w_2 &= 0.9, & w_3 &= 0.3 \\
+  w_4 &= 0.8, & w_5 &= 0.5, & w_6 &= 0.4
+\end{align*}
+
+\task{Starting parameters: output layer}
+\begin{align*}
+  b_4 &= 0.1, & b_5 &= 0.6 \\
+  w_7 &= 0.1, & w_8 &= 0.1, & w_9 &= 1.0 \\
+  w_{10} &= 0.3, & w_{11} &= 0.0, & w_{12} &= 0.6
+\end{align*}
+Learning rate: $\LR = 0.1$. Activation function: ReLU for all nodes.
+
+Train the network on the first training set: perform feedforward, backpropagation, and
+optimization. Then feed the same input forward again with the new parameters, and compare the
+deviations against the ones you started with.
+\seesolution{c3:ex:2}
+
+\calcexercise{Odd parity, after one epoch}
+\label{c3:ex:3}
+Consider the neural network in Figure~\ref{fig:network1} again. The network should be trained to
+predict a high output $Y$ when an odd number of the inputs $X_1$ and $X_2$ are high, and output
+$Y = 0$ otherwise.
+
+Training has already been carried out for one epoch, and the parameters have the following starting
+values:
+
+\task{Starting parameters}
+\begin{align*}
+  b_1 &= 0.1, & b_2 &= -0.4, & b_3 &= -0.2 \\
+  w_1 &= 0.5, & w_2 &= 0.4, & w_3 &= -0.2 \\
+  w_4 &= 0.1, & w_5 &= 0.7, & w_6 &= 0.8
+\end{align*}
+Training is now to be carried out with the training set $X_1X_2 = 11$, $Y = 0$.
+
+Learning rate: $\LR = 0.1$. Activation function: ReLU for all nodes.
+
+Perform feedforward, backpropagation, and optimization. Then compute the output again. Did the
+error decrease? If not, what could you have changed to obtain a smaller error?
+\seesolution{c3:ex:3}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Dense Layer Interface and Stub}
+\label{c3:set:2}
+You'll start a new \code{ml} codebase (or extend your existing one, if you'd like to keep the linear
+regression code alongside it) with an interface for a dense layer and a placeholder implementation
+of it.
+
+\codeexercise{Directory structure}
+\label{c3:ex:4}
+Set up the following structure in this lecture's exercises directory,
+\file{lectures/L03/appendix/exercises}:
+
+\begin{console}
+exercises/
+├── include/
+│   └── ml/
+│       ├── dense_layer/
+│       │   ├── interface.hpp
+│       │   └── stub.hpp
+│       └── types.hpp
+├── source/
+│   └── main.cpp
+├── test/                <- already here, see Exercise 3.7
+└── Makefile
+\end{console}
+
+\noindent You'll extend this structure further in Chapter~\ref{c4:ch:network}.
+
+\codeexercise{Dense layer interface and stub class}
+\label{c3:ex:5}
+The hidden layer and output layer of a future neural network will be represented by the interface
+\code{ml::dense_layer::Interface}. A concrete implementation isn't created until
+Chapter~\ref{c5:ch:dense}. Until then, you'll implement a simple stub class
+\code{ml::dense_layer::Stub} as a placeholder.
+
+\task{The interface (\file{ml/dense_layer/interface.hpp})}
+In the namespace \code{ml::dense_layer}, implement an interface named \code{Interface}. All methods
+(except the destructor) should be declared pure virtual (\code{= 0}).
+\begin{itemize}
+  \item \textbf{\code{~Interface()}:} should be set to \code{default} and marked \code{virtual} and
+    \code{noexcept}.
+\end{itemize}
+Getters, all \code{const}, \code{noexcept}, and \code{[[nodiscard]]}:
+
+\begin{booktable}{@{}p{7.2em}L@{}}
+  \thead{Method} & \thead{Returns} \\
+  \midrule
+  \code{nodeCount()} & Number of nodes in the layer (\code{std::size_t}). \\
+  \code{weightCount()} & Number of weights per node (\code{std::size_t}). \\
+  \code{output()} & Reference to the layer's output (read-only floating-point vector). \\
+  \code{error()} & Reference to the layer's error (read-only floating-point vector). \\
+  \code{weights()} & Reference to the layer's weights (read-only, two-dimensional floating-point
+    vector). \\
+\end{booktable}
+
+\noindent Computation methods, all \code{noexcept} and returning \code{bool}. Each returns
+\code{false} on invalid input (wrong dimensions or an invalid learning rate) and \code{true}
+otherwise, so the caller can decide what to do about the failure. As in
+Chapters~\ref{c1:ch:linreg} and~\ref{c2:ch:training}, \code{std::terminate()} is reserved for the
+constructor, which has no way to return a failure code to the caller:
+\begin{itemize}
+  \item \textbf{\code{feedforward(input)}:} performs feedforward.
+  \begin{itemize}
+    \item \code{input}: read-only floating-point vector of input data.
+  \end{itemize}
+  \item \textbf{\code{backpropagate(reference)}} (output layer): computes error from reference
+    values.
+  \begin{itemize}
+    \item \code{reference}: read-only floating-point vector of reference values.
+  \end{itemize}
+  \item \textbf{\code{backpropagate(nextLayer)}} (hidden layer): computes error from the next
+    layer.
+  \begin{itemize}
+    \item \code{nextLayer}: reference to the next layer (\code{const Interface&}).
+  \end{itemize}
+  \item \textbf{\code{optimize(input, learningRate)}:} updates bias and weights.
+  \begin{itemize}
+    \item \code{input}: read-only floating-point vector.
+    \item \code{learningRate}: floating-point number.
+  \end{itemize}
+\end{itemize}
+One method more, \code{noexcept} and returning nothing:
+\begin{itemize}
+  \item \textbf{\code{initParams()}:} resets the layer's trainable parameters, i.e.\ its bias
+    values and weights, to their initial values.
+  \begin{itemize}
+    \item Takes no arguments and returns nothing.
+    \item Pure virtual like the rest, so every layer states what its own reset means, even when the
+      answer is ``nothing''. \code{Stub} has no trainable parameters to draw again, so its override
+      is empty; \code{Dense} overrides it in Chapter~\ref{c5:ch:dense} by drawing a new random bias
+      and weight for every node, and its constructor calls it too, so the randomization is written
+      once and used from both places.
+  \end{itemize}
+\end{itemize}
+
+\textbf{Who calls it.} The network you write in Chapter~\ref{c4:ch:network} does, on both of its
+layers, before its first training epoch. That's what makes a second call to \code{train()} train a
+new network rather than continue the one the previous call left behind, which matters when a run
+ends up badly trained: a network that has settled into a bad set of parameters mostly stays there,
+while a fresh start draws new ones and can converge on the next attempt. The bias and weights are
+private to the layer, so without a method on the interface the network couldn't reset them at all.
+
+\task{The stub class (\file{ml/dense_layer/stub.hpp})}
+In the namespace \code{ml::dense_layer}, implement a subclass named \code{Stub} that inherits
+\code{Interface} via public inheritance. The class should be marked \code{final}. The stub doesn't
+perform any real computation; it exists solely so other code can be compiled, test-run, and unit
+tested against a real \code{dense_layer::Interface} before a concrete \code{Dense} implementation
+exists (see Chapter~\ref{c5:ch:dense}). The network you build in Chapter~\ref{c4:ch:network} is
+tested entirely against this stub, so it's worth getting right.
+\begin{itemize}
+  \item \textbf{\code{Stub()}:}
+  \begin{itemize}
+    \item The class's only implemented constructor.
+    \item Should take the following arguments:
+    \begin{itemize}
+      \item \code{nodeCount}: number of nodes in the layer (unsigned integer).
+      \item \code{weightCount}: number of weights per node (unsigned integer).
+      \item \code{outputValue}: value every output element is set to (floating-point number).
+        Default value: \code{0.5}.
+    \end{itemize}
+    \item Initializes every element of the output vector to \code{outputValue}, and the error and
+      weight vectors to zeros.
+    \item Should print an error message and call \code{std::terminate()} if either
+      \code{nodeCount} or \code{weightCount} is zero:
+    \begin{itemize}
+      \item As in Chapters~\ref{c1:ch:linreg} and~\ref{c2:ch:training}, the constructor is the one
+        place that terminates, since it has no way to return a failure code.
+      \item It also guarantees at least one node and one weight, which is what makes it safe for
+        \code{weightCount()} to read the width of the first row of the weight matrix.
+    \end{itemize}
+    \item \code{outputValue} is an argument rather than a hard-coded constant so that two stubs can
+      be told apart. A network whose layers all report the same output can't show whether a
+      prediction came from the output layer or from the hidden one; giving each layer its own value
+      makes that visible.
+    \item Should be marked \code{explicit} and \code{noexcept}.
+  \end{itemize}
+  \item \textbf{\code{~Stub()}:}
+  \begin{itemize}
+    \item Destructor overriding the interface's destructor.
+    \item Should be marked \code{default}, \code{noexcept}, and \code{override}.
+  \end{itemize}
+  \item \textbf{Getters} (\code{nodeCount()}, \code{weightCount()}, \code{output()},
+    \code{error()}, \code{weights()}):
+  \begin{itemize}
+    \item Override the corresponding methods in the interface.
+    \item Should be marked \code{override}, retaining the interface's \code{const} and
+      \code{noexcept}, but \textbf{not} \code{[[nodiscard]]}.
+  \end{itemize}
+  \item \textbf{\code{feedforward()}}, both overloads of \textbf{\code{backpropagate()}}, and
+    \textbf{\code{optimize()}}:
+  \begin{itemize}
+    \item Perform range checks only:
+    \begin{itemize}
+      \item Return \code{false} when the dimensions don't match, or, for \code{optimize()}, when
+        the learning rate lies outside \code{(0.0, 1.0)}.
+      \item Return \code{true} otherwise.
+    \end{itemize}
+    \item Deliberately compute nothing:
+    \begin{itemize}
+      \item The output stays at \code{outputValue} regardless of what's fed in.
+      \item The error stays at zero.
+    \end{itemize}
+    \item Should be marked \code{override} and \code{noexcept}.
+  \end{itemize}
+  \item \textbf{\code{setOutput()}:}
+  \begin{itemize}
+    \item Sets every element of the output vector to the given value.
+    \item Should take a single argument:
+    \begin{itemize}
+      \item \code{outputValue}: value to set every output element to (floating-point number).
+    \end{itemize}
+    \item Returns nothing, and should be marked \code{noexcept}.
+    \item \textbf{Not} part of \code{Interface}. It exists on the stub alone.
+    \item It's what lets a test drive the output of a whole network in
+      Chapter~\ref{c4:ch:network}:
+    \begin{itemize}
+      \item The network stores its layers by reference, so calling \code{setOutput()} on the layer
+        a network was built with changes what that network predicts.
+      \item That reveals whether the network reads its output layer live or kept a stale copy of
+        it. Keeping a stale copy is exactly what the note in Chapter~\ref{c4:ch:network} about not
+        needing a separate storage variable is there to prevent.
+    \end{itemize}
+  \end{itemize}
+  \item \textbf{\code{feedforwardCount()}} and \textbf{\code{clearFeedforwardCount()}}:
+  \begin{itemize}
+    \item \code{feedforwardCount()} returns the number of times \code{feedforward()} has been
+      called on this layer as a \code{std::size_t}, counting \textbf{every} call, not just the ones
+      that passed the range check. Return \code{std::size_t} rather than \code{int}: the tests
+      compare the tally against \code{std::size_t} values, and a signed return trips
+      \code{-Wsign-compare}, which the suite builds with \code{-Werror}.
+    \begin{itemize}
+      \item Increment the counter (\code{myFeedforwardCount}) at the very top of
+        \code{feedforward()}, before the input size is checked, so a rejected call raises it just
+        as an accepted one does.
+      \item The tally records how often the layer was \emph{asked} to feed forward, not how often
+        it agreed to.
+      \item Should be marked \code{[[nodiscard]]}, \code{const}, and \code{noexcept}.
+    \end{itemize}
+    \item \code{clearFeedforwardCount()} resets that tally to zero.
+    \begin{itemize}
+      \item Returns nothing, and should be marked \code{noexcept}.
+    \end{itemize}
+    \item Neither is part of \code{Interface}.
+    \item \code{train()} in Chapter~\ref{c4:ch:network} performs one feedforward per training set
+      per epoch, so this is what lets a test pin down the training loop:
+    \begin{itemize}
+      \item Nothing else can: a loop that runs a single pass instead of every epoch still lines up
+        dimensionally and still returns \code{true}, so without a count it's indistinguishable from
+        a correct one.
+    \end{itemize}
+  \end{itemize}
+  \item \textbf{\code{initParams()}:}
+  \begin{itemize}
+    \item Overrides the corresponding method in the interface, and should be marked
+      \code{override} and \code{noexcept}.
+    \item Its body is empty: the stub has no bias, and its weights never move from the zeros it was
+      constructed with, so there's nothing to draw again.
+    \item An empty body is the implementation here, not a placeholder. It's also the only one the
+      network in Chapter~\ref{c4:ch:network} needs: that network calls \code{initParams()} on both
+      of its layers before every training run, and against a stub the call has to compile, run, and
+      change nothing.
+  \end{itemize}
+\end{itemize}
+For this class, the default constructor and the copy and move constructors (and corresponding
+operators) should be deleted.
+
+Add private member variables for the output, the error, the weights, and the feedforward count.
+
+The number of nodes and the number of weights per node don't need member variables of their own.
+Both are readable from the vectors you already have: \code{nodeCount()} is the size of the output
+vector, and \code{weightCount()} is the width of the weight matrix.
+
+The bias doesn't need one at all. It isn't part of \code{Interface}, and this stub never optimizes
+anything, so there'd be nothing to put in it and no way to read it back out.
+
+\note[Note!] Leaving it out is a stub-only simplification. The real \code{Dense} layer you write in
+Chapter~\ref{c5:ch:dense} does need a bias vector: it's a trainable parameter, adjusted alongside the
+weights on every call to \code{optimize()}.
+
+\codeexercise{A quick compile check}
+\label{c3:ex:6}
+There's no network to run yet; that's Chapter~\ref{c4:ch:network}, once
+\code{neural_network::Shallow} exists to make use of this interface. For now, just confirm your
+\code{Interface}/\code{Stub} pair compiles: in \file{main.cpp}, create a \code{ml::dense_layer::Stub}
+with a few nodes and weights, and print its \code{nodeCount()}, \code{weightCount()}, and
+\code{output()} to the terminal. You should see \code{nodeCount()}/\code{weightCount()} match what
+you constructed it with, and every value in \code{output()} equal to the default \code{outputValue}
+of \code{0.5}.
+
+Create a second stub with an explicit \code{outputValue}, and check that its \code{output()} reports
+that value instead. Also feed both stubs a vector of the wrong size and check that
+\code{feedforward()} returns \code{false} rather than terminating.
+
+\codeexercise{Running the tests}
+\label{c3:ex:7}
+A test suite for the stub is available in \file{lectures/L03/appendix/exercises/test}. It's already
+in place next to the code you just wrote. Build and run it from the exercises directory:
+
+\begin{shell}
+make -C test
+\end{shell}
+
+\noindent The test framework is checked out as a submodule at the root of the repository. If
+\file{libs/test} is empty, fetch it once with \code{git submodule update --init}.
+
+All 14 test cases should pass. \textbf{This chapter starts a new \code{ml} codebase}, so this suite
+replaces nothing and stands on its own.
+
+Testing a class that computes nothing may look pointless, but the range checks are the only real
+logic the stub has, and the network you write in Chapter~\ref{c4:ch:network} is tested entirely
+against them. A stub whose \code{feedforward()} accepted an input of any size would let every test
+in Chapter~\ref{c4:ch:network} pass without proving anything.
+
+The test suite's README, \file{lectures/L03/appendix/exercises/test/README.md}, has more
+information, including which of these tests carry over unchanged to your real \code{Dense} layer in
+Chapter~\ref{c5:ch:dense}.

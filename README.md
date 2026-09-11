@@ -49,9 +49,18 @@ far you have read than about what you have understood.
 
 ---
 
+## The Book
+The whole course is also available as a book: [Machine Learning](./book/machine-learning.pdf).
+It holds the ten lectures as chapters, the worked solutions to every exercise answered on paper,
+and the two written papers. It is built from the sources in [`book/`](./book/README.md), which
+also say how to build it yourself (`make -C book`) and how a new edition is released.
+
+---
+
 ## Structure
 
 ```text
+book/        The course typeset as a book with LuaLaTeX; `make -C book` builds the PDF.
 ci/          Scripts for code formatting, compilation, and testing
 exam/        Two written papers and their solutions. Optional, and marked by nobody here.
 info/        Course information and schedule
@@ -119,5 +128,18 @@ Solutions are published after each lecture, so `make test` skips the suites whos
 place yet and reports how many it ran and how many it skipped. Each suite can also be run on its own
 from its own directory with `make`; see the `README.md` in any lecture's `exercises/test/`
 directory for the details.
+
+---
+
+## License
+The source code is released under the [MIT License](./LICENSE): the demo programs and their
+reference implementations, the exercise solutions, the test suites, the build and CI scripts, and
+the book's build files.
+
+The course material is licensed under [CC BY-NC-SA 4.0](./LICENSE-CONTENT): the lectures,
+exercises and exam papers, the other Markdown documents, the figures, and the book typeset from
+them. You may share and adapt it for any non-commercial purpose, with credit, as long as what you
+share carries the same license. The code examples printed in the lectures and in the book may also
+be used under the MIT License. The submodule `libs/test` carries its own license.
 
 ---

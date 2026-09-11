@@ -1,0 +1,36 @@
+% Chapter 3, typeset from lectures/L03: the README is the opener and the closing review, each
+% numbered section of appendix A is a section, in the same order and with the same subsections,
+% and appendix B is the exercises.
+
+\chapter{Neural Networks}
+\label{c3:ch:nn}
+
+{\large\itshape Feedforward, backpropagation and optimization, worked through by hand before a
+line of the network is written.\par}
+
+\begin{chapterbox}{In this chapter}
+\begin{itemize}
+  \item An introduction to neural networks: feedforward, backpropagation, gradient descent, and
+    activation functions.
+  \item Training neural networks by hand.
+  \item A dense layer interface, and a stub implementation of it.
+\end{itemize}
+\end{chapterbox}
+
+This chapter moves from a single linear model to neural networks: layers of nodes, each holding a
+bias and a weight per input, whose outputs are passed through an activation function and on to the
+next layer. It explains what happens during feedforward and backpropagation, how the parameters are
+optimized from the errors backpropagation computes, and what the activation functions are for. You
+should come out of it able to explain concepts such as layers, nodes, and weights, and able to train
+a small neural network by hand.
+
+Read \secref{c3:sec:nn} first; the three hand-training exercises in \secref{c3:sec:exercises} then
+put its equations to work on two small networks, and are the best way to find out whether the
+theory has stuck. \Secref{c3:sec:dense} introduces the dense layer interface you start building in
+the second half of the exercises, together with a stub implementation of it. That pair is the
+foundation the network in Chapter~\ref{c4:ch:network} is built on, and the real layer in
+Chapter~\ref{c5:ch:dense} replaces the stub without anything else having to change.
+
+\input{chapters/03/theory}
+\input{chapters/03/summary}
+\input{chapters/03/exercises}

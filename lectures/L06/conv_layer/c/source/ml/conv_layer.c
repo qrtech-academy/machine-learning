@@ -325,7 +325,7 @@ bool conv_layer_backpropagate(conv_layer_t* self, const matrix_t* output_gradien
 // -----------------------------------------------------------------------------
 bool conv_layer_optimize(conv_layer_t* self, const double learning_rate)
 {
-    if ((NULL == self) || (0.0 >= learning_rate)) { return false; }
+    if ((NULL == self) || (0.0 >= learning_rate) || (1.0 <= learning_rate)) { return false; }
 
     self->bias += self->bias_gradient * learning_rate;
 

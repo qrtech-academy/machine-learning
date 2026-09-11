@@ -171,7 +171,7 @@ The gradients from the dense layer are reshaped back into a matrix:
 ---
 
 #### b) Max pool (backpropagation)
-The gradients are propagated back to the correct positions in the max pooling layer, i.e. to the spots where the max values were located in each pool. If a pool has two max values, the gradient is propagated back to the first position; the remaining positions get a gradient of 0.
+The gradients are propagated back to the correct positions in the max pooling layer, i.e. to the spots where the max values were located in each pool. If a pool holds its max value more than once, the gradient is propagated back to the first position; the remaining positions get a gradient of 0.
 
 The max pooling layer's input (the same conv output as above):
 
@@ -302,7 +302,7 @@ After summing all contributions, we get the padded input gradient matrix:
 0  0  0  0  0  0
 ```
 
-Removing the outermost row and column (padding) leaves a 4×4 matrix matching the original image; this is the gradient with respect to the input, which is passed further back through the network:
+Removing the padding, the outermost row and column on every side, leaves a 4×4 matrix matching the original image; this is the gradient with respect to the input, which is passed further back through the network:
 
 ```
 6  20 16  0

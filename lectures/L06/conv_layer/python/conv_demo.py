@@ -153,12 +153,13 @@ class ConvLayer:
         """Perform optimization.
 
         Args:
-            learning_rate: Learning rate used to adjust the trainable parameters.
+            learning_rate: Learning rate used to adjust the trainable parameters. Must be in
+                range (0.0, 1.0).
 
         Returns:
             True on success, false on failure.
         """
-        if learning_rate <= 0.0:
+        if not 0.0 < learning_rate < 1.0:
             return False
 
         self.bias += self.bias_gradient * learning_rate

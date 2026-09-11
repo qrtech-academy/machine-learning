@@ -1,0 +1,34 @@
+% Section 6.3, from lectures/L06/README.md: the objectives, the evaluation questions, and the next
+% lecture.
+
+\needspace{10\baselineskip}
+\section{Review}
+\label{c6:sec:review}
+
+\subsection*{What you should be able to do now}
+After this chapter, you should:
+\begin{itemize}
+  \item Know why regular neural networks aren't well suited to image classification.
+  \item Know at a high level how convolutional layers are structured.
+  \item Be able to extract features from images via kernels.
+  \item Be able to feed an input through a small CNN by hand (feedforward).
+  \item Have started implementing a conv layer in software (\code{ml::ConvLayer}).
+\end{itemize}
+
+\needspace{6\baselineskip}
+\subsection*{Questions to test yourself}
+You should be able to explain:
+\begin{enumerate}
+  \item Why are regular neural networks (dense layers only) less suited to image classification
+    than a CNN?
+  \item Can you, in your own words, describe the purpose of each layer type in a CNN:
+    convolutional, pooling, flatten, and dense?
+  \item Without looking at \secref{c6:sec:cnn}, can you describe how a kernel is applied across an
+    image during feedforward in a conv layer?
+  \item Which parts of your \code{ml::ConvLayer} so far correspond to feedforward?
+\end{enumerate}
+
+\needspace{6\baselineskip}
+\subsection*{Looking ahead}
+Chapter~\ref{c7:ch:layers} finishes the conv layer, then implements max pooling and flatten layers
+in software.

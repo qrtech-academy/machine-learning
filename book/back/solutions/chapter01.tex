@@ -1,0 +1,159 @@
+% Section A.1, the solution to the hand calculation in Chapter 1, from the "Linear Regression by
+% Hand" section of lectures/L01/exercises/README.md.
+
+\section{Chapter 1: Linear Regression}
+\label{sol:sec:c1}
+
+\solution{c1:ex:1}{Training by hand}
+Five training sets defined by $y = 3x + 2$:
+
+\begin{narrowtable}{@{}cc@{}}
+  $x$ & $y$ \\
+  \midrule
+  0 & 2 \\
+  1 & 5 \\
+  2 & 8 \\
+  3 & 11 \\
+  4 & 14 \\
+\end{narrowtable}
+
+The model starts out with both parameters at zero, and is trained for one epoch with a learning
+rate of 10\%:
+\[
+  \begin{cases} k = 0 \\ m = 0 \end{cases}, \qquad \LR = 0.1
+\]
+The update rule is the one from \secref{c1:sec:linreg}, applied to every training set, including
+the one at $x = 0$:
+\[
+  \delta = \yref - \yp, \quad \Delta e = \delta \cdot \LR, \quad m = m + \Delta e, \quad
+  k = k + \Delta e \cdot x
+\]
+The training sets are used one at a time, in the order listed above.
+
+\step{Training set 1}
+From the first training set we get input $x = 0$ and reference value $\yref = 2$:
+\[
+  \begin{cases} x = 0 \\ \yref = 2 \end{cases}
+\]
+Both parameters are zero at the start, so the predicted output $\yp$ is zero as well:
+\[
+  \yp = k \cdot x + m = 0 \cdot 0 + 0 = 0
+\]
+The deviation $\delta$ is therefore two:
+\[
+  \delta = \yref - \yp = 2 - 0 = 2
+\]
+For a learning rate $\LR$ of 10\%, the adjustment amount $\Delta e$ is 0.2:
+\[
+  \Delta e = \delta \cdot \LR = 2 \cdot 0.1 = 0.2
+\]
+The m-value is increased directly by the adjustment amount $\Delta e$:
+\[
+  m = m + \Delta e = 0 + 0.2 = 0.2
+\]
+The k-value is increased by $\Delta e$ multiplied by $x$, which when $x = 0$ leaves it untouched:
+\[
+  k = k + \Delta e \cdot x = 0 + 0.2 \cdot 0 = 0
+\]
+After the first round of training:
+\[
+  \begin{cases} k = 0 \\ m = 0.2 \end{cases}
+\]
+
+\step{Training set 2}
+\begin{align*}
+  &\begin{cases} x = 1 \\ \yref = 5 \end{cases} \\
+  \yp &= k \cdot x + m = 0 \cdot 1 + 0.2 = 0.2 \\
+  \delta &= \yref - \yp = 5 - 0.2 = 4.8 \\
+  \Delta e &= \delta \cdot \LR = 4.8 \cdot 0.1 = 0.48 \\
+  m &= m + \Delta e = 0.2 + 0.48 = 0.68 \\
+  k &= k + \Delta e \cdot x = 0 + 0.48 \cdot 1 = 0.48
+\end{align*}
+After the second round of training:
+\[
+  \begin{cases} k = 0.48 \\ m = 0.68 \end{cases}
+\]
+
+\step{Training set 3}
+\begin{align*}
+  &\begin{cases} x = 2 \\ \yref = 8 \end{cases} \\
+  \yp &= k \cdot x + m = 0.48 \cdot 2 + 0.68 = 1.64 \\
+  \delta &= \yref - \yp = 8 - 1.64 = 6.36 \\
+  \Delta e &= \delta \cdot \LR = 6.36 \cdot 0.1 = 0.636 \\
+  m &= m + \Delta e = 0.68 + 0.636 = 1.316 \\
+  k &= k + \Delta e \cdot x = 0.48 + 0.636 \cdot 2 = 1.752
+\end{align*}
+After the third round of training:
+\[
+  \begin{cases} k = 1.752 \\ m = 1.316 \end{cases}
+\]
+The deviation has grown for three sets in a row, simply because the reference values grow faster
+than the parameters have managed to so far.
+
+\step{Training set 4}
+\begin{align*}
+  &\begin{cases} x = 3 \\ \yref = 11 \end{cases} \\
+  \yp &= k \cdot x + m = 1.752 \cdot 3 + 1.316 = 6.572 \\
+  \delta &= \yref - \yp = 11 - 6.572 = 4.428 \\
+  \Delta e &= \delta \cdot \LR = 4.428 \cdot 0.1 = 0.4428 \\
+  m &= m + \Delta e = 1.316 + 0.4428 = 1.7588 \\
+  k &= k + \Delta e \cdot x = 1.752 + 0.4428 \cdot 3 = 3.0804
+\end{align*}
+After the fourth round of training:
+\[
+  \begin{cases} k = 3.0804 \\ m = 1.7588 \end{cases}
+\]
+The deviation has decreased for the first time, and the k-value has passed its target of 3.
+
+\step{Training set 5}
+\begin{align*}
+  &\begin{cases} x = 4 \\ \yref = 14 \end{cases} \\
+  \yp &= k \cdot x + m = 3.0804 \cdot 4 + 1.7588 = 14.0804 \\
+  \delta &= \yref - \yp = 14 - 14.0804 = -0.0804
+\end{align*}
+The deviation is negative for the first time: the prediction overshoots the reference value, so
+both parameters are adjusted downwards.
+\begin{align*}
+  \Delta e &= \delta \cdot \LR = -0.0804 \cdot 0.1 = -0.00804 \\
+  m &= m + \Delta e = 1.7588 - 0.00804 = 1.75076 \\
+  k &= k + \Delta e \cdot x = 3.0804 - 0.00804 \cdot 4 = 3.04824
+\end{align*}
+After the fifth and final round of training:
+\[
+  \begin{cases} k = 3.04824 \\ m = 1.75076 \end{cases}
+\]
+After a single epoch, the model predicts according to the following formula:
+\[
+  \yp = 3.04824 \cdot x + 1.75076
+\]
+
+\step{Prediction}
+Predicted output $\yp$ and reference values $\yref$ for input $x$ in the range $[-5, 5]$, with the
+predictions rounded to two decimal places:
+
+\begin{narrowtable}{@{}rrr@{}}
+  $x$ & $\yp$ & $\yref$ \\
+  \midrule
+  $-5$ & $-13.49$ & $-13$ \\
+  $-4$ & $-10.44$ & $-10$ \\
+  $-3$ & $-7.39$ & $-7$ \\
+  $-2$ & $-4.35$ & $-4$ \\
+  $-1$ & $-1.30$ & $-1$ \\
+  0 & 1.75 & 2 \\
+  1 & 4.80 & 5 \\
+  2 & 7.85 & 8 \\
+  3 & 10.90 & 11 \\
+  4 & 13.94 & 14 \\
+  5 & 16.99 & 17 \\
+\end{narrowtable}
+
+The weight is already within 2\% of its target after one epoch, while the bias is still 0.25
+short, which is what tilts every prediction in the table. The bias converges more slowly here
+because it's only ever adjusted by $\Delta e$, whereas the weight is adjusted by
+$\Delta e \cdot x$, i.e.\ up to four times as much per training set.
+
+The \code{x = 0} shortcut used by the code in Exercise~\ref{c1:ex:13} would have assigned $m = 2$
+directly on the first training set, and the run would have ended somewhere else entirely. That's why
+the exercise asks for the rule from \secref{c1:sec:linreg} here: it's the rule the hand calculations
+in \secref{c1:sec:byhand} demonstrate, and it converges on both parameters from the training data
+alone.

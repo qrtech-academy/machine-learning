@@ -95,7 +95,8 @@ implementation does, since it's always derivable from the two matrices you alrea
 ---
 
 ## Wiring It In
-1. Add `source/ml/conv_layer/max_pool.cpp` to `cnn_work`'s `Makefile` `SRC_FILES`.
+1. Make sure `source/ml/conv_layer/max_pool.cpp` is listed in `cnn_work`'s `Makefile` under
+   `SRC_FILES`. It already is, as it has been since L08: the placeholder compiles to nothing.
 2. In `source/ml/factory/factory.cpp`, find `Factory::maxPoolLayer()`: it currently returns a
    `conv_layer::MaxPoolStub` (marked with a `//! @todo` comment). Replace that with your new class:
    ```cpp
@@ -107,7 +108,7 @@ implementation does, since it's always derivable from the two matrices you alrea
 ---
 
 ## Running the tests
-The test suite is available in [exercises/test](./exercises/test/). It's cumulative: it carries
+The test suite is available in [exercises/test](../exercises/test/). It's cumulative: it carries
 L08's conv layer tests over unchanged and adds unit tests for `MaxPool`.
 
 Build and run it from this lecture's `appendix` directory:
@@ -129,6 +130,6 @@ all-negative image, which catches starting the search for the max at `0.0` inste
 block's first value. Every non-negative input passes either way, so it's an easy bug to ship, and
 it bites for real once the conv layer in front is using `Tanh`.
 
-See the [test suite's README](./exercises/test/README.md) for more information.
+See the [test suite's README](../exercises/test/README.md) for more information.
 
 ---

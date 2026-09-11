@@ -1,0 +1,43 @@
+% Section 2.3, from lectures/L02/README.md: the objectives, the evaluation questions, and the next
+% lecture.
+
+\needspace{10\baselineskip}
+\section{Review}
+\label{c2:sec:review}
+
+\subsection*{What you should be able to do now}
+After this chapter, you should:
+\begin{itemize}
+  \item Be able to randomize the order of the training sets before each new epoch.
+  \item Be able to compute the precision of a trained regression model.
+  \item Be able to determine when the model is sufficiently trained based on a given threshold
+    value.
+  \item Be able to adjust the learning rate during training, based on how much the model is
+    improving.
+\end{itemize}
+
+\needspace{6\baselineskip}
+\subsection*{Questions to test yourself}
+You should be able to explain:
+\begin{enumerate}
+  \item Why is it beneficial to randomize the training order every epoch?
+  \item Why is a static local variable used in \code{initRandGen()} to ensure the random number
+    generator is only initialized once? Why does the function belong in \file{ml/utils.cpp} rather
+    than in an anonymous namespace in each model's source file?
+  \item How is the precision of a linear regression model computed?
+  \item What does it mean for the precision to exceed a given threshold, and how is this used to
+    stop training early?
+  \item Why is precision calculation important when training machine learning models?
+  \item How does \code{ml::lin_reg::Adaptive} decide whether to raise or lower its learning rate,
+    and why is the rate clamped at both ends?
+\end{enumerate}
+
+\needspace{6\baselineskip}
+\subsection*{Looking ahead}
+Chapter~\ref{c3:ch:nn} is about neural networks:
+\begin{itemize}
+  \item An introduction to neural networks: feedforward, backpropagation, gradient descent, and
+    activation functions.
+  \item Training neural networks by hand.
+  \item The implementation of a dense layer interface and a stub.
+\end{itemize}

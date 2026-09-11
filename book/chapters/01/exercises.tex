@@ -1,0 +1,436 @@
+% Section 1.6, from lectures/L01/appendix/b_exercises.md. The solution to the hand calculation is
+% in Appendix A, typeset from lectures/L01/exercises/README.md; the solution to the code is in the
+% repository.
+
+\section{Exercises}
+\label{c1:sec:exercises}\label{c1:app:b}
+
+\begin{aside}
+\textbf{How to work these.} Set~1 is a calculation: work it on paper, with the worked example in
+\secref{c1:sec:byhand} as your model. Set~2 is one program, written in the lecture's exercises
+directory, \file{lectures/L01/exercises} in the companion repository, and built with a Makefile you
+write yourself.
+
+\textbf{How to check your work.} The worked solution to Set~1 is in Appendix~\ref{sol:ch:solutions}.
+Set~2 comes with a test suite, already in \file{lectures/L01/exercises/test}, which
+Exercise~\ref{c1:ex:15} runs. It tests the directory above it by default; \code{make ML_DIR=<path>}
+points it at a tree of your own elsewhere.
+
+The solution to Set~2 is published in the companion repository, in \file{lectures/L01/exercises},
+with a README that walks through it. Try each exercise yourself before looking at it.
+\end{aside}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Linear Regression by Hand}
+\label{c1:set:1}
+
+\calcexercise{Training by hand}
+\label{c1:ex:1}
+A regression model is to be trained using the five training sets defined by the formula
+$y = 3x + 2$:
+
+\begin{narrowtable}{@{}cc@{}}
+  $x$ & $y$ \\
+  \midrule
+  0 & 2 \\
+  1 & 5 \\
+  2 & 8 \\
+  3 & 11 \\
+  4 & 14 \\
+\end{narrowtable}
+
+Assume the model's bias (m-value) and weight (k-value) are zero at the start:
+\[
+  \begin{cases} k = 0 \\ m = 0 \end{cases}
+\]
+Run training for one epoch with a learning rate $\LR$ of 10\%:
+\[
+  \LR = 0.1
+\]
+Use the same update rule as the worked example in \secref{c1:sec:byhand}, i.e.\
+\code{m += δ * LR} and \code{k += δ * LR * x} for every training set, including the one at
+\code{x = 0}. The \code{x = 0} shortcut introduced in Exercise~\ref{c1:ex:13} below is a different
+rule and gives different answers here.
+
+Then perform prediction for input consisting of all integers in the range $[-5, 5]$.
+\seesolution{c1:ex:1}
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Implementing Linear Regression in C++}
+\label{c1:set:2}
+You'll implement an interface and an accompanying class for a linear regression model in C++.
+
+\codeexercise{Directory structure}
+\label{c1:ex:2}
+You'll write your code in this lecture's exercises directory, \file{lectures/L01/exercises}. Build
+up the following structure inside it:
+
+\begin{console}
+exercises/
+├── include/
+│   └── ml/
+│       ├── lin_reg/
+│       │   ├── fixed.hpp
+│       │   └── interface.hpp
+│       └── types.hpp
+├── source/
+│   ├── ml/
+│   │   └── lin_reg/
+│   │       └── fixed.cpp
+│   └── main.cpp
+├── test/                <- already here, see Exercise 1.15
+└── Makefile
+\end{console}
+
+\noindent The \file{test} directory is already in place; Exercise~\ref{c1:ex:15} covers running it.
+
+\codeexercise{Makefile}
+\label{c1:ex:3}
+Write a makefile that compiles and builds a program with the file structure above via the
+\code{make} command.
+
+Test-run the program by adding an empty main function to \file{main.cpp}.
+
+\codeexercise{main.cpp}
+\label{c1:ex:4}
+Paste the contents below into the corresponding file:
+
+\begin{cppcode}
+/**
+ * @file Application entry point.
+ */
+#include <cstdio>
+
+#include "ml/lin_reg/fixed.hpp"
+#include "ml/types.hpp"
+
+namespace
+{
+/**
+ * @brief Evaluate the model with the given inputs.
+ *
+ * @param[in] linReg Model to evaluate.
+ * @param[in] inputs Input values for the evaluation.
+ */
+void evaluateModel(const ml::lin_reg::Interface& linReg, const ml::Matrix1d& inputs) noexcept
+{
+    for (const auto& input : inputs)
+    {
+        std::printf("Input: %g, ", input);
+        std::printf("prediction: %g\n", linReg.predict(input));
+    }
+}
+} // namespace
+
+/**
+ * @brief Train and predict with a linear regression model.
+ *
+ * @return 0 if the model was trained, -1 otherwise.
+ */
+int main()
+{
+    constexpr std::size_t epochCount{1000U};
+    constexpr double learningRate{0.1};
+
+    // Create linear regression model holding five training sets (y = 3x + 2).
+    const ml::Matrix1d trainIn{0.0, 1.0, 2.0, 3.0, 4.0};
+    const ml::Matrix1d trainOut{2.0, 5.0, 8.0, 11.0, 14.0};
+    ml::lin_reg::Fixed linReg{trainIn, trainOut};
+
+    // Train the model, print the results on success.
+    const auto trained = linReg.train(epochCount, learningRate);
+
+    if (trained) { evaluateModel(linReg, trainIn); }
+    else { std::fprintf(stderr, "Training failed!\n"); }
+    return trained ? 0 : -1;
+}
+\end{cppcode}
+
+\codeexercise{Matrix alias}
+\label{c1:ex:5}
+In the header file \file{ml/types.hpp}, add a namespace named \code{ml}.
+
+In this namespace, implement the following aliases:
+\begin{itemize}
+  \item \code{Matrix1d}: alias for one-dimensional floating-point vectors
+    (\code{std::vector<double>}).
+  \item \code{Matrix2d}: alias for two-dimensional floating-point vectors
+    (\code{std::vector<Matrix1d>}).
+  \item \code{Matrix3d}: alias for three-dimensional floating-point vectors
+    (\code{std::vector<Matrix2d>}).
+\end{itemize}
+
+\codeexercise{Interface}
+\label{c1:ex:6}
+In the header file \file{ml/lin_reg/interface.hpp}, add a namespace named \code{ml::lin_reg}.
+
+In this namespace, implement an interface named \code{Interface} with the following public
+methods:
+\begin{itemize}
+  \item \textbf{\code{~Interface()}:}
+  \begin{itemize}
+    \item The interface's destructor.
+    \item Should be marked \code{default}, \code{virtual}, and \code{noexcept}.
+  \end{itemize}
+  \item \textbf{\code{predict()}:}
+  \begin{itemize}
+    \item Should perform a prediction.
+    \item Should take a single floating-point argument named \code{input}.
+    \item Should return the predicted value as a floating-point number.
+    \item Should be pure virtual (\code{= 0}).
+    \item Should be marked \code{const} and \code{noexcept}.
+  \end{itemize}
+\end{itemize}
+
+\codeexercise{Subclass: Fixed}
+\label{c1:ex:7}
+In the header file \file{ml/lin_reg/fixed.hpp}, add the namespace \code{ml::lin_reg}. Implement a
+subclass named \code{Fixed} that inherits \code{Interface} via public inheritance. The class
+shouldn't be inheritable further, i.e.\ it should be marked \code{final}.
+
+The class is named \code{Fixed} because it's trained with a fixed learning rate. An
+adaptive-learning-rate variant, \code{Adaptive}, follows the same overall structure but adjusts its
+learning rate dynamically during training.
+
+The class should have the following public methods:
+\begin{itemize}
+  \item \textbf{\code{Fixed()}:}
+  \begin{itemize}
+    \item The class's only implemented constructor.
+    \item Should take the following arguments:
+    \begin{itemize}
+      \item \code{trainIn}: reference to a read-only vector of floating-point numbers (training
+        data, input).
+      \item \code{trainOut}: reference to a read-only vector of floating-point numbers (training
+        data, output).
+    \end{itemize}
+    \item Should be marked \code{explicit} and \code{noexcept}.
+  \end{itemize}
+  \item \textbf{\code{~Fixed()}:}
+  \begin{itemize}
+    \item Destructor overriding the interface's destructor.
+    \item Should be marked \code{default}, \code{noexcept}, and \code{override}.
+  \end{itemize}
+  \item \textbf{\code{predict()}:}
+  \begin{itemize}
+    \item Overrides the corresponding method in the interface.
+    \item Should be marked \code{const}, \code{noexcept}, and \code{override}.
+  \end{itemize}
+  \item \textbf{\code{train()}:}
+  \begin{itemize}
+    \item Trains the model with the arguments:
+    \begin{itemize}
+      \item \code{epochCount}: number of epochs to train (unsigned integer).
+      \item \code{learningRate}: learning rate as a floating-point number. Default value:
+        \code{0.01} (1\%).
+    \end{itemize}
+    \item Returns \code{false} if \code{epochCount} is 0, or if \code{learningRate} is outside the
+      range \code{(0.0, 1.0)}. Otherwise returns \code{true} once training is complete.
+    \item Should be marked \code{noexcept}.
+  \end{itemize}
+\end{itemize}
+The class should have the following private method:
+\begin{itemize}
+  \item \textbf{\code{optimize()}:}
+  \begin{itemize}
+    \item Arguments:
+    \begin{itemize}
+      \item \code{input}: input value ($x$) as a floating-point number.
+      \item \code{output}: reference value ($\yref$) as a floating-point number.
+      \item \code{learningRate}: the learning rate ($\LR$) as a floating-point number.
+    \end{itemize}
+    \item Returns nothing.
+    \item Should be marked \code{noexcept}.
+  \end{itemize}
+\end{itemize}
+
+\codeexercise{Removed constructors and operators}
+\label{c1:ex:8}
+Delete the class's default constructor, copy and move constructors, and the corresponding
+operators.
+
+\codeexercise{Private member variables}
+\label{c1:ex:9}
+Add the following private member variables to \code{Fixed}:
+\begin{itemize}
+  \item \textbf{\code{myTrainIn}:}
+  \begin{itemize}
+    \item Reference to the training data's input points.
+    \item Initialized via the constructor.
+    \item Should be marked \code{const}.
+  \end{itemize}
+  \item \textbf{\code{myTrainOut}:}
+  \begin{itemize}
+    \item Reference to the training data's output points.
+    \item Initialized via the constructor.
+    \item Should be marked \code{const}.
+  \end{itemize}
+  \item \textbf{\code{mySetCount}:}
+  \begin{itemize}
+    \item The number of complete training sets, i.e.\
+      \code{std::min(trainIn.size(), trainOut.size())} (\code{std::min} is available in
+      \code{<algorithm>}).
+    \item Training data holding more inputs than outputs, or the other way around, has no complete
+      set beyond the shorter of the two vectors, so the surplus values are unusable.
+    \item Initialized via the constructor.
+    \item Should be an unsigned integer (\code{std::size_t}, from \code{<cstddef>}) and marked
+      \code{const}.
+  \end{itemize}
+  \item \textbf{\code{myBias}:}
+  \begin{itemize}
+    \item The model's bias value (the m-value in $y = kx + m$).
+    \item Should be a floating-point type.
+  \end{itemize}
+  \item \textbf{\code{myWeight}:}
+  \begin{itemize}
+    \item The model's weight value (the k-value in $y = kx + m$).
+    \item Should be a floating-point type.
+  \end{itemize}
+\end{itemize}
+
+\codeexercise{Constructor}
+\label{c1:ex:10}
+Implement the constructor in \file{source/ml/lin_reg/fixed.cpp}:
+\begin{itemize}
+  \item Initialize all member variables.
+  \item Set \code{mySetCount} to the number of complete training sets, i.e.\ the smaller of the two
+    vectors' sizes.
+  \item \code{myBias} and \code{myWeight} must both be initialized to \code{0.0}, so that the model
+    predicts \code{0} for every input until it has been trained.
+  \item Print an error message to \code{stderr} and call \code{std::terminate()} (from
+    \code{<exception>}) if \code{mySetCount} is 0. A model without training data can never be
+    trained, and since the constructor can't return a failure code, there's no way to report the
+    problem to the caller.
+\end{itemize}
+
+\codeexercise{Prediction}
+\label{c1:ex:11}
+Implement the method \code{predict()} in \file{source/ml/lin_reg/fixed.cpp}.
+
+Return a prediction according to the formula
+\[
+  y = kx + m,
+\]
+where:
+\begin{itemize}
+  \item $y$ is the prediction returned.
+  \item $k$ is the model's weight (\code{myWeight}).
+  \item $x$ is the input (\code{input}).
+  \item $m$ is the model's bias (\code{myBias}).
+\end{itemize}
+
+\codeexercise{Training}
+\label{c1:ex:12}
+Implement the method \code{train()} in \file{source/ml/lin_reg/fixed.cpp}:
+\begin{itemize}
+  \item Return \code{false} immediately if \code{epochCount} is 0, or if \code{learningRate} is
+    outside the range \code{(0.0, 1.0)}:
+  \begin{itemize}
+    \item A learning rate of \code{0.0} or less can never improve the model.
+    \item A learning rate of \code{1.0} or more corrects by at least the full error each step, which
+      makes training oscillate or diverge instead of converging.
+  \end{itemize}
+  \item Missing training data is already handled by the constructor, so \code{train()} doesn't
+    need to check for it.
+  \item Train the model for the given number of epochs.
+  \item During each epoch, iterate through all \code{mySetCount} training sets. Perform
+    optimization by calling the method \code{optimize()} with the current training set (obtained
+    from the vectors, e.g.\ via index).
+  \item Return \code{true} after training is complete.
+\end{itemize}
+
+\codeexercise{Optimization}
+\label{c1:ex:13}
+Implement the method \code{optimize()} in \file{source/ml/lin_reg/fixed.cpp}:
+\begin{itemize}
+  \item If \code{input == 0}: set \code{myBias = output} directly and return, leaving
+    \code{myWeight} untouched. Since $y = k \cdot 0 + m = m$, the reference value \emph{is} the
+    bias, and no value of $k$ changes a prediction made with an input of zero.
+  \item Otherwise:
+  \begin{itemize}
+    \item Compute a prediction with the given input:
+      \code{prediction = myWeight * input + myBias}.
+    \item Compute the error as the difference between the reference value and the prediction:
+      \code{error = output - prediction}.
+    \item Adjust the model's parameters based on the error:
+    \begin{itemize}
+      \item \code{myBias   = myBias   + error * learningRate}
+      \item \code{myWeight = myWeight + error * learningRate * input}
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+
+\codeexercise{Compiling and running}
+\label{c1:ex:14}
+Compile the program and make sure you get the following output:
+
+\begin{console}
+Input: 0, prediction: 2
+Input: 1, prediction: 5
+Input: 2, prediction: 8
+Input: 3, prediction: 11
+Input: 4, prediction: 14
+\end{console}
+
+\noindent The model has been trained on the same five training sets you trained by hand in
+Exercise~\ref{c1:ex:1}, so this output is what $y = 3x + 2$ looks like once the model has found the
+line on its own.
+
+\codeexercise{Running the tests}
+\label{c1:ex:15}
+A ready-made test suite for the model is available in \file{lectures/L01/exercises/test}. It checks
+the behaviour specified above: the initial parameter values, the argument validation in
+\code{train()}, the parameter updates made by \code{optimize()}, and a handful of complete training
+runs.
+
+There's nothing to copy: \file{test} already sits alongside the code you just wrote. Build and run
+it from the exercises directory:
+
+\begin{shell}
+make -C test
+\end{shell}
+
+\noindent The test framework is checked out as a submodule at the root of the repository. If
+\file{libs/test} is empty, fetch it once with \code{git submodule update --init}.
+
+All 15 test cases should pass. When one fails, the output names the assertion that failed, the two
+values involved, and the file and line it came from. Use it to find the part of the specification
+your implementation doesn't match yet.
+
+The test suite's README, \file{lectures/L01/exercises/test/README.md}, has more information,
+including the one piece of behaviour it deliberately doesn't cover.
+
+\codeexercise{Tuning the training}
+\label{c1:ex:16}
+The \file{main.cpp} you pasted trains for 1000 epochs at a learning rate of 10\%, which is far more
+work than these five training sets need. Tune the two constants at the top of \code{main()}, i.e.\
+lower \code{epochCount} and raise \code{learningRate}, and find the fewest epochs that still
+reproduce the output in Exercise~\ref{c1:ex:14} exactly.
+
+Change one constant at a time and rebuild with \code{make} after each change. A few things worth
+knowing while you experiment:
+\begin{itemize}
+  \item \code{learningRate} must stay inside the range \code{(0.0, 1.0)}, otherwise \code{train()}
+    returns \code{false} and the program prints \code{Training failed!} instead of any predictions.
+  \item Don't expect the epoch count to drop smoothly as the learning rate rises. There's a stretch
+    where a higher learning rate needs \emph{more} epochs, not fewer, because each pass overshoots
+    the line and the next has to correct back.
+  \item Raise the learning rate far enough and training stops converging altogether: the
+    predictions grow by orders of magnitude per epoch and print as values like
+    \code{-2.60711e+06}, or as \code{inf} and \code{nan} once the rate is higher still. Find roughly
+    where that starts. It's well below the 1.0 the interface allows, which is why the limit in
+    \code{train()} is an outer bound rather than a recommendation.
+  \item The predictions are printed with \code{\%g}, which shows six significant digits. Matching
+    the output in Exercise~\ref{c1:ex:14} therefore means ``correct to six digits'', not ``exact''.
+    Print with \code{\%.10f} instead if you want to see the error that's left.
+  \item The test suite in Exercise~\ref{c1:ex:15} doesn't use \file{main.cpp}, so it keeps passing
+    no matter which constants you settle on.
+\end{itemize}
+It can be done in well under ten epochs. Note down the pair you end up with, along with roughly
+where training started to diverge.
+
+Keep the pair you settled on in \file{main.cpp} here, but set \code{epochCount} back to
+\code{1000} and \code{learningRate} back to \code{0.1} when you carry the code forward into
+Chapter~\ref{c2:ch:training}. That chapter teaches the model to stop training on its own once it's
+accurate enough, which only shows as a difference when the model is given more epochs than it
+needs.

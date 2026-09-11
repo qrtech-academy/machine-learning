@@ -156,7 +156,7 @@ on the very first training set of the very first epoch. (3 marks)
 discarded. State what the four calls report through that value, name the failure it was meant to
 catch, and state what this function returns when that failure occurs. (2 marks)
 
-**(d)** The L03 stub exposes three methods that are not part of `dense_layer::Interface`. Two of them are:
+**(d)** The L03 stub exposes three methods that are not part of `dense_layer::Interface`. Two of them are
 `feedforwardCount()` and `setOutput()`. State what each one makes testable.
 
 Then state, for each of (a), (b) and (c) in turn, whether a test built on those two methods catches
@@ -208,7 +208,7 @@ Compute the derivative the correct way and the derivative the wrong way, and giv
 them. Then show that for a `Relu` node the two ways agree at $s = 1.5$ and at $s = -0.8$, and state
 what that agreement costs a test suite. (4 marks)
 
-**(c)** `ml::randomStartVal()` returns values in the range $(0, 1)$ only. Explain how that interacts
+**(c)** `ml::randomStartVal()` returns values in the range $[0, 1]$ only. Explain how that interacts
 with ReLU to leave a hidden node unable to learn ever again, and state the two countermeasures the
 course names. (3 marks)
 
@@ -318,8 +318,8 @@ tie; state which, and which position wins. (3 marks)
 Give the 4 x 4 gradient matrix the layer passes back, on the first call after construction.
 (2 marks)
 
-**(c)** A student writes `double maxValue{0.0};` before the search, leaves `maxRow` and `maxCol`
-default-initialized, and ends the block with
+**(c)** A student writes `double maxValue{0.0};` before the search, declares `maxRow` and `maxCol`
+with `{}` so that both start at 0, and ends the block with
 `myInputGradients[maxRow][maxCol] = outputGradients[i][j];`.
 
 Give the 4 x 4 matrix this produces for the same data. Name the **two** distinct things that go

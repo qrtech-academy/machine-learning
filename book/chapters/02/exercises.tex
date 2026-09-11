@@ -1,0 +1,351 @@
+% Section 2.4, from lectures/L02/appendix/b_exercises.md. The solutions are in the repository, in
+% lectures/L02/exercises.
+
+\section{Exercises}
+\label{c2:sec:exercises}\label{c2:app:b}
+
+\begin{aside}
+\textbf{How to work these.} All four sets extend one program: the linear regression model you
+wrote in Chapter~\ref{c1:ch:linreg}'s Set~2. Carry it forward into this lecture's exercises
+directory, \file{lectures/L02/exercises} in the companion repository, and extend it set by set,
+rebuilding with \code{make} after each exercise.
+
+\textbf{How to check your work.} Set~4 runs the lecture's test suite, already in
+\file{lectures/L02/exercises/test}. It is cumulative: it covers everything from
+Chapter~\ref{c1:ch:linreg} as well as what this chapter adds, so it supersedes the earlier suite
+entirely. It tests the directory above it by default; \code{make ML_DIR=<path>} points it at a tree
+of your own elsewhere.
+
+The solutions are published in the companion repository, in \file{lectures/L02/exercises}, with a
+README that walks through them, including what the adaptive learning rate buys on training data its
+initial rate is too cautious for. Try each exercise yourself before looking at them.
+\end{aside}
+
+You'll extend the \code{ml::lin_reg::Fixed} class from Chapter~\ref{c1:ch:linreg}, first with a
+randomized training order, then with precision calculation. Finally you'll add a second model,
+\code{ml::lin_reg::Adaptive}, which picks its own learning rate while it trains.
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Randomizing the Training Order}
+\label{c2:set:1}
+
+\codeexercise{MatrixU32 alias}
+\label{c2:ex:1}
+Add the alias \code{MatrixU32} to the header file \file{ml/types.hpp} as a substitute for
+\code{std::vector<std::uint32_t>}, in the namespace \code{ml}.
+
+Include \code{<cstdint>} in \file{ml/types.hpp}.
+
+\codeexercise{Random number generator}
+\label{c2:ex:2}
+Add a function named \code{initRandGen()} in an anonymous namespace in
+\file{source/ml/lin_reg/fixed.cpp}. The function should initialize the random number generator
+exactly once when called:
+\begin{itemize}
+  \item Use a static local variable named \code{initialized} (of type \code{bool}, initialized to
+    \code{false}) to track whether the generator has already been initialized.
+  \item Initialize the generator with \code{std::srand(std::time(nullptr))}.
+  \item Set \code{initialized} to \code{true} after initialization.
+  \item Include \code{<cstdlib>} and \code{<ctime>} in \file{fixed.cpp}.
+  \item Should be marked \code{noexcept}.
+\end{itemize}
+
+\codeexercise{Training order}
+\label{c2:ex:3}
+Add a private member variable named \code{myTrainOrder} to \code{Fixed}:
+\begin{itemize}
+  \item Should hold the indices of the training sets as unsigned integers (\code{ml::MatrixU32}).
+  \item Mustn't be marked \code{const}, since its contents are rearranged before every epoch.
+\end{itemize}
+The member variable \code{mySetCount} from Chapter~\ref{c1:ch:linreg} can now be removed:
+\code{myTrainOrder} holds one index per training set, so \code{myTrainOrder.size()} is the number of
+training sets.
+
+Update the constructor in \file{source/ml/lin_reg/fixed.cpp}:
+\begin{itemize}
+  \item Compute the number of complete training sets as in Chapter~\ref{c1:ch:linreg}, i.e.\
+    \code{std::min(trainIn.size(), trainOut.size())}, but keep it in a local variable rather than a
+    member.
+  \item Print an error message and call \code{std::terminate()} if the set count is 0, as in
+    Chapter~\ref{c1:ch:linreg}.
+  \item Call \code{initRandGen()}, so the random number generator is ready before the first
+    shuffle. Calling it here rather than in \code{train()} means it's initialized exactly once per
+    model, no matter how often training is started.
+  \item Resize \code{myTrainOrder} to the set count, then fill it with the indices
+    \code{0, 1, 2 ... N-1}.
+\end{itemize}
+
+\codeexercise{Shuffling}
+\label{c2:ex:4}
+Add a private method named \code{shuffle()} to \code{Fixed}:
+\begin{itemize}
+  \item Should shuffle the contents of \code{myTrainOrder} in random order.
+  \item For each index \code{i}, pick a random index \code{r} and swap \code{myTrainOrder[i]} and
+    \code{myTrainOrder[r]}.
+  \item Should be marked \code{noexcept}.
+\end{itemize}
+
+\codeexercise{Updating the training method}
+\label{c2:ex:5}
+Update the method \code{train()} in \file{source/ml/lin_reg/fixed.cpp}:
+\begin{itemize}
+  \item Call \code{shuffle()} at the start of every epoch.
+  \item Iterate through the training sets in the order given by \code{myTrainOrder} instead of
+    sequentially by index, e.g.\ with a range-based for loop over \code{myTrainOrder}. Note that the
+    loop variable is now the index into the training data, not the counter itself.
+\end{itemize}
+
+\codeexercise{Compiling and testing}
+\label{c2:ex:6}
+Compile and test-run the program. The training order should now be random every epoch, but the
+predicted result should still match the training data once training is complete.
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Precision Calculation}
+\label{c2:set:2}
+
+\codeexercise{Precision calculation}
+\label{c2:ex:7}
+Add a private method named \code{precision()} to the \code{Fixed} class. The method should compute
+the model's precision given the training data:
+\begin{itemize}
+  \item Compute the mean absolute error (MAE) across all training sets:
+  \begin{itemize}
+    \item For each training set, compute the absolute error: \code{abs(output - predict(input))}.
+    \item Sum all absolute errors and divide by the number of training sets.
+  \end{itemize}
+  \item Return \code{1.0 - MAE} as a floating-point number.
+  \item Should be marked \code{[[nodiscard]]}, \code{const}, and \code{noexcept}.
+\end{itemize}
+Include \code{<cmath>} in \file{fixed.cpp} for \code{std::abs}.
+
+\codeexercise{Updating the training method}
+\label{c2:ex:8}
+Update the method \code{train()} in \file{source/ml/lin_reg/fixed.cpp} so training stops early once
+the precision exceeds a given threshold:
+\begin{itemize}
+  \item Add an argument named \code{precisionThreshold} (a floating-point number specifying the
+    precision threshold) as the \textbf{last} parameter, so the full signature reads
+    \code{train(epochCount, learningRate = 0.01, precisionThreshold = 0.999999)}. Default value:
+    \code{0.999999} (99.9999\%). Note that the argument shouldn't be named \code{precision}: inside
+    \code{train()}, a parameter of that name hides the method \code{precision()}, so calling it no
+    longer compiles (unless \code{this->precision()} is used).
+  \item Return \code{false} if \code{precisionThreshold} falls outside the range
+    \code{(0.0, 1.0)}:
+  \begin{itemize}
+    \item A threshold of \code{1.0} or more can never be reached, since the precision is
+      \code{1.0 - MAE} and the mean absolute error can't be negative. Training would always run the
+      full epoch count.
+    \item A threshold of \code{0.0} or less accepts a model whose mean absolute error is \code{1.0}
+      or worse, which defeats the purpose of the check.
+  \end{itemize}
+  \item As in Chapter~\ref{c1:ch:linreg}, \code{train()} reports invalid arguments through its
+    return value. Only the constructor calls \code{std::terminate()}, because it has no way to
+    return a failure code to the caller.
+  \item Call \code{precision()} every tenth epoch, starting with the first; computing it scans every
+    training set, so checking less often than every epoch keeps that overhead down over thousands
+    of epochs. Use a named constant for the interval rather than a bare \code{10}.
+  \item Stop training and return \code{true} as soon as the precision reaches or exceeds
+    \code{precisionThreshold}, printing the achieved precision and the number of epochs it took.
+  \item Return \code{true} once the epochs run out, if the threshold was never reached.
+\end{itemize}
+
+\codeexercise{Compiling and testing}
+\label{c2:ex:9}
+Compile and test-run the program. The model should now stop training as soon as the precision
+reaches the threshold, long before the 1000 epochs \file{main.cpp} asks for:
+
+\begin{console}
+Target precision 1.00 reached after 11 epochs!
+Input: 0, prediction: 2
+Input: 1, prediction: 5
+Input: 2, prediction: 8
+Input: 3, prediction: 11
+Input: 4, prediction: 14
+\end{console}
+
+\noindent The training order is random, so the epoch count can vary between runs. For this
+training data it settles at 11: the precision is only checked every tenth epoch, so the check that
+first passes is the one after the eleventh epoch has run. Report the number of epochs completed, not
+the loop index, so the first epoch reads as 1 rather than 0.
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{An Adaptive Learning Rate}
+\label{c2:set:3}
+The learning rate is the one training parameter with no sensible default. Too low and the model
+crawls, too high and it never settles, and where the line between the two falls depends on the
+training data rather than on the algorithm. Instead of asking the caller to guess, you'll now write
+a second model that starts at a cautious rate and revises it while training, using the precision it
+already computes every tenth epoch.
+
+The new class is called \code{Adaptive}, and it's the one the \code{Fixed} name has been pointing at
+since Exercise~\ref{c1:ex:7}.
+
+\codeexercise{Shared utilities}
+\label{c2:ex:10}
+\code{initRandGen()} currently sits in an anonymous namespace in \file{fixed.cpp}, which makes it
+private to that file. The new model needs the same one-time seeding, and copying the function across
+would give each file its own \code{initialized} flag: the second copy would call \code{std::srand()}
+again when the second model is constructed, and a re-seed within the same second restarts the very
+sequence that was already running.
+
+Move the function into a pair of shared files instead:
+\begin{itemize}
+  \item Create \file{include/ml/utils.hpp}. Declare \code{initRandGen()} there, in the namespace
+    \code{ml}, taking no arguments, returning nothing, and marked \code{noexcept}.
+  \item Create \file{source/ml/utils.cpp}. Move the definition there unchanged, along with the
+    \code{<cstdlib>} and \code{<ctime>} includes it needs.
+  \item Remove the function and the \code{<ctime>} include from \file{fixed.cpp}, and include
+    \code{"ml/utils.hpp"} instead. Keep \code{<cstdlib>}: \code{shuffle()} still calls
+    \code{std::rand()}. The call in the constructor stays exactly as it was: \code{Fixed} lives in
+    \code{ml::lin_reg}, so the unqualified name still finds \code{ml::initRandGen()} in the
+    enclosing namespace.
+  \item Add \file{source/ml/utils.cpp} to \code{SRC_FILES} in the makefile.
+\end{itemize}
+Rebuild and re-run before going further. Nothing about the program's behaviour should have changed;
+this step only moves code.
+
+\codeexercise{The Adaptive class}
+\label{c2:ex:11}
+Add the header \file{include/ml/lin_reg/adaptive.hpp} and the source file
+\file{source/ml/lin_reg/adaptive.cpp}, and add the source file to \code{SRC_FILES} in the makefile.
+
+In the namespace \code{ml::lin_reg}, implement a class named \code{Adaptive} that inherits
+\code{Interface} via public inheritance and is marked \code{final}. Everything except
+\code{train()} is the same as in \code{Fixed}:
+\begin{itemize}
+  \item The constructor takes \code{trainIn} and \code{trainOut} and is marked \code{explicit} and
+    \code{noexcept}. It checks the set count, terminates when it's 0, fills \code{myTrainOrder}
+    with \code{0, 1, 2 ... N-1}, and calls \code{initRandGen()}.
+  \item \code{~Adaptive()} is \code{default}, \code{noexcept}, and \code{override}.
+  \item \code{predict()} returns $y = kx + m$, and is marked \code{[[nodiscard]]}, \code{const},
+    \code{noexcept}, and \code{override}.
+  \item The private methods \code{optimize()}, \code{shuffle()}, and \code{precision()} are the same
+    as in \code{Fixed}.
+  \item The private member variables are the same: \code{myTrainOrder}, \code{myTrainIn},
+    \code{myTrainOut}, \code{myBias}, and \code{myWeight}.
+  \item The default constructor, copy and move constructors, and the corresponding operators are
+    deleted.
+\end{itemize}
+\code{train()} is where the two models part ways:
+
+\begin{cppcode}
+bool train(std::size_t epochCount, double precisionThreshold = 0.999999) noexcept;
+\end{cppcode}
+
+\noindent There's no \code{learningRate} argument, because the model no longer takes one. Copying
+the shared parts across rather than sharing them with \code{Fixed} is deliberate here: two small
+independent models make the one difference between them easy to see.
+
+\codeexercise{The learning rate rule}
+\label{c2:ex:12}
+Add a function named \code{updateLearningRate()} in an anonymous namespace in
+\file{adaptive.cpp}:
+
+\begin{cppcode}
+void updateLearningRate(double& learningRate, double& prevPrecision,
+                        double currentPrecision) noexcept;
+\end{cppcode}
+
+\noindent It takes the current learning rate and the previous precision by reference, since it
+updates both, and the precision just measured by value. Give each of the four values it needs a
+named constant: a maximum learning rate of \code{0.25}, a minimum of \code{1e-6}, a smallest
+expected improvement of \code{0.1}, and a step of \code{0.05}.
+
+The rule itself works on the difference between the two precisions, i.e.\ how much the model
+improved since the last evaluation:
+\begin{itemize}
+  \item \textbf{Improved by at least the expected minimum:} leave the learning rate alone. It's
+    working.
+  \item \textbf{Improved, but by less than that:} raise the learning rate by the step. Progress has
+    stalled, so take bigger steps.
+  \item \textbf{Didn't improve at all:} lower the learning rate by the step. The model is
+    overshooting, so take smaller steps.
+\end{itemize}
+Neither branch should enforce the limits itself. Once the rate has been adjusted, keep it inside
+them with a single call to \code{std::clamp()} (from \code{<algorithm>}, already included for
+\code{std::min()}):
+\code{learningRate = std::clamp(learningRate, minLearningRate, maxLearningRate)}. It returns the
+nearer bound whenever the value falls outside the range, so one call covers both ends and each
+branch is left saying only what it's about.
+
+Store the precision just measured in \code{prevPrecision} before returning, so the next call has
+something to compare against.
+
+That one clamp is what keeps the rule safe. Its maximum stays below the rate at which this kind of
+training data starts to oscillate instead of converging, and its minimum keeps the rate positive, so
+a model that keeps missing can still creep towards the line rather than stopping dead.
+
+\codeexercise{Training}
+\label{c2:ex:13}
+Implement \code{train()} in \file{adaptive.cpp}:
+\begin{itemize}
+  \item Give the evaluation interval (\code{10}) and the initial learning rate (\code{0.1}) named
+    constants.
+  \item Declare the learning rate and the previous precision as local variables, initialized to the
+    initial learning rate and \code{0.0}. Being local means every call starts from the initial rate
+    again, rather than inheriting whatever the previous call ended on.
+  \item Return \code{false} if \code{epochCount} is 0, or if \code{precisionThreshold} falls outside
+    the range \code{(0.0, 1.0)}, exactly as \code{Fixed} does. There's no learning rate left to
+    validate.
+  \item For each epoch: call \code{shuffle()}, then run \code{optimize()} over all training sets in
+    the order given by \code{myTrainOrder}, passing the current learning rate.
+  \item Every tenth epoch, except the first, compute the precision once and keep it in a local
+    variable:
+  \begin{itemize}
+    \item Stop training and return \code{true} if it reaches or exceeds \code{precisionThreshold},
+      printing the achieved precision and the number of epochs it took, as in
+      Exercise~\ref{c2:ex:8}.
+    \item Otherwise, pass it to \code{updateLearningRate()}.
+  \end{itemize}
+  \item Return \code{true} once the epochs run out.
+\end{itemize}
+Note that the precision is computed once per evaluation and then used twice. Calling
+\code{precision()} a second time inside \code{updateLearningRate()} would scan every training set
+again for a value that's already in hand.
+
+\codeexercise{Compiling and running}
+\label{c2:ex:14}
+Update \file{main.cpp} to train an \code{ml::lin_reg::Adaptive} model rather than a \code{Fixed}
+one, and drop the learning rate from the \code{train()} call. An epoch budget of 100 is plenty now,
+since the model stops as soon as it reaches the default precision threshold.
+
+Compile and run. The predictions should match the training data, without a learning rate having
+been chosen anywhere in the program:
+
+\begin{console}
+Input: 0, prediction: 2
+Input: 1, prediction: 5
+Input: 2, prediction: 8
+Input: 3, prediction: 11
+Input: 4, prediction: 14
+\end{console}
+
+\noindent Above them sits the early-stop line your own \code{train()} prints. The epoch count in it
+varies with the shuffled order.
+
+% ------------------------------------------------------------------------------------------
+\exerciseset{Running the Tests}
+\label{c2:set:4}
+
+\codeexercise{Running the tests}
+\label{c2:ex:15}
+An updated test suite is available in \file{lectures/L02/exercises/test}. It's cumulative: it
+covers everything from Chapter~\ref{c1:ch:linreg} as well as the randomized training order, the
+precision threshold, and the adaptive learning rate added here, so it supersedes the earlier suite
+entirely.
+
+Once you've carried your code forward into this lecture's exercises directory, build and run it as
+before:
+
+\begin{shell}
+make -C test
+\end{shell}
+
+\noindent All 38 test cases should pass: 20 for \code{Fixed} and 18 for \code{Adaptive}. Note that
+\code{train()} prints its progress, so the output is interleaved with early-stop reports. Look for
+the summary on the last line.
+
+The test suite's README, \file{lectures/L02/exercises/test/README.md}, has more information,
+including why the tests that check exact values train on a single training set now that the order
+is randomized, and how a learning rate the model keeps to itself can be tested at all.

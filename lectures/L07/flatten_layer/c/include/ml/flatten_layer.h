@@ -16,7 +16,7 @@ typedef struct flatten_layer flatten_layer_t;
  *
  * @param[in] input_size Input size (assumed square).
  *
- * @return Pointer to the new flatten layer, or nullptr in failure.
+ * @return Pointer to the new flatten layer, or NULL on failure.
  */
 flatten_layer_t* flatten_layer_new(size_t input_size);
 
@@ -26,8 +26,6 @@ flatten_layer_t* flatten_layer_new(size_t input_size);
  *        Release allocated resources and set the corresponding pointer to null.
  *
  * @param[in] self Double pointer to the flatten layer.
- *
- * @return Pointer to the new flatten layer, or nullptr in failure.
  */
 void flatten_layer_del(flatten_layer_t** self);
 

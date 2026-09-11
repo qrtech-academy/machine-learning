@@ -1,0 +1,34 @@
+% Chapter 9, typeset from lectures/L09: the README is the opener and the closing review, and
+% appendix A is the exercises.
+
+\chapter{The Max Pooling Layer}
+\label{c9:ch:maxpool}
+
+{\large\itshape A layer with nothing to learn, and gradients to route.\par}
+
+\begin{chapterbox}{In this chapter}
+\begin{itemize}
+  \item A concrete class \code{ml::conv_layer::MaxPool}, on the same \code{conv_layer::Interface}
+    as \code{Conv}.
+  \item Its \code{feedforward()}, \code{backpropagate()} and \code{optimize()}.
+  \item Gradient routing in max pooling.
+  \item Layers with and without trainable parameters.
+  \item Replacing \code{MaxPoolStub} in \file{factory.cpp}.
+\end{itemize}
+\end{chapterbox}
+
+This chapter implements a real, working max pooling layer, \code{ml::conv_layer::MaxPool}, in the
+polymorphic \code{cnn_work} pipeline from Chapter~\ref{c8:ch:conv}, replacing the
+\code{MaxPoolStub} it currently uses. Keep working in the same project,
+\file{lectures/L08/cnn_work}. After this chapter you should have created a concrete subclass
+\code{MaxPool} that inherits \code{ml::conv_layer::Interface}, and implemented its
+\code{feedforward()}, \code{backpropagate()} and \code{optimize()}.
+
+The logic is the one you worked through by hand in \secref{c6:sec:exercises} and wrote as the
+struct \code{ml::MaxPoolLayer} in Chapter~\ref{c7:ch:layers}. What makes the class worth a chapter
+is what it doesn't have: no trainable parameters and no activation function, and still the same
+interface as \code{Conv}, printed in Exercise~\ref{c8:ex:1}. The exercises in
+\secref{c9:sec:exercises} are where you write it.
+
+\input{chapters/09/summary}
+\input{chapters/09/exercises}

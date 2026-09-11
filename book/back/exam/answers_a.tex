@@ -1,0 +1,824 @@
+% Appendix: the model answers to Paper A, from exam/paper_a_solutions.md.
+
+% The answers' headings are labelled ansa:q:N.
+\renewcommand{\answerprefix}{ansa}
+
+\chapter{Model Answers to Paper A}
+\label{ansa:ch:answers}
+
+Marks are shown per part. Method carries them: a correct rule with an arithmetic slip in it is worth
+more than a correct number with no working, and later parts consume earlier answers, so an error
+should be followed through rather than penalized twice.
+
+Code answers are marked on the algorithm, not on the syntax. A candidate who writes correct
+pseudocode loses nothing.
+
+% ==========================================================================================
+\answersection{1}{Learning the rules instead of writing them}{12}
+
+\answerpart{a}{3}
+\textbf{Traditional programming} is given the \textbf{input} and the \textbf{rules}, and produces
+the \textbf{output}. The rules are written by hand: the ventilation example in \secref{c1:sec:intro}
+is a chain of \code{if}/\code{else if} on a temperature reading.
+
+\textbf{Machine learning} is given the \textbf{input} and the \textbf{output}, and produces the
+\textbf{rules}. The same ventilation behaviour becomes a table of temperatures paired with fan
+settings, and the machine finds the relationship itself. \credit{1 mark for both arrangements}
+
+\textbf{The paradigm} is \textbf{symbolic AI}, the dominant approach before machine learning.
+\worth{1}
+
+\textbf{Where it worked and where it did not.} It worked on complex but \emph{well-defined} tasks:
+chess is the book's example, where the legal moves and the goal can be stated exactly. It failed on
+computer vision, speech recognition and language translation.
+
+\textbf{The property that separates them.} How widely the input can vary. Chess has a finite,
+exactly describable set of positions; two photographs of the same object share almost no pixel
+values. A task whose input varies without bound cannot be covered by an enumeration of conditions,
+however long, because there is no finite enumeration to write. \worth{1}
+
+\answerpart{b}{4}
+$\yp = kx + m$, $\delta = \yref - \yp$, $\Delta e = \delta \cdot \LR$, then $m \mathrel{+}= \Delta e$
+and $k \mathrel{+}= \Delta e \cdot x$.
+
+\textbf{Set 1} ($x = 0$, $\yref = -1$):
+\begin{gather*}
+  \yp = 0 \cdot 0 + 0 = 0, \quad \delta = -1 - 0 = -1, \quad \Delta e = -0.1 \\
+  m = 0 + (-0.1) = -0.1, \qquad k = 0 + (-0.1)(0) = 0
+\end{gather*}
+\textbf{Set 2} ($x = 1$, $\yref = 3$):
+\begin{gather*}
+  \yp = 0 \cdot 1 + (-0.1) = -0.1, \quad \delta = 3 - (-0.1) = 3.1, \quad \Delta e = 0.31 \\
+  m = -0.1 + 0.31 = 0.21, \qquad k = 0 + 0.31(1) = 0.31
+\end{gather*}
+\textbf{Set 3} ($x = 2$, $\yref = 7$):
+\begin{gather*}
+  \yp = 0.31(2) + 0.21 = 0.83, \quad \delta = 7 - 0.83 = 6.17, \quad \Delta e = 0.617 \\
+  m = 0.21 + 0.617 = \mathbf{0.827}, \qquad k = 0.31 + 0.617(2) = \mathbf{1.544}
+\end{gather*}
+\textit{(1 mark per set, 1 mark for the correct rules stated or clearly used, including $k$ not
+moving on set 1 because $x = 0$.)}
+
+\answerpart{c}{2}
+\[
+  \yp(5) = 1.544(5) + 0.827 = \mathbf{8.547} \qquad \text{against } \yref = 19
+\]
+\worth{1}
+
+\textbf{Why this epoch achieved so much less.} The deviations were $-1$, $3.1$, $6.17$: they
+\textbf{grew} in magnitude across the whole epoch, where the example in \secref{c1:sec:byhand} saw
+its deviation turn over and start shrinking by the fourth set. Two things cause it.
+
+The target slope is 4 rather than 2, so $k$ has twice as far to travel and every prediction lags
+further behind. And the target bias is $-1$ while every deviation after the first is positive, so
+sets 2 and 3 drive $m$ \emph{upwards}, from $-0.1$ to $+0.827$, away from where it has to end up.
+The model can only reach $m = -1$ after $k$ has overshot far enough for the deviations to turn
+negative, and one epoch of three sets is nowhere near enough for that.
+\textit{(1 mark; credit any answer that quotes the growing $\delta$ sequence and identifies either
+the larger slope or the wrong-direction bias movement.)}
+
+\answerpart{d}{3}
+The special case: \code{if (0 == input) { myBias = output; return; }}.
+
+\textbf{Set 1} ($x = 0$): $m$ is assigned $-1$ directly. $k$ is untouched, so $k = 0$. \worth{1}
+
+\textbf{Set 2} ($x = 1$): $\yp = 0(1) + (-1) = -1$, $\delta = 4$, $\Delta e = 0.4$, so $m = -0.6$
+and $k = 0.4$.
+
+\textbf{Set 3} ($x = 2$): $\yp = 0.4(2) + (-0.6) = 0.2$, $\delta = 6.8$, $\Delta e = 0.68$, so
+$m = \mathbf{0.08}$ and $k = \mathbf{1.76}$. \worth{1}
+
+Against (b)'s $k = 1.544$, $m = 0.827$: the special case puts the bias at its target, $-1$, at once,
+so sets 2 and 3 start from a bias 0.9 lower than in (b). The lower bias makes both predictions lower
+and both deviations larger, $4$ and $6.8$ against $3.1$ and $6.17$, so the weight is pushed further,
+to $1.76$ against $1.544$, and the bias is pulled back up by $1.08$ rather than $0.927$, ending at
+$0.08$ instead of $0.827$. Both models are still far from $(4, -1)$.
+
+\textbf{When it is a bad idea.} When the training data is noisy, or contains more than one set at
+$x = 0$. The bias is a property of the whole data set; the special case snaps it onto a single
+sample and discards everything every other sample had contributed to it. With more than one $x = 0$
+sample the final bias is simply whichever of them was visited last, and since
+Chapter~\ref{c2:ch:training} randomizes the order, the trained model then depends on the shuffle.
+\credit{1 mark; any one of: noise, duplicate $x = 0$ samples, order dependence}
+
+% ==========================================================================================
+\answersection{2}{The training loop that trains nothing}{12}
+
+\answerpart{a}{3}
+\textbf{Fault 1: \code{randomizeTrainOrder()} is called once, outside the epoch loop.} It belongs at
+the top of the epoch body, so a new order is drawn each epoch. As written the order is drawn once
+and reused for the entire run. \worth{1}
+
+\textbf{Fault 2: the inner loop indexes with the counter, not with the order.} It should read
+\code{myTrainInput[myTrainOrder[x]]} (and likewise for \code{myTrainOutput}). As written,
+\code{myTrainOrder} is used only for its \code{size()}; its contents are never read at all.
+\worth{1}
+
+\textbf{What actually happens.} The sets are visited in strict storage order $0, 1, 2, \ldots$, the
+same every epoch. Fault 2 makes fault 1 invisible: shuffling a vector nobody reads changes nothing,
+so fixing only fault 1 changes nothing either. Both have to be fixed for the shuffle to have any
+effect. \worth{1}
+
+\answerpart{b}{3}
+\textbf{The correct order} is output layer first, hidden layer second:
+
+\begin{cppcode}
+myOutputLayer.backpropagate(myTrainOutput[x]);
+myHiddenLayer.backpropagate(myOutputLayer);
+\end{cppcode}
+\worth{1}
+
+\textbf{What the hidden layer reads as written.} \code{myHiddenLayer.backpropagate(myOutputLayer)}
+computes $\delta_i = \sum_j \Delta e_j \cdot w_{ji}$ from \code{myOutputLayer.error()} and
+\code{myOutputLayer.weights()}. Called first, it reads the error vector the output layer computed on
+the \textbf{previous training set}, against a different reference value, and from a different
+feedforward pass than the one that just ran. The blame is real, but it belongs to another example.
+\worth{1}
+
+\textbf{The very first set of the very first epoch.} The output layer has never backpropagated, so
+its error vector still holds the zeros it was constructed with. Every hidden $\delta$ is therefore
+$0$, every hidden $\Delta e$ is $0$, and \code{myHiddenLayer.optimize()} adds zero to every bias and
+every weight. The hidden layer's first update is a no-op. \worth{1}
+
+\answerpart{c}{2}
+All four report \textbf{failure of a range check} through the return value: \code{false} when the
+dimensions do not match, and additionally, for \code{optimize()}, when the learning rate lies outside
+$(0.0, 1.0)$. \worth{1}
+
+The failure they exist to catch is training data whose shape does not match the layers, namely a
+training input row that is not \code{weightCount()} wide, or a training output row that is not
+\code{nodeCount()} long. (The layer-to-layer mismatch is already caught: \code{Shallow}'s constructor
+terminates when the output layer's weight count does not equal the hidden layer's node count.)
+
+With the values discarded the loop runs to completion regardless, the layers are left holding
+whatever they held before, and the function \textbf{returns \code{true}}, reporting a successful
+training run that never happened. \worth{1}
+
+\answerpart{d}{4}
+\textbf{\code{feedforwardCount()}} makes the \emph{number} of feedforward passes testable: one per
+training set per epoch. Nothing else can establish it. A loop that runs a single pass instead of
+every epoch lines up dimensionally and returns \code{true} exactly as a correct one does, so without
+a tally the two are indistinguishable.
+
+\textbf{\code{setOutput()}} makes it testable that \code{predict()} reads the output layer
+\textbf{live} rather than returning a stored copy. The network holds its layers by reference, so
+changing a layer's output after the network was built must change what the network predicts; if it
+does not, the network kept a stale copy. \credit{1 mark for both}
+
+\textbf{Fault (a): not caught.} The count is one feedforward per set per epoch whatever order the sets
+are visited in, and neither method records the \emph{arguments} a call was made with. A count cannot
+see an order. \worth{1}
+
+\textbf{Fault (b): not caught.} \code{backpropagate()} is called the right number of times with the
+right arguments; only the sequence is wrong. Against the stub it is doubly invisible, because the
+stub's error stays at zero no matter when it is called. \worth{1}
+
+\textbf{Fault (c): not caught.} With correctly sized training data every call returns \code{true}, so
+discarding the values changes nothing a passing test can observe. It only matters on data that is
+wrongly shaped, which a green test run does not supply. \textit{(No mark of its own; credit it within
+the mark for faults (a) and (b) if a candidate answers all three.)}
+
+\textbf{What the stub would need to catch (b).} A record of the \emph{order} in which its methods
+were called, not just how often; a call log the test can read back, or a per-method sequence number,
+so a test can assert that the output layer's \code{backpropagate()} ran before the hidden layer's.
+Equivalently, letting the stub report the arguments it was handed would expose fault (a) as well.
+\worth{1}
+
+% ==========================================================================================
+\answersection{3}{A network trained by hand}{14}
+
+\answerpart{a}{3}
+$x_1 = 1$, $x_2 = 1$.
+\begin{align*}
+  s_1 &= b_1 + x_1 w_1 + x_2 w_2 = 0.3 + 0.4 - 0.5 = 0.2 \Rightarrow y_1 = \sigma(0.2) =
+    \mathbf{0.2} \\
+  s_2 &= b_2 + x_1 w_3 + x_2 w_4 = -0.2 + 0.2 + 0.3 = 0.3 \Rightarrow y_2 = \sigma(0.3) =
+    \mathbf{0.3} \\
+  s_3 &= b_3 + y_1 w_5 + y_2 w_6 = 0.1 + 0.2(0.6) + 0.3(-0.7) = 0.1 + 0.12 - 0.21 = 0.01 \\
+  y_3 &= \sigma(0.01) = \mathbf{0.01}
+\end{align*}
+\credit{1 mark per node}
+
+\answerpart{b}{3}
+\begin{align*}
+  \delta_3 &= Y - y_3 = 1 - 0.01 = 0.99, & e_3 &= \delta_3 \cdot \sigma'(s_3) = 0.99 \cdot 1 =
+    \mathbf{0.99} \\
+  \delta_1 &= e_3 w_5 = 0.99(0.6) = 0.594, & e_1 &= 0.594 \cdot \sigma'(s_1) = 0.594 \cdot 1 =
+    \mathbf{0.594} \\
+  \delta_2 &= e_3 w_6 = 0.99(-0.7) = -0.693, & e_2 &= -0.693 \cdot \sigma'(s_2) = \mathbf{-0.693}
+\end{align*}
+All three weighted sums are positive, so every ReLU derivative is 1. \worth{2}
+
+\textbf{Why the output layer first.} A hidden node's deviation is a sum of the \emph{next} layer's
+computed errors, weighted by the connections leaving it: $\delta_i = \sum_j e_j w_{ji}$. Those errors
+do not exist until the output layer has compared its own output against the reference value.
+Reversing the order does not fail; it silently uses whatever the output layer's error vector happened
+to hold from the previous example. \worth{1}
+
+\answerpart{c}{4}
+\textbf{Output layer:} $\Delta c_3 = e_3 \cdot \LR = 0.99(0.1) = 0.099$.
+\begin{align*}
+  b_3 &= 0.1 + 0.099 = \mathbf{0.199} \\
+  w_5 &= 0.6 + 0.099(y_1) = 0.6 + 0.099(0.2) = \mathbf{0.6198} \\
+  w_6 &= -0.7 + 0.099(y_2) = -0.7 + 0.099(0.3) = \mathbf{-0.6703}
+\end{align*}
+\worth{2}
+
+\textbf{Hidden layer:} $\Delta c_1 = 0.594(0.1) = 0.0594$, $\Delta c_2 = -0.693(0.1) = -0.0693$.
+\begin{align*}
+  b_1 &= 0.3 + 0.0594 = \mathbf{0.3594}, & b_2 &= -0.2 - 0.0693 = \mathbf{-0.2693} \\
+  w_1 &= 0.4 + 0.0594(1) = \mathbf{0.4594}, & w_3 &= 0.2 - 0.0693(1) = \mathbf{0.1307} \\
+  w_2 &= -0.5 + 0.0594(1) = \mathbf{-0.4406}, & w_4 &= 0.3 - 0.0693(1) = \mathbf{0.2307}
+\end{align*}
+\worth{2}
+
+Note that the weights are scaled by the \emph{input to that layer}, $y_1$ and $y_2$ for the output
+layer, $x_1$ and $x_2$ for the hidden layer, while the biases are not. A candidate who used $x$ for
+the output layer's weights has made the mistake Question~\ref{exa:q:5}(c) asks about.
+
+\answerpart{d}{2}
+\begin{align*}
+  s_1 &= 0.3594 + 0.4594 - 0.4406 = 0.3782 \Rightarrow y_1 = 0.3782 \\
+  s_2 &= -0.2693 + 0.1307 + 0.2307 = 0.0921 \Rightarrow y_2 = 0.0921 \\
+  s_3 &= 0.199 + 0.3782(0.6198) + 0.0921(-0.6703) = 0.199 + 0.234408 - 0.061735 = 0.371673 \\
+  y_3 &\approx \mathbf{0.3717}, \qquad \delta_3 = Y - y_3 = 1 - 0.3717 = \mathbf{0.6283}
+\end{align*}
+\worth{1}
+
+The deviation fell from $0.99$ to $0.6283$, a reduction of $0.3617$, or about 37\%. One step of one
+training set moved the output roughly a third of the way to its target, which is what a learning
+rate of 0.1 on a deviation this large looks like. \worth{1}
+
+\answerpart{e}{2}
+With the \textbf{original} parameters and $x_1 = x_2 = 0$:
+\begin{align*}
+  s_1 &= 0.3 \Rightarrow y_1 = 0.3, \qquad s_2 = -0.2 \Rightarrow y_2 = \sigma(-0.2) = 0 \\
+  s_3 &= 0.1 + 0.3(0.6) + 0(-0.7) = 0.28 \Rightarrow y_3 = 0.28 \\
+  \delta_3 &= 0 - 0.28 = -0.28, \qquad e_3 = -0.28 \\
+  \delta_2 &= e_3 w_6 = -0.28(-0.7) = 0.196, \qquad e_2 = 0.196 \cdot \sigma'(s_2) = 0.196 \cdot 0 =
+    \mathbf{0}
+\end{align*}
+Therefore $\Delta c_2 = 0$, and $b_2$, $w_3$ and $w_4$ all keep their original values of $-0.2$,
+$0.2$ and $0.3$. \worth{1}
+
+Note that the blame arriving at node 2 was not small, $\delta_2 = 0.196$; it was
+\textbf{annihilated} by the derivative. And the bias is the tell: $w_3$ and $w_4$ would have stayed
+put anyway, since both are multiplied by an input of zero, but $b_2$ has nothing to hide behind and
+it does not move either.
+
+\textbf{The phenomenon} is the \textbf{dying ReLU} problem: once a node's weighted sum is negative,
+its derivative is exactly zero, its error is zero, its parameters stop updating, and nothing can
+drive the sum back up. The node is dead for the rest of training.
+
+\textbf{The countermeasure} the book names is \textbf{Leaky ReLU}, which passes a weak signal below
+zero ($y = s \cdot \alpha$ for $s \leq 0$, with $\alpha \approx 0.01$) and so keeps the derivative
+non-zero everywhere. \worth{1}
+
+% ==========================================================================================
+\answersection{4}{The activation function, and the argument it is given}{10}
+
+\answerpart{a}{3}
+\begin{booktable}{@{}p{5.6em}LL@{}}
+  \thead{\code{ActFunc}} & \thead{\code{actFuncOutput(f, v)}} & \thead{\code{actFuncDelta(f, v)}} \\
+  \midrule
+  \code{Relu} & \code{v} if \code{v > 0.0}, otherwise \code{0.0} & \code{1.0} if \code{v > 0.0},
+    else \code{0.0} \\
+  \code{Tanh} & \code{std::tanh(v)} & \code{1.0 - tanh(v) * tanh(v)} \\
+  \code{None} & \code{v} (identity) & \code{1.0} \\
+\end{booktable}
+\worth{2}
+
+\textbf{Why \code{None} is the \code{default} case.} \code{ActFunc} has exactly three enumerators.
+\code{Relu} and \code{Tanh} are handled explicitly, so the only case that can reach \code{default} is
+\code{None}; there is no ``cannot happen'' branch to write, and inventing one would add an error path
+that is unreachable and therefore untestable. Putting \code{None} there also satisfies the compiler
+that the function returns on every path without a redundant trailing \code{return}. \worth{1}
+
+\answerpart{b}{4}
+\textbf{Tanh at $s = 1.5$.}
+
+Correct, the derivative evaluated at the activation's \emph{input}:
+\[
+  \sigma'(s) = 1 - \tanh^2(1.5) = 1 - 0.905148^2 = 1 - 0.819293 = \mathbf{0.180707}
+\]
+Wrong, the derivative evaluated at the activation's \emph{output}, $y = \tanh(1.5) = 0.905148$:
+\[
+  1 - \tanh^2(0.905148) = 1 - 0.718795^2 = 1 - 0.516666 = \mathbf{0.483334}
+\]
+\[
+  \text{ratio} = \frac{0.483334}{0.180707} = \mathbf{2.675}
+\]
+The wrong value is 2.7 times too large, so every parameter this node feeds moves 2.7 times too far on
+every step. The error grows with $\lvert s \rvert$: the true derivative collapses towards zero as the
+node saturates and the mistaken one does not, so the bug does its worst damage exactly where tanh is
+supposed to be applying the brakes. \worth{2}
+
+\textbf{ReLU.} At $s = 1.5$: $y = 1.5$. From $s$: $1.5 > 0 \Rightarrow 1$. From $y$:
+$1.5 > 0 \Rightarrow 1$. At $s = -0.8$: $y = 0$. From $s$: $-0.8 > 0$ is false $\Rightarrow 0$. From
+$y$: $0 > 0$ is false $\Rightarrow 0$. The two agree in both cases.
+
+They agree in \emph{every} case, and not by luck: ReLU's derivative tests only the predicate ``is
+this value positive'', and $\max(0, s)$ is positive exactly when $s$ is. \worth{1}
+
+\textbf{What that costs a test suite.} A suite that only ever exercises \code{Relu} cannot detect the
+bug at all; every assertion passes, and the layer is wrong. Only a \code{Tanh} test separates the
+two, which is what \code{BackpropagateUsesPreActivationDerivative} in the test suite of
+Chapter~\ref{c5:ch:dense} exists to do. The general lesson is that a test suite has to include the
+case that can \emph{distinguish} two implementations, not merely a case each of them handles.
+\worth{1}
+
+\answerpart{c}{3}
+\code{randomStartVal()} divides \code{std::rand()} by \code{RAND_MAX}, so it returns a value in
+$[0, 1]$ and never a negative one. Every bias and every weight therefore starts positive, and every
+node starts on ReLU's positive side. \worth{1}
+
+If training then drives some node's weighted sum negative for \textbf{every} input in the training
+data, $\sigma'(s) = 0$ for that node on every set. Its $\Delta e$ is zero, so its bias and weights
+never change again, and because they never change, the sum can never come back above zero. The node
+is permanently stuck, and nothing upstream or downstream can rescue it, because it also stops
+passing any blame backwards. \worth{1}
+
+\textbf{The countermeasures the book names:}
+\begin{itemize}
+  \item \textbf{Leaky ReLU}, which keeps a small non-zero derivative below zero, so a node driven
+    negative can still recover.
+  \item \textbf{\code{Tanh}}, whose derivative is non-zero everywhere. This is what the test suite of
+    Chapter~\ref{c5:ch:dense} trains with, precisely so the suite does not fail at random.
+\end{itemize}
+Also creditable: widening the hidden layer, so that losing a node is survivable.
+Chapter~\ref{c5:ch:dense} records that with only two hidden nodes and ReLU, roughly one run in four
+fails to learn XOR at all, however long it trains. \worth{1}
+
+% ==========================================================================================
+\answersection{5}{The dense layer, written out}{12}
+
+\answerpart{a}{4}
+\begin{cppcode}
+bool Dense::feedforward(const Matrix1d& input) noexcept
+{
+    if (input.size() != weightCount())
+    {
+        std::fprintf(stderr, "Input dimension mismatch: expected %zu, actual: %zu!\n",
+            weightCount(), input.size());
+        return false;
+    }
+    for (std::size_t i{}; i < nodeCount(); ++i)
+    {
+        auto sum{myBias[i]};
+
+        for (std::size_t j{}; j < weightCount(); ++j)
+        {
+            sum += myWeights[i][j] * input[j];
+        }
+        myPreActivationOutput[i] = sum;
+        myOutput[i]              = actFuncOutput(myActFunc, sum);
+    }
+    return true;
+}
+\end{cppcode}
+
+\noindent\textit{(3 marks: 1 for the validation returning \code{false} without computing anything,
+1 for the weighted sum starting at the bias, 1 for applying the activation function to it.)}
+
+\textbf{The member variable is \code{myPreActivationOutput}.} It holds $s$, the weighted sum for each
+node \emph{before} the activation function was applied. Both overloads of \code{backpropagate()} need
+it, because the activation's derivative has to be evaluated at the activation's input, not at its
+output (Question~\ref{exa:q:4}(b)). It is not on the interface because no other layer ever reads it:
+it is this layer's own bookkeeping, carried from the forward pass to the backward one. \worth{1}
+
+\answerpart{b}{4}
+\begin{cppcode}
+bool Dense::backpropagate(const Interface& nextLayer) noexcept
+{
+    if (nextLayer.weightCount() != nodeCount())
+    {
+        std::fprintf(stderr, "Layer dimension mismatch: expected %zu, actual: %zu!\n",
+            nodeCount(), nextLayer.weightCount());
+        return false;
+    }
+    for (std::size_t i{}; i < nodeCount(); ++i)
+    {
+        double err{};
+
+        for (std::size_t j{}; j < nextLayer.nodeCount(); ++j)
+        {
+            err += nextLayer.error()[j] * nextLayer.weights()[j][i];
+        }
+        myError[i] = err * actFuncDelta(myActFunc, myPreActivationOutput[i]);
+    }
+    return true;
+}
+\end{cppcode}
+
+\noindent\textit{(3 marks: 1 for the validation, 1 for the sum over the next layer's nodes, 1 for
+multiplying by the derivative at \code{myPreActivationOutput[i]}.)}
+
+\textbf{The indices.} $j$ ranges over the \textbf{next} layer's nodes, $0 \ldots$
+\code{nextLayer.nodeCount() - 1}. $i$ ranges over \textbf{this} layer's nodes, $0 \ldots$
+\code{nodeCount() - 1}, and doubles as the weight index inside each next-layer node, which works
+precisely because the next layer has one weight per node in this layer, the condition the validation
+just checked. \code{weights()[j][i]} therefore reads ``next-layer node $j$'s weight on this layer's
+node $i$'': the single connection along which node $i$'s output travelled forward, and along which
+its share of the blame must travel back.
+
+\textbf{Swapped.} \code{weights()[i][j]} reads a different entry entirely, the weight matrix
+transposed. If the two layers happen to be the same size it still compiles, still stays in bounds and
+still returns \code{true}, while handing every node the blame belonging to some other node; the
+network then trains on systematically misattributed gradients and simply never converges. If the
+sizes differ it indexes out of bounds. The silent version is the more dangerous of the two.
+\worth{1}
+
+\answerpart{c}{4}
+\begin{cppcode}
+bool Dense::optimize(const Matrix1d& input, const double learningRate) noexcept
+{
+    if ((0.0 >= learningRate) || (1.0 <= learningRate))
+    {
+        std::fprintf(stderr, "Invalid learning rate %g!\n", learningRate);
+        return false;
+    }
+    if (input.size() != weightCount())
+    {
+        std::fprintf(stderr, "Input dimension mismatch: expected %zu, actual: %zu!\n",
+            weightCount(), input.size());
+        return false;
+    }
+    for (std::size_t i{}; i < nodeCount(); ++i)
+    {
+        myBias[i] += myError[i] * learningRate;
+
+        for (std::size_t j{}; j < weightCount(); ++j)
+        {
+            myWeights[i][j] += myError[i] * learningRate * input[j];
+        }
+    }
+    return true;
+}
+\end{cppcode}
+
+\noindent\textit{(2 marks: 1 for both checks, 1 for the bias update carrying no \code{input[j]}
+factor while the weight update does.)}
+
+\textbf{What \code{Shallow::train()} must pass to the output layer.} \code{myHiddenLayer.output()},
+the hidden layer's output vector, which is exactly what the output layer consumed during
+feedforward. \worth{1}
+
+\textbf{If it passed the network's training input instead.} Usually nothing at all happens: the
+output layer has one weight per hidden node, not one per network input, so
+\code{input.size() != weightCount()} and the call returns \code{false} without touching a parameter.
+Training then stops with \code{false} if the return value is checked, and silently stops updating
+the output layer if it is not.
+
+The dangerous case is a hidden layer that happens to have as many nodes as the network has inputs.
+The check then passes and every weight is scaled by the wrong number. $w_{ij}$ is supposed to move in
+proportion to the value that flowed along it, and it would instead move in proportion to an unrelated
+one, so the update stops being the gradient with respect to that weight. The network fails to
+converge while every call reports success. \worth{1}
+
+% ==========================================================================================
+\answersection{6}{Why an image is not just a long vector}{10}
+
+\answerpart{a}{3}
+\textbf{1. Spatial structure is lost.} An image is two- or three-dimensional, and has to be
+flattened into a one-dimensional vector before a dense layer can take it. Which pixels sat next to
+which is discarded, and no amount of training recovers it.
+
+\textbf{2. The parameter count explodes.} Every pixel gets its own weight into every node, so the
+layer grows as (pixels $\times$ nodes). Part (b) puts a number on it.
+
+\textbf{3. Generalization gets worse.} Each pixel is treated as a completely separate input, so the
+network has no way of knowing that the same pattern shifted a few pixels across is the same pattern.
+It needs far more training data and still transfers badly to new images. \credit{1 mark each}
+
+\answerpart{b}{3}
+\begin{gather*}
+  1024 \times 1024 = 1{,}048{,}576 \text{ inputs} \\
+  \text{weights} = 1{,}048{,}576 \times 1000 = 1{,}048{,}576{,}000, \qquad \text{biases} = 1000 \\
+  \text{total} = \mathbf{1{,}048{,}577{,}000 \text{ trainable values}}
+\end{gather*}
+\worth{2}
+
+As \code{double}, at 8 bytes each:
+\[
+  1{,}048{,}577{,}000 \times 8 = 8{,}388{,}616{,}000 \text{ bytes} \approx \mathbf{7.81\ GB}
+\]
+(Using the paper's supplied 1 KB = 1024 B throughout, so 1 GB = $2^{30}$ B. A candidate who uses
+decimal GB and answers 8.39 has done the same work and should not lose the mark.)
+
+And that is \textbf{one hidden layer}. A real network has several. \worth{1}
+
+\answerpart{c}{4}
+\textbf{Conv layer:} one $3 \times 3$ kernel and one bias.
+\[
+  3 \times 3 + 1 = \mathbf{10}
+\]
+\textbf{Dense layer:} $64 \times 64 = 4096$ inputs and 4096 outputs.
+\[
+  4096 \times 4096 + 4096 = 16{,}777{,}216 + 4096 = \mathbf{16{,}781{,}312}
+\]
+\[
+  \text{ratio} = \frac{16{,}781{,}312}{10} \approx \mathbf{1{,}678{,}131 : 1}
+\]
+\worth{2}
+
+\textbf{The two constraints.}
+\begin{itemize}
+  \item \textbf{Locality.} Each output looks at a small window of the input rather than at all of it.
+  \item \textbf{Weight sharing.} The same kernel is reused at every position, instead of each
+    output/input pair owning its own weight.
+\end{itemize}
+\worth{1}
+
+\textbf{Splitting the ratio.} Apply locality alone: each of the 4096 outputs keeps its own private
+$3 \times 3$ window of weights plus a bias.
+\[
+  4096 \times 9 + 4096 = 40{,}960 \qquad \frac{16{,}781{,}312}{40{,}960} \approx 410\times
+\]
+Now add weight sharing: those 4096 private kernels collapse into one.
+\[
+  \frac{40{,}960}{10} = 4096\times \qquad 410 \times 4096 \approx 1{,}678{,}000,
+  \text{ the whole ratio.}
+\]
+Weight sharing is the larger of the two factors, by an order of magnitude. Locality is what makes the
+layer look at neighbourhoods; sharing is what makes it cheap. \worth{1}
+
+% ==========================================================================================
+\answersection{7}{A convolutional layer, traced by hand}{14}
+
+\answerpart{a}{4}
+$\text{pad} = 2 / 2 = 1$, so one zero on every side and the padded input is $6 \times 6$:
+
+\begin{console}
+0 0 0 0 0 0
+0 1 1 1 1 0
+0 0 0 0 1 0
+0 0 0 1 0 0
+0 0 1 0 0 0
+0 0 0 0 0 0
+\end{console}
+\worth{1}
+
+Each output cell $(i, j)$ is $s = b + \sum_{a,c} K[a][c] \cdot P[i+a][j+c]$, over the $2 \times 2$
+window whose top-left corner is $(i, j)$ in the padded matrix. Two worked cells:
+\begin{align*}
+  s(0,0) &= 0.5(0) + 1.0(0) + 1.0(0) - 0.5(1) - 0.2 = -0.70 \\
+  s(1,1) &= 0.5(1) + 1.0(1) + 1.0(0) - 0.5(0) - 0.2 = 1.30
+\end{align*}
+\needspace{6\baselineskip}
+\textbf{Pre-activation:}
+
+\begin{console}
+-0.70   0.30   0.30   0.30
+ 0.80   1.30   1.30   0.80
+-0.20  -0.20  -0.70   1.80
+-0.20  -0.70   1.80   0.30
+\end{console}
+\worth{2}
+
+\needspace{6\baselineskip}
+\noindent\textbf{Output} (ReLU: every negative entry becomes 0):
+
+\begin{console}
+0.00   0.30   0.30   0.30
+0.80   1.30   1.30   0.80
+0.00   0.00   0.00   1.80
+0.00   0.00   1.80   0.30
+\end{console}
+\worth{1}
+
+\answerpart{b}{3}
+\begin{narrowtable}{@{}lllr@{}}
+  \thead{Block} & \thead{Values} & \thead{Max} & \thead{Position} \\
+  \midrule
+  top left & 0.00, 0.30, 0.80, 1.30 & 1.30 & (1, 1) \\
+  top right & 0.30, 0.30, 1.30, 0.80 & 1.30 & (1, 2) \\
+  bottom left & 0.00, 0.00, 0.00, 0.00 & 0.00 & (2, 0) \\
+  bottom right & 0.00, 1.80, 1.80, 0.30 & 1.80 & (2, 3) \\
+\end{narrowtable}
+
+\needspace{6\baselineskip}
+\noindent\textbf{Max pooling output:}
+
+\begin{console}
+1.3   1.3
+0.0   1.8
+\end{console}
+
+\noindent\textbf{Flatten output:} $[1.3,\ 1.3,\ 0.0,\ 1.8]$ \worth{2}
+
+\textbf{The tie blocks are the bottom-left and the bottom-right.} The bottom-left block is four
+identical zeros, and the bottom-right block holds 1.80 twice, at $(2,3)$ and $(3,2)$.
+
+\textbf{The rule:} on a tie, the first occurrence in row-major order wins. What matters is not which
+cell is chosen but that \code{feedforward()} and \code{backpropagate()} choose the \emph{same} one.
+If they disagree the gradient is routed to a cell that did not produce the output, and the conv layer
+behind learns from the wrong pixel. \worth{1}
+
+\answerpart{c}{3}
+Reshaped row-major into the pooling output's $2 \times 2$ shape:
+\[
+  \begin{bmatrix} 4 & -2 \\ 6 & 8 \end{bmatrix}
+\]
+\worth{1}
+
+Each gradient goes to the position its block's maximum came from, and every other position gets 0:
+
+\begin{console}
+0    0    0   0
+0    4   -2   0
+6    0    0   8
+0    0    0   0
+\end{console}
+\credit{2 marks: 4 to (1,1), $-2$ to (1,2), 6 to (2,0), 8 to (2,3)}
+
+\answerpart{d}{4}
+The conv layer first multiplies each incoming gradient by $\sigma'(s)$ at that position, using the
+pre-activation matrix from (a):
+
+\begin{narrowtable}{@{}lrrrr@{}}
+  \thead{Position} & $s$ & $\sigma'(s)$ & \thead{gradient in} & \code{outGrad} \\
+  \midrule
+  (1, 1) & 1.30 & 1 & 4 & 4 \\
+  (1, 2) & 1.30 & 1 & $-2$ & $-2$ \\
+  (2, 0) & $-0.20$ & \textbf{0} & 6 & \textbf{0} \\
+  (2, 3) & 1.80 & 1 & 8 & 8 \\
+\end{narrowtable}
+\[
+  \text{biasGradient} = 4 - 2 + 0 + 8 = \mathbf{10}
+\]
+\worth{1}
+\[
+  \text{kernelGradient}[a][b] = \sum_{i,j} P[i+a][j+b] \cdot \text{outGrad}(i,j)
+\]
+Three positions contribute: $(1,1)$ with 4, $(1,2)$ with $-2$ and $(2,3)$ with 8. Each kernel entry
+therefore has three terms, one per contributing position, reading the padded input at the offset
+that entry sits at:
+\begin{align*}
+  k_{00} &= P[1][1](4) + P[1][2](-2) + P[2][3](8) = 1(4) + 1(-2) + 0(8) = \mathbf{2} \\
+  k_{01} &= P[1][2](4) + P[1][3](-2) + P[2][4](8) = 1(4) + 1(-2) + 1(8) = \mathbf{10} \\
+  k_{10} &= P[2][1](4) + P[2][2](-2) + P[3][3](8) = 0(4) + 0(-2) + 1(8) = \mathbf{8} \\
+  k_{11} &= P[2][2](4) + P[2][3](-2) + P[3][4](8) = 0(4) + 0(-2) + 0(8) = \mathbf{0}
+\end{align*}
+\needspace{6\baselineskip}
+\textbf{Kernel gradients:}
+
+\begin{console}
+ 2   10
+ 8    0
+\end{console}
+\worth{2}
+
+\noindent\textbf{Updated parameters} at $\LR = 0.01$:
+\[
+  \text{bias} = -0.2 + 10(0.01) = \mathbf{-0.10}
+\]
+
+\begin{console}
+0.52   1.10
+1.08  -0.50
+\end{console}
+\worth{1}
+
+\textbf{The gradient that contributes nothing is the 6.} Max pooling routed it to conv output position
+$(2,0)$, whose pre-activation was $-0.20$. ReLU's derivative there is exactly zero, so \code{outGrad}
+at that position is $0 \times 6 = 0$, and the gradient is annihilated before it reaches the bias
+gradient, any kernel gradient, or the input gradients. It is worth seeing \emph{why} that position
+was chosen at all: its whole pooling block had been flattened to zero by ReLU, and a block ReLU has
+flattened passes nothing back.
+
+A candidate who instead answers ``the $-2$, because $k_{11}$ came out as 0'' has found a different
+fact. $k_{11}$ is zero because the corresponding image pixels are zero, not because a gradient died.
+
+% ==========================================================================================
+\answersection{8}{Max pooling, and the value it forgets}{8}
+
+\answerpart{a}{3}
+\begin{narrowtable}{@{}lllr@{}}
+  \thead{Block} & \thead{Values} & \thead{Max} & \thead{Position} \\
+  \midrule
+  top left & 0.6, 0.2, 0.1, 0.4 & 0.6 & (0, 0) \\
+  top right & 0.3, 0.3, 0.1, $-0.5$ & 0.3 & (0, 2) \\
+  bottom left & 0.8, 0.2, 0.5, 0.9 & 0.9 & (3, 1) \\
+  bottom right & $-0.1$, $-0.6$, $-0.4$, $-0.3$ & $-0.1$ & (2, 2) \\
+\end{narrowtable}
+
+\noindent\textbf{Output:}
+
+\begin{console}
+ 0.6    0.3
+ 0.9   -0.1
+\end{console}
+\worth{2}
+
+\textbf{The tie is in the top-right block}, where 0.3 appears at both $(0,2)$ and $(0,3)$. The first
+occurrence in row-major order wins, so $(0,2)$ is recorded. \worth{1}
+
+\answerpart{b}{2}
+\begin{console}
+ 5    0   -3    0
+ 0    0    0    0
+ 0    0    7    0
+ 0    2    0    0
+\end{console}
+\worth{2}
+
+\answerpart{c}{3}
+With \code{maxValue} starting at 0.0 and \code{maxRow}/\code{maxCol} starting at 0:
+\begin{itemize}
+  \item top left: 0.6 beats 0.0; $(0,0)$ receives 5.
+  \item top right: 0.3 beats 0.0; $(0,2)$ receives $-3$.
+  \item bottom left: 0.9 beats 0.0; $(3,1)$ receives 2.
+  \item bottom right: every value is negative, so \textbf{nothing ever beats 0.0}. \code{maxRow} and
+    \code{maxCol} keep their initial value of 0, and 7 is written to $(0,0)$.
+\end{itemize}
+
+\begin{console}
+ 7    0   -3    0
+ 0    0    0    0
+ 0    0    0    0
+ 0    2    0    0
+\end{console}
+\worth{1}
+
+\textbf{The two distinct things that go wrong:}
+
+\textbf{1. The bottom-right block's gradient never reaches the bottom-right block.} Position $(2,2)$
+produced the pooled output and receives nothing, so the conv layer behind gets no gradient at all
+for that quarter of the image and never learns from it.
+
+\textbf{2. The gradient is written into a different block, destroying what was there.} $(0,0)$
+belongs to the top-left block and had already, correctly, been given 5. The assignment (\code{=},
+not \code{+=}) overwrites it with 7. So one gradient is lost and another is fabricated at a position
+that did not earn it, and the top-left block's legitimate gradient disappears as collateral damage.
+\credit{1 mark; both halves needed}
+
+\textbf{Why an all-non-negative test suite passes.} After a ReLU conv layer, every value in the
+feature map is $\geq 0$, so every block contains at least one value that beats the initial 0.0, the
+search always finds a real maximum, and \code{maxRow}/\code{maxCol} are always assigned. The defect
+is invisible.
+
+It only surfaces where the layer in front can produce negative values, which is exactly what happens
+once the conv layer uses \code{Tanh}. The fix is to initialize the search from the block's own first
+value rather than from 0.0. The same defect appears in \code{feedforward()}, where the test suite of
+Chapter~\ref{c9:ch:maxpool} catches it with \code{FeedforwardHandlesNegativeValues}; the backward
+half needs the same all-negative input to be exposed. \worth{1}
+
+% ==========================================================================================
+\answersection{9}{The finished network, and the target it has to run on}{8}
+
+\answerpart{a}{2}
+\begin{narrowtable}{@{}ll@{}}
+  \thead{After} & \thead{Shape} \\
+  \midrule
+  conv layer & $16 \times 16$ \\
+  max pooling & $4 \times 4$ \\
+  flatten & $1 \times 16$ \\
+  dense (4 nodes) & $1 \times 4$ \\
+\end{narrowtable}
+
+The conv layer preserves the size because it zero-pads; the pooling layer divides by the pool size,
+$16 / 4 = 4$; the flatten layer produces $4 \times 4 = 16$ values. \worth{2}
+
+\answerpart{b}{3}
+\begin{narrowtable}{@{}ll@{}}
+  \thead{Layer} & \thead{Trainable parameters} \\
+  \midrule
+  conv & $5 \times 5 + 1 = \mathbf{26}$ \\
+  max pooling & $\mathbf{0}$ \\
+  flatten & $\mathbf{0}$ \\
+  dense & $4 \times 16 + 4 = \mathbf{68}$ \\
+  \midrule
+  \textbf{total} & $\mathbf{94}$ \\
+\end{narrowtable}
+\worth{2}
+
+\textbf{The two that contribute nothing are max pooling and flatten}, and both are purely
+structural. Max pooling selects a value that was already present and stores no weights of its own;
+flatten changes the shape of the data and computes nothing at all. Neither has anything an
+\code{optimize()} could adjust, which is why the book's \code{MaxPool::optimize()} is a genuine no-op
+rather than a placeholder, and why \code{flatten_layer::Interface} declares no \code{optimize()} in
+the first place. \worth{1}
+
+\answerpart{c}{3}
+\[
+  128 \times 256 + 128 = 32{,}768 + 128 = \mathbf{32{,}896 \text{ values}}
+\]
+
+\begin{narrowtable}{@{}lrl@{}}
+  \thead{Type} & \thead{Bytes each} & \thead{Total footprint} \\
+  \midrule
+  \code{double} & 8 & 263,168 B (exactly 257 KB) \\
+  \code{float} & 4 & 131,584 B (128.5 KB) \\
+  \code{int8} & 1 & 32,896 B (32.125 KB) \\
+\end{narrowtable}
+\worth{2}
+
+The budget is $256 \times 1024 = 262{,}144$ bytes.
+\begin{align*}
+  263{,}168 &> 262{,}144 \Rightarrow \textbf{double does not fit}, \text{ by } 1024 \text{ bytes} \\
+  131{,}584 &< 262{,}144 \Rightarrow \textbf{float fits} \\
+  32{,}896 &< 262{,}144 \Rightarrow \textbf{int8 fits}
+\end{align*}
+The comparison has to be made in bytes. ``About 257 KB against a 256 KB budget'' reads like a
+rounding question and is in fact a miss; it is a miss of exactly one kilobyte, which is the kind of
+margin that turns into a link failure rather than a warning. \worth{1}

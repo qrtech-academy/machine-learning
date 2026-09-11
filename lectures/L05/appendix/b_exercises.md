@@ -6,14 +6,14 @@ it's been wired to since **L03**.
 ---
 
 ## Declaring the Dense Layer
-You'll extend your `ml` codebase from **L04** by implementing a concrete subclass `Dense`, which takes over from `ml::dense_layer::Stub` as the layer your network is built from. The stub itself stays in the codebase; see section 7. See [appendix A](./a_theory.md) for a walkthrough of the dense layer's architecture before you start.
+You'll extend your `ml` codebase from **L04** by implementing a concrete subclass `Dense`, which takes over from `ml::dense_layer::Stub` as the layer your network is built from. The stub itself stays in the codebase; see section 7 of the next part. See [appendix A](./a_theory.md) for a walkthrough of the dense layer's architecture before you start.
 
 ---
 
 ### 1. The `ActFunc` enum class
 In `ml/types.hpp`, define an enum class named `ActFunc`. This enum class should be usable to select the activation function for a given dense layer. Add the following enumerators:
 * `Relu`: for ReLU (`Rectified Linear Unit`), which for a given input x returns x if x > 0, otherwise 0.
-* `Tanh`: for hyperbolic tangent, which produces output in the range [-1, 1].
+* `Tanh`: for hyperbolic tangent, which produces output in the range (-1, 1).
 * `None`: for no activation at all, i.e. the identity function, which returns x unchanged. Useful on an output layer that has to produce values outside the range a bounded activation function can reach.
 
 ---
@@ -92,7 +92,7 @@ Create a constructor that can be used to create a dense layer with arbitrary dim
 * **Takes:**
     * `nodeCount`: the number of nodes in the layer (unsigned integer).
     * `weightCount`: the number of weights per node in the layer (unsigned integer).
-    * `actFunc`: the activation function to use (of type `ActFunc`). `ReLU` should be used as the default.
+    * `actFunc`: the activation function to use (of type `ActFunc`). `ActFunc::Relu` should be used as the default.
 * Should be marked `explicit` and `noexcept`.
 * If `nodeCount` or `weightCount` equals 0, an error message should be printed and the program terminated by calling `std::terminate()`.
 
@@ -140,7 +140,7 @@ if ((0U == nodeCount) || (0U == weightCount))
 * Follow the descriptions in `include/ml/dense_layer/interface.hpp`:
     * Methods such as `nodeCount()` and `weightCount()` should return the number of nodes and weights per node in the layer, respectively.
     * Getter methods such as `output()` and `error()` should return references to the corresponding member variables.
-    * The three unimplemented methods return `bool` (see **L03**), so an empty body won't compile. Give each one a placeholder body of `return false;` until you implement it below. `false` rather than `true`, so that a method you forget to finish reports failure instead of quietly claiming success.
+    * `feedforward()`, both overloads of `backpropagate()`, and `optimize()` return `bool` (see **L03**), so an empty body won't compile. Give each one a placeholder body of `return false;` until you implement it below. `false` rather than `true`, so that a method you forget to finish reports failure instead of quietly claiming success.
     * `initParams()` returns nothing, so an empty body compiles fine. Leave it empty until section 2 of the next part, where the constructor starts calling it. That's the body the stub keeps for good; for `Dense` it's a placeholder.
 
 ---
@@ -332,7 +332,7 @@ test suite trains with `Tanh`.
 ---
 
 ### 8. Running the tests
-The final test suite is available in [exercises/test](./exercises/test/). It's cumulative: it
+The final test suite is available in [exercises/test](../exercises/test/). It's cumulative: it
 carries the **L04** stub and network tests over unchanged and adds unit tests for `Dense` and for
 the helpers in `ml/utils`.
 
@@ -356,7 +356,7 @@ The one to read is `BackpropagateUsesPreActivationDerivative`. It checks the **N
 4 and 5 above, and only `ActFunc::Tanh` can catch that mistake: for `Relu` the two values agree,
 since `max(0.0, s)` is positive exactly when `s` is.
 
-See the [test suite's README](./exercises/test/README.md) for more information, including how the
+See the [test suite's README](../exercises/test/README.md) for more information, including how the
 convergence threshold was chosen.
 
 ---

@@ -1,0 +1,367 @@
+% Appendix: Paper A, from exam/paper_a.md. The questions only; the model answers are a separate
+% appendix, as they are a separate file, so the paper can be sat without them in view.
+
+\chapter{Self-Assessment Paper A}
+\label{exa:ch:paper}
+
+\noindent\textbf{Time:} 4 hours. \textbf{Closed book.} A basic calculator is permitted.
+\textbf{Total: 100 marks.}
+
+This paper exists to test your own skills and knowledge. It is not a qualification and it gates
+nothing. It draws on all ten chapters, so \textbf{it is meant to be taken once you have finished the
+book}. The model answers are in Appendix~\ref{ansa:ch:answers}.
+
+\section*{Rubric}
+\textbf{Sign convention.} The book computes a deviation $\delta = \yref - \yp$ and \emph{adds} the
+resulting adjustment to every parameter. Every update in this paper therefore reads
+\code{parameter += gradient * learningRate}, with no minus sign. An answer that flips the sign
+consistently and says so is not penalized twice.
+
+\textbf{The activation derivative is evaluated at the weighted sum $s$}, never at the output $y$.
+This matters in more than one question.
+\[
+  \sigma_{\mathrm{ReLU}}(s) = \begin{cases} s & s > 0 \\ 0 & s \leq 0 \end{cases} \qquad
+  \sigma'_{\mathrm{ReLU}}(s) = \begin{cases} 1 & s > 0 \\ 0 & s \leq 0 \end{cases}
+\]
+\[
+  \sigma_{\mathrm{Tanh}}(s) = \tanh(s) \qquad \sigma'_{\mathrm{Tanh}}(s) = 1 - \tanh^2(s) \qquad
+  \sigma_{\mathrm{None}}(s) = s \qquad \sigma'_{\mathrm{None}}(s) = 1
+\]
+
+\textbf{Convolutional layers zero-pad} with \code{pad = kernelSize / 2} (integer division), so the
+output has the same size as the input.
+
+\textbf{Max pooling breaks ties toward the first occurrence} in row-major order, and \textbf{flatten
+is row-major}.
+
+\textbf{Code answers} may be written in C++17 or in unambiguous pseudocode. Nothing on this paper is
+marked on syntax; a missing semicolon costs nothing and a missing bounds check costs everything.
+
+\textbf{Show the arithmetic.} Where a question asks you to compute, an unsupported number scores
+nothing, and a correct method with a slip in it scores most of the marks.
+
+\subsection*{Supplied constants}
+
+\begin{narrowtable}{@{}lr@{}}
+  \thead{Quantity} & \thead{Value} \\
+  \midrule
+  $\tanh(1.5)$ & 0.905148 \\
+  $\tanh(0.905148)$ & 0.718795 \\
+  1 KB & 1024 B \\
+\end{narrowtable}
+
+\subsection*{Marks}
+
+\begin{narrowtable}{@{}lccccccccc@{}}
+  \thead{Question} & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
+  \midrule
+  \thead{Marks} & 12 & 12 & 14 & 10 & 12 & 10 & 14 & 8 & 8 \\
+\end{narrowtable}
+
+% ------------------------------------------------------------------------------------------
+\question{Learning the rules instead of writing them}{12}
+\label{exa:q:1}
+
+\qpart{a} Traditional programming and machine learning both involve the same three things: input,
+rules, and output. They differ in which two are supplied and which one is produced. State the
+arrangement for each of the two.
+
+Then name the pre-machine-learning paradigm the book contrasts with, give one class of task it
+handled well and one class it did not, and state the property of the input that separates the two.
+\worth{3}
+
+\qpart{b} A linear regression model is to be trained on the training data below, which follows
+$y = 4x - 1$:
+
+\begin{narrowtable}{@{}cc@{}}
+  $x$ & $y$ \\
+  \midrule
+  0 & $-1$ \\
+  1 & 3 \\
+  2 & 7 \\
+\end{narrowtable}
+
+Both parameters start at zero, the learning rate is $\LR = 0.1$, and one epoch is run with the sets
+taken in the order shown.
+
+Using the general update rules from Chapter~\ref{c1:ch:linreg}, $\Delta e = \delta \cdot \LR$
+applied to both parameters, with no special case for any input, compute $\yp$, $\delta$, $\Delta e$,
+$k$ and $m$ for each of the three training sets. \worth{4}
+
+\qpart{c} Give the trained model's prediction at $x = 5$ and compare it against the reference
+value.
+
+The worked example in \secref{c1:sec:byhand} (which trained on $y = 2x + 1$) landed within a few
+hundredths of its target after a single epoch. State why this model did not, quoting the specific
+numbers from (b) that account for the difference. \worth{2}
+
+\qpart{d} \code{ml::lin_reg::Fixed::optimize()} treats $x = 0$ as a special case: it assigns the
+reference value straight to the bias and leaves the weight untouched.
+
+Redo the first training set under that rule, carry the result through the remaining two sets, and
+compare the final parameters against (b). Then state one situation in which the special case is a
+bad idea. \worth{3}
+
+% ------------------------------------------------------------------------------------------
+\question{The training loop that trains nothing}{12}
+\label{exa:q:2}
+
+The training method below compiles, runs, and returns \code{true}. It is the training loop from
+Chapter~\ref{c4:ch:network}, and it is wrong in several independent ways.
+
+\begin{cppcode}
+bool Shallow::train(const std::size_t epochCount, const double precisionThreshold) noexcept
+{
+    constexpr std::size_t evaluationInterval{100U};
+    constexpr double initialLearningRate{0.1};
+
+    double learningRate{initialLearningRate};
+    double prevPrecision{};
+
+    if ((0U == epochCount) || (0.0 >= precisionThreshold) || (1.0 <= precisionThreshold))
+    {
+        return false;
+    }
+    myHiddenLayer.initParams();
+    myOutputLayer.initParams();
+
+    randomizeTrainOrder();
+
+    for (std::size_t epoch{}; epoch < epochCount; ++epoch)
+    {
+        for (std::size_t x{}; x < myTrainOrder.size(); ++x)
+        {
+            predict(myTrainInput[x]);
+
+            myHiddenLayer.backpropagate(myOutputLayer);
+            myOutputLayer.backpropagate(myTrainOutput[x]);
+
+            myHiddenLayer.optimize(myTrainInput[x], learningRate);
+            myOutputLayer.optimize(myHiddenLayer.output(), learningRate);
+        }
+        const bool evaluate{(0U != epoch) && (0U == (epoch % evaluationInterval))};
+
+        if (evaluate)
+        {
+            const auto currentPrecision = precision();
+
+            if (precisionThreshold <= currentPrecision) { return true; }
+            updateLearningRate(learningRate, prevPrecision, currentPrecision);
+        }
+    }
+    return true;
+}
+\end{cppcode}
+
+\noindent The parameter reset, the evaluation every hundredth epoch and the learning rate rule are
+all as specified; the faults below are elsewhere.
+
+\qpart{a} The loop was supposed to visit the training sets in a different random order every epoch.
+Two separate faults prevent it. Name both, and state what order the sets are actually visited in.
+\worth{3}
+
+\qpart{b} Backpropagation is performed in the wrong order. State the correct order, state precisely
+what the hidden layer computes its error from as the code stands, and state what value it computes
+on the very first training set of the very first epoch. \worth{3}
+
+\qpart{c} Each of the four layer calls returns \code{bool} and every one of those return values is
+discarded. State what the four calls report through that value, name the failure it was meant to
+catch, and state what this function returns when that failure occurs. \worth{2}
+
+\qpart{d} The stub from Chapter~\ref{c3:ch:nn} exposes three methods that are not part of
+\code{dense_layer::Interface}. Two of them are \code{feedforwardCount()} and \code{setOutput()}.
+State what each one makes testable.
+
+Then state, for each of (a), (b) and (c) in turn, whether a test built on those two methods catches
+the fault described there, with the reason. Finally, name one thing you would have to add to the
+stub to catch the fault in (b). \worth{4}
+
+% ------------------------------------------------------------------------------------------
+\question{A network trained by hand}{14}
+\label{exa:q:3}
+
+The network below has two inputs, two hidden nodes and one output node. Every node uses ReLU, and
+the learning rate is $\LR = 0.1$.
+
+\textbf{Hidden layer:} $b_1 = 0.3$, $b_2 = -0.2$, with $w_1 = 0.4$ and $w_2 = -0.5$ feeding node 1
+from $x_1$ and $x_2$, and $w_3 = 0.2$ and $w_4 = 0.3$ feeding node 2 from $x_1$ and $x_2$.
+
+\textbf{Output layer:} $b_3 = 0.1$, with $w_5 = 0.6$ from $y_1$ and $w_6 = -0.7$ from $y_2$.
+
+Training set: $X_1X_2 = 1\ 1$, $Y = 1$.
+
+\qpart{a} Perform feedforward. Give the weighted sum $s$ and the output $y$ for all three nodes.
+\worth{3}
+
+\qpart{b} Perform backpropagation. Give $\delta_3$, $e_3$, $\delta_1$, $\delta_2$, $e_1$ and $e_2$.
+State why the output layer has to be done before the hidden layer. \worth{3}
+
+\qpart{c} Perform optimization. Give all three updated biases and all six updated weights.
+\worth{4}
+
+\qpart{d} Feed the same input forward again with the updated parameters. Give the new output and the
+new deviation, and state by how much the deviation shrank. \worth{2}
+
+\qpart{e} The \textbf{original} parameters are now used to train on a different set:
+$X_1X_2 = 0\ 0$, $Y = 0$. Show that node 2's bias and both of its weights leave this step completely
+unchanged, name the phenomenon, and name the activation function the book recommends as a
+countermeasure. \worth{2}
+
+% ------------------------------------------------------------------------------------------
+\question{The activation function, and the argument it is given}{10}
+\label{exa:q:4}
+
+\qpart{a} \code{ml::actFuncOutput()} and \code{ml::actFuncDelta()} each handle exactly three cases.
+Give the output and the derivative for all three, and state why \code{ActFunc::None} is the
+\code{default} case of the switch rather than an error case. \worth{3}
+
+\qpart{b} \code{actFuncDelta()} must be given the weighted sum $s$, not the output $y$. A
+\code{Tanh} node has $s = 1.5$.
+
+Compute the derivative the correct way and the derivative the wrong way, and give the ratio between
+them. Then show that for a \code{Relu} node the two ways agree at $s = 1.5$ and at $s = -0.8$, and
+state what that agreement costs a test suite. \worth{4}
+
+\qpart{c} \code{ml::randomStartVal()} returns values in the range $[0, 1]$ only. Explain how that
+interacts with ReLU to leave a hidden node unable to learn ever again, and state the two
+countermeasures the book names. \worth{3}
+
+% ------------------------------------------------------------------------------------------
+\question{The dense layer, written out}{12}
+\label{exa:q:5}
+
+\qpart{a} Write \code{Dense::feedforward()}. Include the input validation.
+
+One member variable is written by this method, is needed later, and is returned by no getter on the
+interface. Name it and state what it is for. \worth{4}
+
+\qpart{b} Write the hidden-layer overload of \code{backpropagate()}, the one declared as
+\code{Dense::backpropagate(const Interface& nextLayer)}.
+
+The next layer's weight matrix is read as \code{nextLayer.weights()[j][i]}. State what $j$ ranges
+over and what $i$ ranges over, and state what the layer would compute if the two indices were
+swapped. \worth{4}
+
+\qpart{c} Write \code{Dense::optimize()}.
+
+Then state which vector \code{Shallow::train()} must pass as \code{input} when it optimizes the
+\textbf{output} layer, and state what would go wrong if it passed the network's own training input
+instead. \worth{4}
+
+% ------------------------------------------------------------------------------------------
+\question{Why an image is not just a long vector}{10}
+\label{exa:q:6}
+
+\qpart{a} Give the three reasons the book sets out for why a network built only from dense layers
+handles images badly. \worth{3}
+
+\qpart{b} A $1024 \times 1024$ greyscale image is flattened and fed into a single hidden layer of
+1000 nodes.
+
+Compute the number of trainable parameters in that one layer, and its memory footprint stored as
+\code{double}. Give the footprint in bytes and in GB. \worth{3}
+
+\qpart{c} Consider a $64 \times 64$ feature map. A conv layer with one $3 \times 3$ kernel and
+same-size padding produces a $64 \times 64$ output from it. A dense layer producing the same
+$64 \times 64$ outputs from the same $64 \times 64$ inputs is the alternative.
+
+Compute both parameter counts and the ratio between them.
+
+Conv adds two constraints to a dense layer. Name both, then split the ratio you computed into the
+factor due to each. \worth{4}
+
+% ------------------------------------------------------------------------------------------
+\question{A convolutional layer, traced by hand}{14}
+\label{exa:q:7}
+
+A conv layer takes a $4 \times 4$ input, has one $2 \times 2$ kernel, stride 1, zero-padding with
+\code{pad = kernelSize / 2}, and \code{ActFunc::Relu}. It is followed by a max pooling layer (pool
+size 2, stride 2) and a flatten layer. The learning rate is 0.01.
+
+\textbf{Input image} (a hand-drawn 7):
+
+\begin{console}
+1 1 1 1
+0 0 0 1
+0 0 1 0
+0 1 0 0
+\end{console}
+
+\noindent\textbf{Kernel:}
+
+\begin{console}
+0.5   1.0
+1.0  -0.5
+\end{console}
+
+\noindent\textbf{Bias:} $-0.2$
+
+\qpart{a} Give the padded input, then compute the conv layer's pre-activation matrix and its output.
+\worth{4}
+
+\qpart{b} Give the max pooling layer's output and the flatten layer's output. For each pooled value,
+name the position in the conv output it came from.
+
+Two of the four pooling blocks need the tie-breaking rule. Name them and state the rule. \worth{3}
+
+\qpart{c} The dense layer sends back the gradients $[4, -2, 6, 8]$. Reshape them, route them back
+through the pooling layer, and give the $4 \times 4$ gradient matrix that arrives at the conv layer's
+output. \worth{3}
+
+\qpart{d} Compute the bias gradient and all four kernel gradients, and give the updated kernel and
+bias.
+
+One of the four gradients from (c) contributes nothing whatsoever to any of those five numbers.
+Identify it and give the reason. \worth{4}
+
+% ------------------------------------------------------------------------------------------
+\question{Max pooling, and the value it forgets}{8}
+\label{exa:q:8}
+
+A max pooling layer (pool size 2, stride 2) receives the following $4 \times 4$ feature map:
+
+\begin{console}
+ 0.6   0.2   0.3   0.3
+ 0.1   0.4   0.1  -0.5
+ 0.8   0.2  -0.1  -0.6
+ 0.5   0.9  -0.4  -0.3
+\end{console}
+
+\qpart{a} Give the layer's output and, for each value, the position it came from. One block contains
+a tie; state which, and which position wins. \worth{3}
+
+\qpart{b} The gradients $\begin{bmatrix} 5 & -3 \\ 2 & 7 \end{bmatrix}$ arrive from the layer in
+front. Give the $4 \times 4$ gradient matrix the layer passes back, on the first call after
+construction. \worth{2}
+
+\qpart{c} A student writes \code{double maxValue{0.0};} before the search, declares \code{maxRow}
+and \code{maxCol} with \code{{}} so that both start at 0, and ends the block with
+\code{myInputGradients[maxRow][maxCol] = outputGradients[i][j];}.
+
+Give the $4 \times 4$ matrix this produces for the same data. Name the \textbf{two} distinct things
+that go wrong with it, and state why a test suite whose feature maps are all non-negative passes
+anyway. \worth{3}
+
+% ------------------------------------------------------------------------------------------
+\question{The finished network, and the target it has to run on}{8}
+\label{exa:q:9}
+
+A CNN is built as follows:
+
+\begin{console}
+input (16x16) -> conv (one 5x5 kernel, stride 1, same padding, ReLU)
+              -> max pooling (4x4, stride 4)
+              -> flatten
+              -> dense (4 nodes)
+\end{console}
+
+\qpart{a} Give the shape of the data after each of the four layers. \worth{2}
+
+\qpart{b} Give the trainable-parameter count for each of the four layers and the total for the
+network. Two of the four contribute nothing; name them and state why. \worth{3}
+
+\qpart{c} A different network contains a dense layer of 128 nodes over 256 inputs.
+
+Compute its trainable-parameter count, then its footprint stored as \code{double}, as \code{float},
+and as \code{int8}. State which of the three fits into a 256 KB flash budget, and show the comparison
+in bytes rather than in KB. \worth{3}

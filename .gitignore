@@ -9,6 +9,7 @@
 
 # Don't ignore license files.
 !LICENSE
+!LICENSE-CONTENT
 
 # Ignore .txt files.
 *.txt
