@@ -8,12 +8,12 @@
 \begin{aside}
 \textbf{How to work these.} Set~1 is three calculations: work them on paper with the equations
 from \secref{c3:sec:nn} and a calculator, one training set at a time. Set~2 starts a new \code{ml}
-codebase in this lecture's exercises directory, \file{lectures/L03/appendix/exercises} in the
+codebase in this lecture's exercises directory, \file{lectures/L03/exercises} in the
 companion repository, and is built with a Makefile you write yourself.
 
 \textbf{How to check your work.} The worked solutions to Set~1 are in
 Appendix~\ref{sol:ch:solutions}. Set~2 comes with a test suite, already in
-\file{lectures/L03/appendix/exercises/test}, which Exercise~\ref{c3:ex:7} runs. It tests the
+\file{lectures/L03/exercises/test}, which Exercise~\ref{c3:ex:7} runs. It tests the
 directory above it by default; \code{make ML_DIR=<path>} points it at a tree of your own elsewhere.
 
 The solution to Set~2 is published in the companion repository after the lecture;
@@ -121,7 +121,7 @@ of it.
 \codeexercise{Directory structure}
 \label{c3:ex:4}
 Set up the following structure in this lecture's exercises directory,
-\file{lectures/L03/appendix/exercises}:
+\file{lectures/L03/exercises}:
 
 \begin{console}
 exercises/
@@ -366,7 +366,7 @@ that value instead. Also feed both stubs a vector of the wrong size and check th
 
 \codeexercise{Running the tests}
 \label{c3:ex:7}
-A test suite for the stub is available in \file{lectures/L03/appendix/exercises/test}. It's already
+A test suite for the stub is available in \file{lectures/L03/exercises/test}. It's already
 in place next to the code you just wrote. Build and run it from the exercises directory:
 
 \begin{shell}
@@ -384,6 +384,6 @@ logic the stub has, and the network you write in Chapter~\ref{c4:ch:network} is 
 against them. A stub whose \code{feedforward()} accepted an input of any size would let every test
 in Chapter~\ref{c4:ch:network} pass without proving anything.
 
-The test suite's README, \file{lectures/L03/appendix/exercises/test/README.md}, has more
+The test suite's README, \file{lectures/L03/exercises/test/README.md}, has more
 information, including which of these tests carry over unchanged to your real \code{Dense} layer in
 Chapter~\ref{c5:ch:dense}.

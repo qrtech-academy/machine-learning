@@ -1,5 +1,5 @@
 % Section 9.2, from lectures/L09/appendix/a_max_pool_layer.md, with the setup from the suite's
-% README, lectures/L09/appendix/exercises/test/README.md. The solution to the code is in the
+% README, lectures/L09/exercises/test/README.md. The solution to the code is in the
 % repository.
 
 \section{Exercises}
@@ -10,7 +10,7 @@
 you started in Chapter~\ref{c8:ch:conv}, \file{lectures/L08/cnn_work}. Keep working in the same
 project: \file{max_pool.hpp} and \file{max_pool.cpp} are already in it as placeholders.
 
-\textbf{How to check your work.} The test suite in \file{lectures/L09/appendix/exercises/test}
+\textbf{How to check your work.} The test suite in \file{lectures/L09/exercises/test}
 points back at \code{cnn_work}; Exercise~\ref{c9:ex:10} runs it, and \code{make ML_DIR=<path>}
 points it at a tree of your own elsewhere.
 
@@ -166,7 +166,7 @@ return std::make_unique<conv_layer::MaxPool>(inputSize, poolSize);
 
 \codeexercise{Running the tests}
 \label{c9:ex:10}
-The test suite is available in \file{lectures/L09/appendix/exercises/test}. It's cumulative: it
+The test suite is available in \file{lectures/L09/exercises/test}. It's cumulative: it
 carries Chapter~\ref{c8:ch:conv}'s conv layer tests over unchanged and adds unit tests for
 \code{MaxPool}.
 
@@ -188,5 +188,5 @@ an all-negative image, which catches starting the search for the max at \code{0.
 the block's first value. Every non-negative input passes either way, so it's an easy bug to ship,
 and it bites for real once the conv layer in front is using \code{Tanh}.
 
-The test suite's README, \file{lectures/L09/appendix/exercises/test/README.md}, has more
+The test suite's README, \file{lectures/L09/exercises/test/README.md}, has more
 information.

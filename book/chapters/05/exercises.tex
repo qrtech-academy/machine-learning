@@ -7,13 +7,13 @@
 \begin{aside}
 \textbf{How to work these.} Both sets extend the \code{ml} codebase from
 \secref{c4:sec:exercises}: carry it forward into the lecture's exercises directory,
-\file{lectures/L05/appendix/exercises} in the companion repository. Set~1 declares the
+\file{lectures/L05/exercises} in the companion repository. Set~1 declares the
 \code{Dense} class, and Set~2 implements its methods, so your network finally runs on a layer that
 computes something rather than the stub it's been wired to since Chapter~\ref{c3:ch:nn}. See
 \secref{c5:sec:architecture} for a walkthrough of the dense layer's architecture before you start.
 
 \textbf{How to check your work.} The final test suite of Part~I is already in
-\file{lectures/L05/appendix/exercises/test}, and Exercise~\ref{c5:ex:16} runs it. It's cumulative:
+\file{lectures/L05/exercises/test}, and Exercise~\ref{c5:ex:16} runs it. It's cumulative:
 it carries the stub and network tests from Chapter~\ref{c4:ch:network} over unchanged and adds unit
 tests for \code{Dense} and for the helpers in \file{ml/utils}. It tests the directory above it by
 default; \code{make ML_DIR=<path>} points it at a tree of your own elsewhere.
@@ -511,7 +511,7 @@ Chapter~\ref{c3:ch:nn}, and it's why the test suite trains with \code{Tanh}.
 
 \codeexercise{Running the tests}
 \label{c5:ex:16}
-The final test suite is available in \file{lectures/L05/appendix/exercises/test}. It's cumulative:
+The final test suite is available in \file{lectures/L05/exercises/test}. It's cumulative:
 it carries the stub and network tests from Chapter~\ref{c4:ch:network} over unchanged and adds unit
 tests for \code{Dense} and for the helpers in \file{ml/utils}.
 
@@ -536,5 +536,5 @@ Exercises~\ref{c5:ex:12} and~\ref{c5:ex:13}, and only \code{ActFunc::Tanh} can c
 for \code{Relu} the two values agree, since \code{max(0.0, s)} is positive exactly when \code{s}
 is.
 
-The test suite's README, \file{lectures/L05/appendix/exercises/test/README.md}, has more
+The test suite's README, \file{lectures/L05/exercises/test/README.md}, has more
 information, including how the convergence threshold was chosen.

@@ -1,5 +1,5 @@
 % Section 8.3, from lectures/L08/appendix/a_conv_layer.md, with the setup and the numbers from the
-% suite's README, lectures/L08/appendix/exercises/test/README.md. The solution to the code is in
+% suite's README, lectures/L08/exercises/test/README.md. The solution to the code is in
 % the repository.
 
 \section{Exercises}
@@ -11,7 +11,7 @@
 from here on. There's nothing to copy: \file{conv.hpp} and \file{conv.cpp} are already in the
 project as placeholders, and already built by its Makefile.
 
-\textbf{How to check your work.} The test suite in \file{lectures/L08/appendix/exercises/test}
+\textbf{How to check your work.} The test suite in \file{lectures/L08/exercises/test}
 already points at \code{cnn_work}; Exercise~\ref{c8:ex:10} runs it, and \code{make ML_DIR=<path>}
 points it at a tree of your own elsewhere. Run \code{cnn_work} itself as well, once
 Exercise~\ref{c8:ex:9} has wired the class in.
@@ -209,7 +209,7 @@ return std::make_unique<conv_layer::Conv>(inputSize, kernelSize, actFunc);
 
 \codeexercise{Running the tests}
 \label{c8:ex:10}
-A test suite for \code{Conv} is available in \file{lectures/L08/appendix/exercises/test}. It's the
+A test suite for \code{Conv} is available in \file{lectures/L08/exercises/test}. It's the
 first suite of Part~II and covers this chapter's layer only; Chapters~\ref{c9:ch:maxpool}
 and~\ref{c10:ch:flatten} add their own.
 
@@ -229,5 +229,5 @@ it doesn't compile until the class does. Note also that the tests construct \cod
 so they pass whether or not you've done the \file{factory.cpp} wiring step in
 Exercise~\ref{c8:ex:9}; run \code{cnn_work} itself to check that.
 
-The test suite's README, \file{lectures/L08/appendix/exercises/test/README.md}, has more
+The test suite's README, \file{lectures/L08/exercises/test/README.md}, has more
 information, including why the layer needs \code{kernel()} and \code{bias()} at all.

@@ -7,14 +7,14 @@
 \begin{aside}
 \textbf{How to work these.} Both sets extend one program, the \code{ml} codebase you started in
 \secref{c3:sec:exercises}: carry it forward into the lecture's exercises directory,
-\file{lectures/L04/appendix/exercises} in the companion repository, and build it with your own
+\file{lectures/L04/exercises} in the companion repository, and build it with your own
 Makefile. Set~1 declares the neural network class; Set~2 completes it with a full training method.
 The network trains with an adaptive learning rate, following the same rule
 \code{ml::lin_reg::Adaptive} uses in Chapter~\ref{c2:ch:training}, so no learning rate has to be
 chosen anywhere in the program.
 
 \textbf{How to check your work.} The test suite is already in
-\file{lectures/L04/appendix/exercises/test}, and Exercise~\ref{c4:ex:14} runs it. It's cumulative:
+\file{lectures/L04/exercises/test}, and Exercise~\ref{c4:ex:14} runs it. It's cumulative:
 it carries the stub tests from Chapter~\ref{c3:ch:nn} over unchanged and adds component tests for
 \code{Shallow}, so it supersedes the suite from \secref{c3:sec:exercises} entirely. It tests the
 directory above it by default; \code{make ML_DIR=<path>} points it at a tree of your own elsewhere.
@@ -33,7 +33,7 @@ neural network consisting of a hidden layer and an output layer, built on top of
 \codeexercise{Directory structure}
 \label{c4:ex:1}
 Carry the code from Chapter~\ref{c3:ch:nn} forward into this lecture's exercises directory,
-\file{lectures/L04/appendix/exercises}, then extend the structure as follows:
+\file{lectures/L04/exercises}, then extend the structure as follows:
 
 \begin{console}
 exercises/
@@ -469,7 +469,7 @@ there to learn until Chapter~\ref{c5:ch:dense}.
 
 \codeexercise{Running the tests}
 \label{c4:ex:14}
-An updated test suite is available in \file{lectures/L04/appendix/exercises/test}. It's cumulative:
+An updated test suite is available in \file{lectures/L04/exercises/test}. It's cumulative:
 it carries the stub tests from Chapter~\ref{c3:ch:nn} over unchanged and adds component tests for
 \code{Shallow} on top, so it supersedes the suite from \secref{c3:sec:exercises} entirely.
 
@@ -485,6 +485,6 @@ feedforward per training set per epoch, and that the precision is evaluated on e
 epoch and no other. Nothing else can tell a correct training loop from one that runs a single pass:
 both line up dimensionally and both return \code{true}.
 
-The test suite's README, \file{lectures/L04/appendix/exercises/test/README.md}, has more
+The test suite's README, \file{lectures/L04/exercises/test/README.md}, has more
 information, including the mistakes this suite deliberately can't catch and what it would take to
 catch them.

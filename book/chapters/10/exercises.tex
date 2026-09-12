@@ -16,7 +16,7 @@ Set~6 is a short set of exam-style conceptual questions. Everything you need to 
 the earlier chapters. Set~7 takes the network off the laptop, as \secref{c10:sec:embedded}
 describes: one exercise on paper, one in code.
 
-\textbf{How to check your work.} The test suite in \file{lectures/L10/appendix/exercises/test}
+\textbf{How to check your work.} The test suite in \file{lectures/L10/exercises/test}
 points back at \code{cnn_work}; Exercise~\ref{c10:ex:9} runs it, and \code{make ML_DIR=<path>}
 points it at a tree of your own elsewhere. The worked solutions to Sets~4 to~6 and to
 Exercise~\ref{c10:ex:18} are in Appendix~\ref{sol:ch:solutions}.
@@ -151,7 +151,7 @@ return std::make_unique<flatten_layer::Flatten>(inputSize);
 
 \codeexercise{Running the tests}
 \label{c10:ex:9}
-The final test suite is available in \file{lectures/L10/appendix/exercises/test}. It's cumulative:
+The final test suite is available in \file{lectures/L10/exercises/test}. It's cumulative:
 it carries the conv and max pooling layer tests over unchanged and adds unit tests for
 \code{Flatten}, plus \textbf{component tests for the network as a whole}.
 
@@ -184,7 +184,7 @@ Two things worth knowing before you start:
     \code{BackpropagationReachesTheConvLayerThroughEveryLayer}, which chains the four layers by hand
     and checks the gradients survive the trip back.
 \end{itemize}
-The test suite's README, \file{lectures/L10/appendix/exercises/test/README.md}, has more
+The test suite's README, \file{lectures/L10/exercises/test/README.md}, has more
 information, including how the convergence thresholds were measured.
 
 % ------------------------------------------------------------------------------------------
