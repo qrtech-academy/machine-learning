@@ -390,8 +390,11 @@ network you build in **L04** is tested entirely against this stub, so it's worth
     * Should be marked `default`, `noexcept`, and `override`.
 * **Getters** (`nodeCount()`, `weightCount()`, `output()`, `error()`, `weights()`):
     * Override the corresponding methods in the interface.
-    * Should be marked `override`, retaining the interface's `const` and `noexcept`, but **not**
-      `[[nodiscard]]`.
+    * Should be marked `override`, retaining the interface's `[[nodiscard]]`, `const`, and
+      `noexcept`.
+    * Attributes aren't inherited, so the override needs its own `[[nodiscard]]`. Without it, a
+      discarded call such as `stub.nodeCount();` compiles silently whenever it's made on a `Stub`
+      rather than through an `Interface&`.
 * **`feedforward()`**, both overloads of **`backpropagate()`**, and **`optimize()`**:
     * Perform range checks only:
         * Return `false` when the dimensions don't match, or, for `optimize()`, when the learning

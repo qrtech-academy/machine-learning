@@ -16,6 +16,8 @@ In the header file `include/ml/flatten_layer/flatten.hpp` (currently a TODO plac
 class named `Flatten` that inherits `ml::flatten_layer::Interface`:
 * Use public inheritance and mark the class `final`.
 * Override every method from the interface, including the destructor (can be `= default`).
+* Keep `[[nodiscard]]` on every override whose interface method has it. Attributes aren't
+  inherited, so the override needs its own (see **L03**).
 
 **Note**: unlike `Conv` and `MaxPool`, `flatten_layer::Interface` declares **no `optimize()`
 method at all**: not because it was left out, but because a flatten layer has nothing to

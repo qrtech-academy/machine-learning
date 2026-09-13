@@ -151,8 +151,10 @@ weight. The hidden layer's first update is a no-op.
 
 ### (c) 2 marks
 
-All four report **failure of a range check** through the return value: `false` when the dimensions
+All five report **failure of a range check** through the return value: `false` when the dimensions
 do not match, and additionally, for `optimize()`, when the learning rate lies outside $(0.0, 1.0)$.
+The network's `feedforward()` has no check of its own; it passes on the result of the two layer
+checks it runs.
 *(1 mark)*
 
 The failure they exist to catch is training data whose shape does not match the layers, namely a

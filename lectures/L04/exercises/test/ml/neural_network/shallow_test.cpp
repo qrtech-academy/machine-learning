@@ -135,7 +135,9 @@ TEST(NeuralNetworkShallow, PredictFeedsBothLayersOnce)
     EXPECT_EQ(hiddenLayer.feedforwardCount(), std::size_t{});
     EXPECT_EQ(outputLayer.feedforwardCount(), std::size_t{});
 
-    network.predict(TrainInput[0U]);
+    // Test the counts after a single prediction.
+    // Expect one pass through each layer, and one output value per output node.
+    EXPECT_EQ(network.predict(TrainInput[0U]).size(), Test::OutputCount);
     EXPECT_EQ(hiddenLayer.feedforwardCount(), one);
     EXPECT_EQ(outputLayer.feedforwardCount(), one);
 
@@ -143,7 +145,7 @@ TEST(NeuralNetworkShallow, PredictFeedsBothLayersOnce)
     // Expect one pass through each layer per call, and never more than one.
     for (std::size_t i{}; i < predictionCount; ++i)
     {
-        network.predict(TrainInput[i]);
+        EXPECT_EQ(network.predict(TrainInput[i]).size(), Test::OutputCount);
     }
     EXPECT_EQ(hiddenLayer.feedforwardCount(), one + predictionCount);
     EXPECT_EQ(outputLayer.feedforwardCount(), one + predictionCount);

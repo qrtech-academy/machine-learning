@@ -17,6 +17,8 @@ In the header file `include/ml/conv_layer/max_pool.hpp` (currently a TODO placeh
 named `MaxPool` that inherits `ml::conv_layer::Interface` (the same interface `Conv` implements):
 * Use public inheritance and mark the class `final`.
 * Override every method from the interface, including the destructor (can be `= default`).
+* Keep `[[nodiscard]]` on every override whose interface method has it. Attributes aren't
+  inherited, so the override needs its own (see **L03**).
 
 ---
 

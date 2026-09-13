@@ -71,6 +71,7 @@ clean:
 In the header file `include/ml/dense_layer/dense.hpp`, in the namespace `ml::dense_layer`, add a class named `Dense` that inherits the corresponding interface, see the file `include/ml/dense_layer/interface.hpp`:
 * Use public inheritance and mark the class `final` so it can't be inherited further.
 * Override every method from the interface, including the destructor.
+* Keep `[[nodiscard]]` on every override whose interface method has it. Attributes aren't inherited, so the override needs its own (see **L03**).
 * That includes `initParams()`, which `Stub` implements as an empty method for want of anything to reset (see **L03**). `Dense` has bias values and weights to draw again, so its override does real work; the implementation follows in section 2 of the next part.
 
 **Tip**: copy the entire contents of the interface and paste it into the new file. Then adapt the code for the new subclass `Dense` (no `virtual` or `= 0`, use `override`, etc.).

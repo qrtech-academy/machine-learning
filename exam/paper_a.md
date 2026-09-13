@@ -119,7 +119,7 @@ bool Shallow::train(const std::size_t epochCount, const double precisionThreshol
     {
         for (std::size_t x{}; x < myTrainOrder.size(); ++x)
         {
-            predict(myTrainInput[x]);
+            feedforward(myTrainInput[x]);
 
             myHiddenLayer.backpropagate(myOutputLayer);
             myOutputLayer.backpropagate(myTrainOutput[x]);
@@ -152,8 +152,9 @@ Two separate faults prevent it. Name both, and state what order the sets are act
 what the hidden layer computes its error from as the code stands, and state what value it computes
 on the very first training set of the very first epoch. (3 marks)
 
-**(c)** Each of the four layer calls returns `bool` and every one of those return values is
-discarded. State what the four calls report through that value, name the failure it was meant to
+**(c)** Each of the five calls in the inner loop returns `bool` (the network's own `feedforward()`
+and the four layer calls), and every one of those return values is discarded. State what the five
+calls report through that value, name the failure it was meant to
 catch, and state what this function returns when that failure occurs. (2 marks)
 
 **(d)** The L03 stub exposes three methods that are not part of `dense_layer::Interface`. Two of them are

@@ -89,10 +89,10 @@ are covered in [appendix B](./b_exercises.md).
 ---
 
 ### Step 1 - Feedforward
-Call `predict(myTrainInput[x])`. This performs feedforward through both layers and returns the output layer's output.
+Call the network's private `feedforward(myTrainInput[x])`. This performs feedforward through both layers and returns `false` if either layer rejected its input. `predict()` performs the same pass and then returns the output layer's output, but training has no use for that output.
 
 ```
-predict(input)
+feedforward(input)
   → myHiddenLayer.feedforward(input)
   → myOutputLayer.feedforward(myHiddenLayer.output())
 ```

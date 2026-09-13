@@ -15,6 +15,8 @@ In the header file `include/ml/conv_layer/conv.hpp` (currently a TODO placeholde
 named `Conv` that inherits `ml::conv_layer::Interface` (`include/ml/conv_layer/interface.hpp`):
 * Use public inheritance and mark the class `final` so it can't be inherited further.
 * Override every method from the interface, including the destructor.
+* Keep `[[nodiscard]]` on every override whose interface method has it. Attributes aren't
+  inherited, so the override needs its own (see **L03**).
 
 **Tip**: copy the entire contents of the interface and paste it into the new file, then adapt it (no
 `virtual`/`= 0`, add `override` everywhere; including on `inputGradients()`, which is easy to miss).

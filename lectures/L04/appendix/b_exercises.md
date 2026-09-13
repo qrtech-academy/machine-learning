@@ -74,7 +74,7 @@ definition in `utils.cpp`, shared through `utils.hpp`, gives exactly that.
 ### 3. Interface for neural networks
 In the header file `ml/neural_network/interface.hpp`, add a namespace named `ml::neural_network`. In this namespace, implement an interface named `Interface`:
 * **`~Interface()`:** should be set to `default` and marked `virtual` and `noexcept`.
-* **`predict(input)`:** pure virtual. `input`: read-only floating-point vector of the input to base the prediction on. Returns a reference to a floating-point vector holding the predicted value. Should be marked `noexcept` (**not** `const`, since the layers' output is updated on every prediction).
+* **`predict(input)`:** pure virtual. `input`: read-only floating-point vector of the input to base the prediction on. Returns a reference to a floating-point vector holding the predicted value. Should be marked `[[nodiscard]]` and `noexcept` (**not** `const`, since the layers' output is updated on every prediction).
 
 ---
 
@@ -83,7 +83,7 @@ In the header file `ml/neural_network/shallow.hpp`, add the namespace `ml::neura
 
 * **`Shallow()`:** takes `hiddenLayer` and `outputLayer` (the network's hidden layer and output layer, `ml::dense_layer::Interface&`), plus `trainInput` and `trainOutput` (read-only, two-dimensional floating-point vectors holding the training data's inputs and outputs). Should be marked `explicit` and `noexcept`.
 * **`~Shallow()`:** should be marked `default`, `noexcept`, and `override`.
-* **`predict()`:** overrides the corresponding method in the interface. Should be marked `noexcept` and `override`.
+* **`predict()`:** overrides the corresponding method in the interface. Should be marked `[[nodiscard]]`, `noexcept`, and `override`. Attributes aren't inherited, so the override needs its own `[[nodiscard]]` (see **L03**).
 * **`train(epochCount, precisionThreshold = 0.999999)`:** trains the network (implemented in full later this lecture). `epochCount`: number of epochs to train (unsigned integer). `precisionThreshold`: precision at which training stops early (floating-point number). Default value: `0.999999` (99.9999 %). Returns `true` if training was carried out, `false` otherwise. Should be marked `noexcept`.
 
 There's no `learningRate` argument. The network picks its own rate while training and revises it as
@@ -97,6 +97,20 @@ The class should also have the following private methods, used to train in a ran
 * **`randomizeTrainOrder()`:** shuffles the contents of `myTrainOrder` into a random order. For each
   index `i`, pick a random index `r` and swap `myTrainOrder[i]` and `myTrainOrder[r]`. Takes no
   arguments, returns nothing, and should be marked `noexcept`.
+
+Both `predict()` and `train()` feed an input through the whole network, so that goes in a private
+method of its own:
+* **`feedforward(input)`:** feeds `input` through the hidden layer and then the output layer.
+  `input`: read-only floating-point vector. Returns `true` if both layers accepted their input,
+  `false` otherwise. Should be marked `noexcept`.
+
+**Why not let `train()` call `predict()`?** A prediction is worth nothing but its return value,
+which is why `predict()` is `[[nodiscard]]`. `train()` doesn't want that value, only the
+feedforward pass behind it, so calling `predict()` there would discard it and fail to compile
+under `-Werror`. `predict()` also can't say whether that pass succeeded, since it returns the
+output rather than a `bool`. `feedforward()` does both jobs: `train()` calls it and checks the
+result, and `predict()` calls it and returns the output layer's output. It isn't marked
+`[[nodiscard]]` for the same reason: `predict()` has no way to pass the result on, so it ignores it.
 
 One more private method is needed by the training method, implemented in the second part of this
 appendix:
@@ -139,10 +153,14 @@ Implement the following in `source/ml/neural_network/shallow.cpp`:
 * Fill `myTrainOrder` by calling `initTrainOrder()` with that set count.
 * Call `initRandGen()` (from `ml/utils.hpp`, see section 2), so the generator is seeded before the first shuffle. Doing it here rather than inside `randomizeTrainOrder()` keeps the one-time setup out of a method called once per epoch.
 
-**The method `predict()`:**
+**The method `feedforward()`:**
 * Perform feedforward through the entire network:
     1. Call `myHiddenLayer.feedforward(input)` with the given input.
     2. Call `myOutputLayer.feedforward(myHiddenLayer.output())` with the hidden layer's output as input.
+* Return `false` as soon as either call fails, without feeding the output layer if the hidden layer rejected the input. Return `true` otherwise.
+
+**The method `predict()`:**
+* Call `feedforward(input)`.
 * Return `myOutputLayer.output()` (a reference; no separate storage variable is needed in `Shallow`).
 
 ---
@@ -274,7 +292,7 @@ Replace the temporary version of `train()` in `source/ml/neural_network/shallow.
 * At the start of every epoch, call `randomizeTrainOrder()`. As in **L02**, reshuffling each epoch keeps the network from learning anything from the order the training data happens to be stored in.
 * For each epoch, iterate through the training sets in the order `myTrainOrder` gives rather than sequentially, e.g. with a range-based for loop over `myTrainOrder`. Note that the loop variable is the index into the training data, not the counter itself.
 * For each training set index `x`, perform the following three steps:
-    1. **Feedforward:** call `predict(myTrainInput[x])`. This performs feedforward through both the hidden layer and the output layer.
+    1. **Feedforward:** call `feedforward(myTrainInput[x])`. This performs feedforward through both the hidden layer and the output layer.
     2. **Backpropagation:**
         * Compute the error in the output layer: `myOutputLayer.backpropagate(myTrainOutput[x])`.
         * Compute the error in the hidden layer from the output layer's error and weights: `myHiddenLayer.backpropagate(myOutputLayer)`.
@@ -282,7 +300,7 @@ Replace the temporary version of `train()` in `source/ml/neural_network/shallow.
         * Optimize the hidden layer: `myHiddenLayer.optimize(myTrainInput[x], learningRate)`, passing the current learning rate.
         * Optimize the output layer based on the hidden layer's output: `myOutputLayer.optimize(myHiddenLayer.output(), learningRate)`.
 
-Each of the four layer calls above returns `bool` (see **L03**). Return `false` as soon as any of them fails: a dimension mismatch means the network is wired wrong, and training on from there would only produce meaningless numbers.
+Each of the five calls above returns `bool`: `feedforward()` and the four layer calls (see **L03**). Return `false` as soon as any of them fails: a dimension mismatch means the network is wired wrong, and training on from there would only produce meaningless numbers.
 
 **Evaluating the training progress:**
 * Every hundredth epoch, except the first, compute the precision once and keep it in a local variable:
