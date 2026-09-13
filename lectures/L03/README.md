@@ -25,8 +25,9 @@
 
 ### After the lecture
 * Complete the exercises in [appendix B](./appendix/b_exercises.md).
+* Check your hand-training calculations against the worked solutions in [appendix C](./appendix/c_solutions.md). Try each example yourself first.
 * Verify your implementation with the [test suite](./exercises/test/README.md).
-* Solutions will be available a few days after the lecture.
+* Solutions to the code will be available a few days after the lecture.
 
 ---
 
