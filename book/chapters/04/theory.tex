@@ -95,11 +95,12 @@ continue the old one, and step~4 is what frees the caller from having to pick a 
 are covered in the exercises, in \secref{c4:sec:exercises}.
 
 \subsection{Step 1: Feedforward}
-Call \code{predict(myTrainInput[x])}. This performs feedforward through both layers and returns
-the output layer's output.
+Call the network's private \code{feedforward(myTrainInput[x])}. This performs feedforward through
+both layers and returns \code{false} if either layer rejected its input. \code{predict()} performs
+the same pass and then returns the output layer's output, but training has no use for that output.
 
 \begin{console}
-predict(input)
+feedforward(input)
   → myHiddenLayer.feedforward(input)
   → myOutputLayer.feedforward(myHiddenLayer.output())
 \end{console}

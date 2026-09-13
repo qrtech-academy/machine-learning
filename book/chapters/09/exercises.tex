@@ -47,6 +47,8 @@ named \code{MaxPool} that inherits \code{ml::conv_layer::Interface}, the same in
   \item Use public inheritance and mark the class \code{final}.
   \item Override every method from the interface, including the destructor (which can be
     \code{= default}).
+  \item Keep \code{[[nodiscard]]} on every override whose interface method has it. Attributes
+    aren't inherited, so the override needs its own (see Chapter~\ref{c3:ch:nn}).
 \end{itemize}
 
 \codeexercise{Removed constructors and operators}

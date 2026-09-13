@@ -106,8 +106,8 @@ In the header file \file{ml/neural_network/interface.hpp}, add a namespace named
     \code{noexcept}.
   \item \textbf{\code{predict(input)}:} pure virtual. \code{input}: read-only floating-point vector
     of the input to base the prediction on. Returns a reference to a floating-point vector holding
-    the predicted value. Should be marked \code{noexcept} (\textbf{not} \code{const}, since the
-    layers' output is updated on every prediction).
+    the predicted value. Should be marked \code{[[nodiscard]]} and \code{noexcept} (\textbf{not}
+    \code{const}, since the layers' output is updated on every prediction).
 \end{itemize}
 
 \codeexercise{The Shallow class: declaration}
@@ -123,7 +123,8 @@ via public inheritance. The class should be marked \code{final}.
   \item \textbf{\code{~Shallow()}:} should be marked \code{default}, \code{noexcept}, and
     \code{override}.
   \item \textbf{\code{predict()}:} overrides the corresponding method in the interface. Should be
-    marked \code{noexcept} and \code{override}.
+    marked \code{[[nodiscard]]}, \code{noexcept}, and \code{override}. Attributes aren't
+    inherited, so the override needs its own \code{[[nodiscard]]} (see Chapter~\ref{c3:ch:nn}).
   \item \textbf{\code{train(epochCount, precisionThreshold = 0.999999)}:} trains the network
     (implemented in full in Set~2). \code{epochCount}: number of epochs to train (unsigned
     integer). \code{precisionThreshold}: precision at which training stops early (floating-point
@@ -145,6 +146,22 @@ The class should also have the following private methods, used to train in a ran
     \code{myTrainOrder[i]} and \code{myTrainOrder[r]}. Takes no arguments, returns nothing, and
     should be marked \code{noexcept}.
 \end{itemize}
+Both \code{predict()} and \code{train()} feed an input through the whole network, so that goes in a
+private method of its own:
+\begin{itemize}
+  \item \textbf{\code{feedforward(input)}:} feeds \code{input} through the hidden layer and then the
+    output layer. \code{input}: read-only floating-point vector. Returns \code{true} if both layers
+    accepted their input, \code{false} otherwise. Should be marked \code{noexcept}.
+\end{itemize}
+\textbf{Why not let \code{train()} call \code{predict()}?} A prediction is worth nothing but its
+return value, which is why \code{predict()} is \code{[[nodiscard]]}. \code{train()} doesn't want
+that value, only the feedforward pass behind it, so calling \code{predict()} there would discard it
+and fail to compile under \code{-Werror}. \code{predict()} also can't say whether that pass
+succeeded, since it returns the output rather than a \code{bool}. \code{feedforward()} does both
+jobs: \code{train()} calls it and checks the result, and \code{predict()} calls it and returns the
+output layer's output. It isn't marked \code{[[nodiscard]]} for the same reason: \code{predict()}
+has no way to pass the result on, so it ignores it.
+
 One more private method is needed by the training method, implemented in Set~2:
 \begin{itemize}
   \item \textbf{\code{precision()}:} computes the network's precision over the whole training data.
@@ -205,7 +222,7 @@ Implement the following in \file{source/ml/neural_network/shallow.cpp}:
     \code{randomizeTrainOrder()} keeps the one-time setup out of a method called once per epoch.
 \end{itemize}
 
-\task{The method \code{predict()}}
+\task{The method \code{feedforward()}}
 \begin{itemize}
   \item Perform feedforward through the entire network:
   \begin{enumerate}
@@ -213,6 +230,13 @@ Implement the following in \file{source/ml/neural_network/shallow.cpp}:
     \item Call \code{myOutputLayer.feedforward(myHiddenLayer.output())} with the hidden layer's
       output as input.
   \end{enumerate}
+  \item Return \code{false} as soon as either call fails, without feeding the output layer if the
+    hidden layer rejected the input. Return \code{true} otherwise.
+\end{itemize}
+
+\task{The method \code{predict()}}
+\begin{itemize}
+  \item Call \code{feedforward(input)}.
   \item Return \code{myOutputLayer.output()} (a reference; no separate storage variable is needed
     in \code{Shallow}).
 \end{itemize}
@@ -402,7 +426,7 @@ with a full implementation.
     the loop variable is the index into the training data, not the counter itself.
   \item For each training set index \code{x}, perform the following three steps:
   \begin{enumerate}
-    \item \textbf{Feedforward:} call \code{predict(myTrainInput[x])}. This performs feedforward
+    \item \textbf{Feedforward:} call \code{feedforward(myTrainInput[x])}. This performs feedforward
       through both the hidden layer and the output layer.
     \item \textbf{Backpropagation:}
     \begin{itemize}
@@ -420,8 +444,8 @@ with a full implementation.
     \end{itemize}
   \end{enumerate}
 \end{itemize}
-Each of the four layer calls above returns \code{bool} (see Chapter~\ref{c3:ch:nn}). Return
-\code{false} as soon as any of them fails: a dimension mismatch means the network is wired wrong,
+Each of the five calls above returns \code{bool}: \code{feedforward()} and the four layer calls
+(see Chapter~\ref{c3:ch:nn}). Return \code{false} as soon as any of them fails: a dimension mismatch means the network is wired wrong,
 and training on from there would only produce meaningless numbers.
 
 \task{Evaluating the training progress}

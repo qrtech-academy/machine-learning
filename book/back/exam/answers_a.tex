@@ -141,9 +141,10 @@ $0$, every hidden $\Delta e$ is $0$, and \code{myHiddenLayer.optimize()} adds ze
 every weight. The hidden layer's first update is a no-op. \worth{1}
 
 \answerpart{c}{2}
-All four report \textbf{failure of a range check} through the return value: \code{false} when the
+All five report \textbf{failure of a range check} through the return value: \code{false} when the
 dimensions do not match, and additionally, for \code{optimize()}, when the learning rate lies outside
-$(0.0, 1.0)$. \worth{1}
+$(0.0, 1.0)$. The network's \code{feedforward()} has no check of its own; it passes on the result of
+the two layer checks it runs. \worth{1}
 
 The failure they exist to catch is training data whose shape does not match the layers, namely a
 training input row that is not \code{weightCount()} wide, or a training output row that is not

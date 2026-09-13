@@ -100,6 +100,8 @@ see the file \file{include/ml/dense_layer/interface.hpp}:
 \begin{itemize}
   \item Use public inheritance and mark the class \code{final} so it can't be inherited further.
   \item Override every method from the interface, including the destructor.
+  \item Keep \code{[[nodiscard]]} on every override whose interface method has it. Attributes
+    aren't inherited, so the override needs its own (see Chapter~\ref{c3:ch:nn}).
   \item That includes \code{initParams()}, which \code{Stub} implements as an empty method for want
     of anything to reset (see Chapter~\ref{c3:ch:nn}). \code{Dense} has bias values and weights to
     draw again, so its override does real work; the implementation follows in

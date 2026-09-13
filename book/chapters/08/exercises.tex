@@ -46,6 +46,8 @@ named \code{Conv} that inherits \code{ml::conv_layer::Interface}, from
 \begin{itemize}
   \item Use public inheritance and mark the class \code{final} so it can't be inherited further.
   \item Override every method from the interface, including the destructor.
+  \item Keep \code{[[nodiscard]]} on every override whose interface method has it. Attributes
+    aren't inherited, so the override needs its own (see Chapter~\ref{c3:ch:nn}).
 \end{itemize}
 The interface is typeset below, straight from the repository:
 

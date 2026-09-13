@@ -256,8 +256,11 @@ tested entirely against this stub, so it's worth getting right.
     \code{error()}, \code{weights()}):
   \begin{itemize}
     \item Override the corresponding methods in the interface.
-    \item Should be marked \code{override}, retaining the interface's \code{const} and
-      \code{noexcept}, but \textbf{not} \code{[[nodiscard]]}.
+    \item Should be marked \code{override}, retaining the interface's \code{[[nodiscard]]},
+      \code{const}, and \code{noexcept}.
+    \item Attributes aren't inherited, so the override needs its own \code{[[nodiscard]]}. Without
+      it, a discarded call such as \code{stub.nodeCount();} compiles silently whenever it's made on
+      a \code{Stub} rather than through an \code{Interface&}.
   \end{itemize}
   \item \textbf{\code{feedforward()}}, both overloads of \textbf{\code{backpropagate()}}, and
     \textbf{\code{optimize()}}:

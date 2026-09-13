@@ -47,6 +47,8 @@ straight from the repository:
   \item Use public inheritance and mark the class \code{final}.
   \item Override every method from the interface, including the destructor (which can be
     \code{= default}).
+  \item Keep \code{[[nodiscard]]} on every override whose interface method has it. Attributes
+    aren't inherited, so the override needs its own (see Chapter~\ref{c3:ch:nn}).
 \end{itemize}
 
 \cppfile{lectures/L08/cnn_work/include/ml/flatten_layer/interface.hpp}
