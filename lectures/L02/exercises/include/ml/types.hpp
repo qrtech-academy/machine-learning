@@ -1,5 +1,5 @@
 /**
- * @file Machine learning type definitions..
+ * @file Machine learning type definitions.
  */
 #pragma once
 
