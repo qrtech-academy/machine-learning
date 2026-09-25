@@ -140,8 +140,8 @@ otherwise                        ->  updateLearningRate(): raise the rate when p
                                      stalled, lower it when the network is overshooting
 ```
 
-The learning rate is therefore never supplied by the caller. It starts at `0.1` and is revised from
-one evaluation to the next, exactly as in `ml::lin_reg::Adaptive` from **L02**, which evaluates
+The learning rate is therefore never supplied by the caller. It starts at `0.01` and is revised from
+one evaluation to the next, much as in `ml::lin_reg::Adaptive` from **L02**, which evaluates
 every tenth epoch instead: a linear regression model converges in tens of epochs, a network in
 thousands.
 

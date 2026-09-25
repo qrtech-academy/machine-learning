@@ -7,44 +7,46 @@ the program.
 ---
 
 ## The Neural Network Class
-You'll extend the codebase from last lecture with an interface and a class for a simple neural network consisting of a hidden layer and an output layer, built on top of the `dense_layer::Interface`/`Stub` pair you already have.
+You'll extend the codebase from last lecture, already carried over into this lecture's exercises directory, with an interface and a class for a simple neural network consisting of a hidden layer and an output layer, built on top of the `dense_layer::Interface`/`Stub` pair you already have.
 
 ---
 
 ### 1. Directory structure
-Carry last lecture's code forward into this lecture's [exercises](../exercises/) directory, then
-extend the structure as follows:
+This lecture's [exercises](../exercises/) directory is already set up, so there's nothing to create
+or copy:
 
 ```
 exercises/
 ├── include/
 │   └── ml/
 │       ├── dense_layer/
-│       │   ├── interface.hpp
-│       │   └── stub.hpp
+│       │   ├── interface.hpp    <- from L03, ready to use
+│       │   └── stub.hpp         <- from L03, ready to use
 │       ├── neural_network/
-│       │   ├── interface.hpp
-│       │   └── shallow.hpp
-│       ├── types.hpp
-│       └── utils.hpp
+│       │   ├── interface.hpp    <- to implement
+│       │   └── shallow.hpp      <- to implement
+│       ├── types.hpp            <- from L03, ready to use
+│       └── utils.hpp            <- to implement
 ├── source/
 │   ├── ml/
 │   │   ├── neural_network/
-│   │   │   └── shallow.cpp
-│   │   └── utils.cpp
-│   └── main.cpp
-├── test/                <- already here, see section 5 of the next part
-└── Makefile
+│   │   │   └── shallow.cpp      <- to implement
+│   │   └── utils.cpp            <- to implement
+│   └── main.cpp                 <- ready to use, see section 9
+├── test/                        <- ready to use, see section 5 of the next part
+└── Makefile                     <- ready to use
 ```
 
-Note that the sources now sit under `source/ml/`, mirroring `include/ml/`. Don't forget to add
-both `source/ml/neural_network/shallow.cpp` and `source/ml/utils.cpp` to your makefile.
+The dense layer interface, the stub, and `types.hpp` are carried over from **L03** unchanged. Each
+file you're to implement holds a `@todo` comment saying what goes in it; replace it with your code.
+Note that the sources now sit under `source/ml/`, mirroring `include/ml/`. The makefile already
+compiles `source/ml/neural_network/shallow.cpp` and `source/ml/utils.cpp` along with `main.cpp`.
 
 ---
 
 ### 2. Utility functions
 Some helpers don't belong to any one class. The first of them is needed this lecture, and **L05**
-adds three more to the same pair of files, so give them a home now.
+adds three more to the same pair of files.
 
 **The header (`ml/utils.hpp`):**
 In the namespace `ml`, declare a single function:
@@ -91,26 +93,36 @@ it goes, exactly as `ml::lin_reg::Adaptive` does in **L02**, so there's nothing 
 guess at. The rule itself is written in the second part of this appendix.
 
 The class should also have the following private methods, used to train in a randomized order:
-* **`initTrainOrder()`:** fills `myTrainOrder` (see below) with the indices `0, 1, 2 ... N-1`, where
-  `N` is the number of complete training sets. Takes that set count as its only argument, returns
-  nothing, and should be marked `noexcept`.
+* **`initTrainOrder(setCount)`:** fills `myTrainOrder` (see below) with the indices
+  `0, 1, 2 ... N-1`, where `N` is the number of complete training sets. `setCount`: that set count
+  (unsigned integer). Returns nothing, and should be marked `noexcept`.
 * **`randomizeTrainOrder()`:** shuffles the contents of `myTrainOrder` into a random order. For each
   index `i`, pick a random index `r` and swap `myTrainOrder[i]` and `myTrainOrder[r]`. Takes no
   arguments, returns nothing, and should be marked `noexcept`.
 
-Both `predict()` and `train()` feed an input through the whole network, so that goes in a private
-method of its own:
+Each training set passes through the network in three steps, feedforward, backpropagation and
+optimization (see [appendix A](./a_theory.md)), and each step drives both layers. Give every step a
+private method of its own, so that `train()` reads as the three steps rather than the six layer
+calls behind them:
 * **`feedforward(input)`:** feeds `input` through the hidden layer and then the output layer.
   `input`: read-only floating-point vector. Returns `true` if both layers accepted their input,
   `false` otherwise. Should be marked `noexcept`.
+* **`backpropagate(reference)`:** computes the error in the output layer and then in the hidden
+  layer. `reference`: read-only floating-point vector holding the reference values for the input
+  last fed forward. Returns `true` if both layers succeeded, `false` otherwise. Should be marked `noexcept`.
+* **`optimize(input, learningRate)`:** updates the parameters of the hidden layer and then the
+  output layer. `input`: read-only floating-point vector holding the input last fed forward.
+  `learningRate`: the learning rate to use (floating-point number). Returns `true` if both layers
+  succeeded, `false` otherwise. Should be marked `noexcept`.
 
 **Why not let `train()` call `predict()`?** A prediction is worth nothing but its return value,
 which is why `predict()` is `[[nodiscard]]`. `train()` doesn't want that value, only the
 feedforward pass behind it, so calling `predict()` there would discard it and fail to compile
 under `-Werror`. `predict()` also can't say whether that pass succeeded, since it returns the
 output rather than a `bool`. `feedforward()` does both jobs: `train()` calls it and checks the
-result, and `predict()` calls it and returns the output layer's output. It isn't marked
-`[[nodiscard]]` for the same reason: `predict()` has no way to pass the result on, so it ignores it.
+result, and `predict()` calls it and returns the output layer's output. That's also why
+`feedforward()` isn't marked `[[nodiscard]]`: `predict()` has no way to pass the result on, so it
+ignores it.
 
 One more private method is needed by the training method, implemented in the second part of this
 appendix:
@@ -118,6 +130,10 @@ appendix:
   arguments and returns a floating-point number. Should be marked `[[nodiscard]]` and `noexcept`,
   but **not** `const`, unlike its **L02** namesake: it calls `predict()`, which feeds both layers
   forward and therefore changes their output.
+
+The learning rate rule that `train()` also needs doesn't belong in the class at all. It uses no
+member of `Shallow`, so it goes in an anonymous namespace in `shallow.cpp`, out of the header (see
+section 2 of the next part).
 
 Feel free to add more (private) methods as needed.
 
@@ -130,14 +146,15 @@ Delete the class's default constructor, copy and move constructors, and the corr
 
 ### 6. Private member variables
 Add the following private member variables to `Shallow`:
+* **`myTrainOrder`:** the indices of the training sets as unsigned integers (`ml::MatrixU32`), in the order they'll be trained in. Initialized by the constructor and reshuffled once per epoch.
 * **`myHiddenLayer`:** reference to the network's hidden layer, obtained via the constructor.
 * **`myOutputLayer`:** reference to the network's output layer, obtained via the constructor.
 * **`myTrainInput`:** reference to the training data's input, obtained via the constructor.
 * **`myTrainOutput`:** reference to the training data's output, obtained via the constructor.
-* **`myTrainOrder`:** the indices of the training sets as unsigned integers (`ml::MatrixU32`), in the order they'll be trained in. Initialized by the constructor and reshuffled once per epoch.
 
-No member is needed for the learning rate either. It's a local variable inside `train()`, so every
-call starts from the same initial rate rather than inheriting whatever the previous call ended on.
+No member is needed for the learning rate either, nor for the previous precision. Both are local
+variables inside `train()`, handed to `updateLearningRate()` by reference, so every call starts
+from the same initial rate rather than inheriting whatever the previous call ended on.
 
 No separate member is needed for the training set count. `myTrainOrder` holds one index per training set, so `myTrainOrder.size()` is that count, exactly as `myTrainOrder` replaced `mySetCount` in **L02**.
 
@@ -168,20 +185,38 @@ Implement the following in `source/ml/neural_network/shallow.cpp`:
 ### 8. Training method (placeholder)
 Implement a temporary version of `train()` in `source/ml/neural_network/shallow.cpp` that simply returns `true`. The full implementation (feedforward, backpropagation, and optimization for each training set and epoch, plus the precision check that sets the learning rate) follows later this lecture.
 
-Give `precision()` a temporary body too, returning `0.0`, so the header and the source file stay in step until section 1 of the next part fills it in.
+Give the private methods that only training uses temporary bodies too, so the header and the
+source file stay in step until the next part fills them in:
+* `backpropagate()` and `optimize()` return `false`, so a method you forget to finish reports
+  failure rather than quietly claiming success.
+* `precision()` returns `0.0`.
 
 ---
 
 ### 9. Compiling and testing
-Write a `main` function in `main.cpp` that:
-* Creates one `ml::dense_layer::Stub` instance for the hidden layer and one for the output layer (e.g. 3 nodes/2 weights per node, and 1 node/3 weights per node respectively - the number of weights in the output layer should match the number of nodes in the hidden layer).
-* Creates an `ml::neural_network::Shallow` instance from these two layers and training data of your choice (e.g. a 2-bit XOR pattern).
-* Performs a prediction for each training set's input, and prints the input and predicted output in the terminal.
+`main.cpp` is provided in full. Read it before you run it:
+* It creates one `ml::dense_layer::Stub` instance for the hidden layer (3 nodes with 2 weights per node) and one for the output layer (1 node with 3 weights per node). The output layer's weight count matches the hidden layer's node count, which is what connects the two.
+* It creates an `ml::neural_network::Shallow` instance from these two layers and the 2-bit XOR pattern as training data.
+* The helper function `trainAndTest()` prints a prediction for each training input, trains the network for 100 epochs with the default precision threshold, and prints the predictions again. `main()` returns `0` if that succeeds, and `-1` otherwise.
 
-Compile and test-run the program. You should get the following output (the dense layers are still stubs, so the prediction is always 0.5):
+A few more helper functions in the anonymous namespace keep `main()` short:
+* **`printSeparator()`:** prints a line of 80 dashes.
+* **`printMatrix(matrix)`:** prints the values of a vector separated by spaces, without a trailing newline.
+* **`printPredictions(header, network, trainInput)`:** prints `header` followed by a colon, then one line per training input holding the input and the network's prediction. It takes the network as an `ml::neural_network::Interface&` rather than a `Shallow&`: a prediction is all it needs, so it works for any network.
+
+`trainAndTest()`, on the other hand, takes a `Shallow&`, since `train()` isn't part of `ml::neural_network::Interface`. Note that `train()` is called without a learning rate; the network picks its own.
+
+Build and run the program with `make`. The placeholder `train()` from section 8 returns `true` straight away, so the program runs to the end already. You should get the following output (the dense layers are still stubs, so the prediction is always 0.5):
 
 ```
 --------------------------------------------------------------------------------
+Predictions before training:
+Input: 0 0, predicted output: 0.5
+Input: 0 1, predicted output: 0.5
+Input: 1 0, predicted output: 0.5
+Input: 1 1, predicted output: 0.5
+--------------------------------------------------------------------------------
+Predictions after training:
 Input: 0 0, predicted output: 0.5
 Input: 0 1, predicted output: 0.5
 Input: 1 0, predicted output: 0.5
@@ -201,52 +236,73 @@ measurement into a learning rate, and finally the training loop that uses both.
 ### 1. Precision calculation
 Implement the private method `precision()` in `source/ml/neural_network/shallow.cpp`. It measures
 how close the network currently is to its training data, the same mean absolute error (MAE) the
-models in **L02** measure, computed over vectors rather than single values:
-* Declare an error sum and a value count, both starting at zero.
-* For each training set index `x` in `myTrainOrder`:
-    * Call `predict(myTrainInput[x])` and keep the returned reference.
-    * For every output node `i`, add `std::abs(myTrainOutput[x][i] - prediction[i])` to the error
-      sum and raise the value count by one.
-* Compute the MAE by dividing the error sum by the value count.
-* Return `1.0 - MAE`.
+models in **L02** measure, computed over vectors rather than single values.
+
+Start with a helper function named `averageAbs()`, in an anonymous namespace at the top of
+`shallow.cpp`:
+
+```cpp
+[[nodiscard]] double averageAbs(const Matrix1d& x, const Matrix1d& y) noexcept
+```
+
+* Compute the number of comparisons as the smaller of `x.size()` and `y.size()`.
+* Return `0.0` if there's nothing to compare.
+* Otherwise, sum `std::abs(x[i] - y[i])` for every index `i` below that count, and return the sum
+  divided by the count, i.e. the average absolute difference between the two vectors.
 
 Include `<cmath>` in `shallow.cpp` for `std::abs`.
 
-**Why the value count rather than the set count?** **L02** divides by the number of training sets,
-because a linear regression model produces exactly one value per set. Here a set holds one value
-per output node, so dividing by the set count alone would report an error that grows with the width
-of the output layer. Dividing by the number of values added gives the average error *per value*,
-which is what `1.0 - MAE` is meant to be read against, and the two are identical for the
-single-output network you're building.
+Then implement `precision()` itself:
+* Declare an error sum starting at zero.
+* For each training set:
+    * Call `predict()` with the set's input and keep the returned reference.
+    * Add `averageAbs(reference, prediction)` to the error sum, where `reference` is the set's
+      training output.
+* Compute the MAE by dividing the error sum by the number of training sets, `myTrainOrder.size()`.
+* Return `1.0 - MAE`.
 
-**Why indexing `myTrainOutput[x][i]` per output node is safe.** `train()` only calls `precision()`
-at the end of a complete epoch, and every epoch has already passed each training output through
+**Why average each set first?** **L02** divides by the number of training sets, because a linear
+regression model produces exactly one value per set. Here a set holds one value per output node, so
+summing the raw errors and dividing by the set count would report an error that grows with the
+width of the output layer. Averaging within each set first keeps every set's contribution on the
+same scale, whatever the width, so `1.0 - MAE` reads the same for a network with one output node as
+for one with ten. Since every set holds the same number of values (see below), the mean of the
+per-set means is exactly the average error *per value*.
+
+**Why every set has the same width.** `train()` only calls `precision()` at the end of a complete
+epoch, and every epoch has already passed each training output through
 `myOutputLayer.backpropagate()`, which returns `false` when the row's length doesn't match the
 layer's node count. A row of the wrong length therefore ends training before `precision()` is ever
-reached.
+reached, so every reference row and every prediction holds exactly one value per output node.
+`averageAbs()` still compares only up to the shorter of its two vectors, so it can never read out
+of range even when called from somewhere without that guarantee.
 
 ---
 
 ### 2. The learning rate rule
 The learning rate is the one training parameter with no sensible default, so the network sets its
-own, using the precision it just computed. Add a function named `updateLearningRate()` in an
-anonymous namespace in `shallow.cpp`, exactly as **L02** does in `adaptive.cpp`:
+own, using the precision it just computed. Add a function named `updateLearningRate()` to the
+anonymous namespace from section 1, as **L02** does in `adaptive.cpp`:
 
 ```cpp
 void updateLearningRate(double& learningRate, double& prevPrecision,
-                        double currentPrecision) noexcept;
+                        const double currentPrecision) noexcept
 ```
 
+**Why not a private method?** The rule touches nothing but its arguments, so it has no business in
+the class, and declaring it in `shallow.hpp` would expose an implementation detail to every file
+that includes the header. The anonymous namespace makes it visible in `shallow.cpp` only.
+
 It takes the current learning rate and the previous precision by reference, since it updates both,
-and the precision just measured by value. Give each of the four values it needs a named constant: a
-maximum learning rate of `0.25`, a minimum of `0.01`, a smallest expected improvement of `0.1`, and
-a step of `0.05`.
+and the precision just measured by value. Give each of the five values it needs a named constant: a
+maximum learning rate of `0.25`, a minimum of `0.01`, a smallest expected improvement of `0.1`, a
+step of `0.05`, and a decrease factor of `0.5`.
 
 The rule works on the difference between the two precisions, i.e. how much the network improved
 since the last evaluation:
 * **Improved by at least the expected minimum:** leave the learning rate alone. It's working.
 * **Improved, but by less than that:** raise the learning rate by the step. Progress has stalled, so take bigger steps.
-* **Didn't improve at all:** lower the learning rate by the step. The network is overshooting, so take smaller steps.
+* **Didn't improve at all:** halve the learning rate. The network is overshooting, so take smaller steps.
 
 As in **L02**, keep the limits out of the branches and apply them once afterwards with
 `learningRate = std::clamp(learningRate, minLearningRate, maxLearningRate)`. It needs
@@ -255,16 +311,26 @@ As in **L02**, keep the limits out of the branches and apply them once afterward
 Store the precision just measured in `prevPrecision` before returning, so the next call has
 something to compare against.
 
-**The clamp's minimum is the one value that differs from L02**, which uses `1e-6`. The purpose the
-minimum is given there is that "a model that keeps missing can still creep towards the line rather
-than stopping dead", and in a network `1e-6` doesn't deliver it: the parameter updates it allows are far
-too small to measure, so the precision drifts *down* by a fraction of a millionth from one
-evaluation to the next, the rule reads that as another failure to improve, and the rate stays at
-the floor for the rest of the run. Two unlucky evaluations in a row are enough to reach it from the
-initial rate, and the network never learns anything afterwards. Measured on the 2-bit XOR pattern,
-once the real `Dense` layer of **L05** has replaced the stub, a floor of `1e-6` kills roughly one
-run in six that way. With `0.01` the rate recovers on its own, since a network that is still moving
-improves sooner or later, and the rule raises the rate again the moment it does.
+**Why halve rather than subtract?** **L02** lowers the rate by the same step it raises it by. Here
+the rate goes up by a fixed step and down by a fixed factor, a scheme known as *additive increase,
+multiplicative decrease* (AIMD), the same rule TCP uses to adjust how fast it sends data. The cut
+scales with the rate: from `0.25`, repeated halving eases down through `0.125`, `0.0625` and so on,
+whereas subtracting `0.05` would take any rate below `0.06` straight to the floor after a single bad
+evaluation. And since a raise always adds `0.05`, a rate that was halved after one unlucky
+evaluation has more than recovered after the next one that shows progress.
+
+**The minimum differs from L02 too**, which uses `1e-6`. The purpose the minimum is given there is
+that "a model that keeps missing can still creep towards the line rather than stopping dead", and
+in a network `1e-6` doesn't deliver it: the parameter updates it allows are far too small to
+measure, so the precision drifts *down* by a fraction of a millionth from one evaluation to the
+next, the rule reads that as another failure to improve, and the rate stays at the floor for the
+rest of the run. A network that sits on a plateau for enough evaluations can halve its way down
+there, and it never learns anything afterwards. With `0.01` the rate recovers on its own, since a
+network that is still moving improves sooner or later, and the rule raises the rate again the
+moment it does.
+
+The initial rate sits at that floor as well, `0.01` rather than **L02**'s `0.1`, so the network
+starts cautiously and only speeds up once it has shown progress.
 
 ---
 
@@ -286,21 +352,31 @@ Replace the temporary version of `train()` in `source/ml/neural_network/shallow.
 * Do the reset **after** the argument checks, so a rejected call leaves a trained network exactly as it was.
 
 **Training:**
-* Give the evaluation interval (`100`) and the initial learning rate (`0.1`) named constants.
+* Give the evaluation interval (`100`) and the initial learning rate (`0.01`) named constants.
 * Declare the learning rate and the previous precision as local variables, initialized to the initial learning rate and `0.0`. Being local means every call starts from the initial rate again, rather than inheriting whatever the previous call ended on.
 * Iterate the desired number of epochs with a for loop: `for (std::size_t epoch{}; epoch < epochCount; ++epoch)`.
 * At the start of every epoch, call `randomizeTrainOrder()`. As in **L02**, reshuffling each epoch keeps the network from learning anything from the order the training data happens to be stored in.
 * For each epoch, iterate through the training sets in the order `myTrainOrder` gives rather than sequentially, e.g. with a range-based for loop over `myTrainOrder`. Note that the loop variable is the index into the training data, not the counter itself.
 * For each training set index `x`, perform the following three steps:
     1. **Feedforward:** call `feedforward(myTrainInput[x])`. This performs feedforward through both the hidden layer and the output layer.
-    2. **Backpropagation:**
-        * Compute the error in the output layer: `myOutputLayer.backpropagate(myTrainOutput[x])`.
-        * Compute the error in the hidden layer from the output layer's error and weights: `myHiddenLayer.backpropagate(myOutputLayer)`.
-    3. **Optimization:**
-        * Optimize the hidden layer: `myHiddenLayer.optimize(myTrainInput[x], learningRate)`, passing the current learning rate.
-        * Optimize the output layer based on the hidden layer's output: `myOutputLayer.optimize(myHiddenLayer.output(), learningRate)`.
+    2. **Backpropagation:** call `backpropagate(myTrainOutput[x])`. This computes the error in both layers.
+    3. **Optimization:** call `optimize(myTrainInput[x], learningRate)`, passing the current learning rate. This updates the parameters in both layers.
 
-Each of the five calls above returns `bool`: `feedforward()` and the four layer calls (see **L03**). Return `false` as soon as any of them fails: a dimension mismatch means the network is wired wrong, and training on from there would only produce meaningless numbers.
+Each of the three calls returns `bool`. Return `false` as soon as any of them fails: a dimension mismatch means the network is wired wrong, and training on from there would only produce meaningless numbers.
+
+Replace the temporary bodies of `backpropagate()` and `optimize()` with full implementations:
+
+**The method `backpropagate()`:**
+1. Compute the error in the output layer: `myOutputLayer.backpropagate(reference)`.
+2. Compute the error in the hidden layer from the output layer's error and weights: `myHiddenLayer.backpropagate(myOutputLayer)`.
+
+The order is crucial: the hidden layer's error is computed from the output layer's, so the output layer has to go first.
+
+**The method `optimize()`:**
+1. Optimize the hidden layer: `myHiddenLayer.optimize(input, learningRate)`.
+2. Optimize the output layer based on the hidden layer's output: `myOutputLayer.optimize(myHiddenLayer.output(), learningRate)`.
+
+As in `feedforward()`, each method returns `false` as soon as either layer call fails, without making the second call, and `true` otherwise. Each layer call returns `bool` (see **L03**).
 
 **Evaluating the training progress:**
 * Every hundredth epoch, except the first, compute the precision once and keep it in a local variable:
@@ -314,11 +390,14 @@ Each of the five calls above returns `bool`: `feedforward()` and the four layer 
 ---
 
 ### 4. Compiling and testing
-Update `main.cpp` so `train()` is called (with an epoch count of your choice, and the default precision threshold) before prediction is performed. Check the return value of `train()`: print an error message and exit the program with an error code if training fails.
+`main.cpp` needs no changes: it already calls `train()` between the two rounds of predictions, and
+keeps using `ml::dense_layer::Stub` for both layers until a concrete dense layer implementation
+exists (see **L05**).
 
-Keep using `ml::dense_layer::Stub` for the hidden layer and output layer until a concrete dense layer implementation exists (see **L05**).
+Build and run the program again with `make`. The output is the same as in section 9 of the previous
+part, only now the full training loop runs behind it.
 
-Compile and test-run the program. Don't worry if the network doesn't predict correctly; the dense layers are still stubs and therefore don't actually train. What matters is that the code compiles and runs without errors; a concrete implementation of `Dense` is added in **L05**.
+Don't worry if the network doesn't predict correctly; the dense layers are still stubs and therefore don't actually train. What matters is that the code compiles and runs without errors; a concrete implementation of `Dense` is added in **L05**.
 
 The early-stop line stays absent for the same reason: the stub reports the same output whatever it's fed, so the precision sits at whatever that fixed output happens to score and never moves. Every run trains for the full epoch count. Your `train()` isn't wrong; there's simply nothing there to learn until **L05**.
 
@@ -329,13 +408,13 @@ An updated test suite is available in [exercises/test](../exercises/test/). It's
 carries the **L03** stub tests over unchanged and adds component tests for `Shallow` on top, so it
 supersedes the L03 suite entirely.
 
-Once you've carried your code forward into this lecture's exercises directory, build and run it:
+Once you've implemented the exercises above, build and run it from the exercises directory:
 
 ```bash
 make -C test
 ```
 
-All 28 test cases should pass. The ones worth reading check that a prediction reads the output
+All 30 test cases should pass. The ones worth reading check that a prediction reads the output
 layer *live* rather than from a stored copy, that training performs exactly one feedforward per
 training set per epoch, and that the precision is evaluated on every hundredth epoch and no other.
 Nothing else can tell a correct training loop from one that runs a single pass: both line up

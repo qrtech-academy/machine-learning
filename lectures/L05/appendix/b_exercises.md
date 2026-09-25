@@ -343,7 +343,7 @@ Once you've carried your code forward into this lecture's exercises directory, b
 make -C test
 ```
 
-All 57 test cases should pass. Because `Dense` randomizes its own bias and weights, none of its
+All 59 test cases should pass. Because `Dense` randomizes its own bias and weights, none of its
 output can be predicted from the constructor arguments, so the tests recover the bias by feeding
 the layer a vector of zeros: every weight term drops out and the weighted sum is the bias alone.
 That makes every expected value exact rather than approximate.

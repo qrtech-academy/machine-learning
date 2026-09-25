@@ -64,7 +64,7 @@ make
 `make build`, `make run`, and `make clean` do what their names suggest. The test suite exits with
 code 0 when everything passes, and -1 otherwise.
 
-The suite holds 57 test cases: 14 for the stub and 14 for the network, both carried over from L04,
+The suite holds 59 test cases: 14 for the stub and 16 for the network, both carried over from L04,
 plus 21 for `Dense` and 8 for the helpers in `ml/utils`.
 
 ---

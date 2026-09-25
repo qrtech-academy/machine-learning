@@ -313,6 +313,56 @@ TEST(NeuralNetworkShallow, TrainStopsWhenPrecisionThresholdIsReached)
 }
 
 /**
+ * @brief Verify that training fails at the first training set whose input the hidden layer
+ *        rejects, without feeding the output layer.
+ */
+TEST(NeuralNetworkShallow, TrainFailsOnMismatchedTrainingInput)
+{
+    constexpr std::size_t epochCount{2U};
+    constexpr std::size_t mismatchedInputCount{Test::InputCount + 1U};
+    constexpr std::size_t one{1U};
+
+    const Matrix2d mismatchedTrainInput(Test::SetCount, Matrix1d(mismatchedInputCount));
+
+    DenseLayer hiddenLayer{Test::HiddenCount, Test::InputCount};
+    DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount};
+    NeuralNetwork network{hiddenLayer, outputLayer, mismatchedTrainInput, TrainOutput};
+
+    EXPECT_FALSE(network.train(epochCount, Test::PrecisionThreshold));
+
+    // Test the counts after the failed call.
+    // Expect a single rejected input to the hidden layer, and nothing passed on to the output
+    // layer: the feedforward stops at the first layer that fails, and training at the first set.
+    EXPECT_EQ(hiddenLayer.feedforwardCount(), one);
+    EXPECT_EQ(outputLayer.feedforwardCount(), std::size_t{});
+}
+
+/**
+ * @brief Verify that training fails at the first training set whose reference values the output
+ *        layer rejects during backpropagation.
+ */
+TEST(NeuralNetworkShallow, TrainFailsOnMismatchedTrainingOutput)
+{
+    constexpr std::size_t epochCount{2U};
+    constexpr std::size_t mismatchedOutputCount{Test::OutputCount + 1U};
+    constexpr std::size_t one{1U};
+
+    const Matrix2d mismatchedTrainOutput(Test::SetCount, Matrix1d(mismatchedOutputCount));
+
+    DenseLayer hiddenLayer{Test::HiddenCount, Test::InputCount};
+    DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount};
+    NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, mismatchedTrainOutput};
+
+    EXPECT_FALSE(network.train(epochCount, Test::PrecisionThreshold));
+
+    // Test the counts after the failed call.
+    // Expect one feedforward through each layer: the first set fed forward fine, and training
+    // stopped at its backpropagation rather than moving on to the next set.
+    EXPECT_EQ(hiddenLayer.feedforwardCount(), one);
+    EXPECT_EQ(outputLayer.feedforwardCount(), one);
+}
+
+/**
  * @brief Verify that predictions still work once training has run.
  */
 TEST(NeuralNetworkShallow, PredictAfterTraining)

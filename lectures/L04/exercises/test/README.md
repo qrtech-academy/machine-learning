@@ -4,8 +4,8 @@ Unit tests for the dense layer stub and component tests for the neural network b
 [`QAcademy Test`](https://github.com/qrtech-academy/test-framework) framework.
 
 This suite **supersedes the L03 one**: it carries the stub tests over unchanged and adds
-`ml/neural_network/shallow_test.cpp` on top. Once you've carried your code forward into this
-lecture's exercises directory, this is the only suite you need to run.
+`ml/neural_network/shallow_test.cpp` on top. The stub and the dense layer interface already sit in
+this lecture's exercises directory, so this is the only suite you need to run.
 
 ---
 
@@ -58,7 +58,7 @@ make
 `make build`, `make run`, and `make clean` do what their names suggest. The test suite exits with
 code 0 when everything passes, and -1 otherwise.
 
-The suite holds 28 test cases: the 14 stub tests carried over from L03, and 14 for the network.
+The suite holds 30 test cases: the 14 stub tests carried over from L03, and 16 for the network.
 
 Unlike L03, `SOURCE_FILES` is no longer empty: `Shallow` and `ml/utils` both have `.cpp` files, so
 `../source/ml/neural_network/shallow.cpp` and `../source/ml/utils.cpp` are compiled in. `main.cpp`
@@ -94,6 +94,8 @@ a network that returned the hidden layer's output would pass every one of these.
 | `TrainDefaultPrecisionThreshold`            | `train(epochCount)` alone works           |
 | `TrainEvaluatesPrecisionEveryHundredthEpoch`| one evaluation per 100 epochs, never at 1 |
 | `TrainStopsWhenPrecisionThresholdIsReached` | training ends at the first evaluation     |
+| `TrainFailsOnMismatchedTrainingInput`       | `false` at the first set, output unfed    |
+| `TrainFailsOnMismatchedTrainingOutput`      | `false` at the first backpropagation      |
 
 `TrainFeedsEveryTrainingSetEveryEpoch` is the one that matters. A training loop that runs a single
 pass instead of every epoch, or that visits one training set instead of all four, still lines up
@@ -110,6 +112,14 @@ evaluation each change one of those three numbers.
 stub already predicts exactly, so the precision is `1.0` at the first evaluation. A `train()` that
 never checks the threshold runs all 500 epochs and fails the count.
 
+The two `TrainFails...` tests cover the private `bool` methods `train()` is built from. Training
+data whose rows don't fit the layers must make `train()` return `false` at the very first training
+set, so each layer's feedforward tally shows exactly how far it got: one rejected input to the
+hidden layer and nothing passed on to the output layer, or one feedforward through each layer and
+then a rejected backpropagation. A `train()` that ignores the result of `backpropagate()`, or a
+`feedforward()` that feeds the output layer after the hidden layer has already failed, turns one of
+them red.
+
 Dimensions are chosen so mistakes can't hide: 2 inputs, 3 hidden nodes, 1 output node. Because the
 input count and the hidden node count differ, a vector handed to the wrong layer is a dimension
 error rather than a coincidence that happens to fit.
@@ -125,6 +135,13 @@ that never calls it behaves exactly like one that does. Catching the omission wo
 `feedforwardCount()`, counting the calls the way that one counts feedforwards. The reset becomes
 observable in **L05** instead, where `Dense` overrides `initParams()` with a real one and the
 values it writes can be read back.
+
+### An ignored feedforward result
+A `train()` that calls `feedforward()` without checking its result still passes
+`TrainFailsOnMismatchedTrainingInput`. The rejected input is the same one `optimize()` hands the
+hidden layer a moment later, and the stub rejects it there too, so training still ends at the first
+set with the same tallies. Telling the two apart would take a tally of `optimize()` calls on the
+stub, the same second counter the parameter reset needs.
 
 ### The constructor's error paths
 The constructor's two `std::terminate()` paths aren't tested, for the same reason as in

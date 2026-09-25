@@ -148,8 +148,8 @@ otherwise                        ->  updateLearningRate(): raise the rate when
                                      network is overshooting
 \end{console}
 
-\noindent The learning rate is therefore never supplied by the caller. It starts at \code{0.1} and
-is revised from one evaluation to the next, exactly as in \code{ml::lin_reg::Adaptive} from
+\noindent The learning rate is therefore never supplied by the caller. It starts at \code{0.01} and
+is revised from one evaluation to the next, much as in \code{ml::lin_reg::Adaptive} from
 Chapter~\ref{c2:ch:training}, which evaluates every tenth epoch instead: a linear regression model
 converges in tens of epochs, a network in thousands.
 
