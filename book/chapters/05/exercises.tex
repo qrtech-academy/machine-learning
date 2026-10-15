@@ -13,9 +13,10 @@ computes something rather than the stub it's been wired to since Chapter~\ref{c3
 \secref{c5:sec:architecture} for a walkthrough of the dense layer's architecture before you start.
 
 \textbf{How to check your work.} The final test suite of Part~I is already in
-\file{lectures/L05/exercises/test}, and Exercise~\ref{c5:ex:16} runs it. It's cumulative:
-it carries the stub and network tests from Chapter~\ref{c4:ch:network} over unchanged and adds unit
-tests for \code{Dense} and for the helpers in \file{ml/utils}. It tests the directory above it by
+\file{lectures/L05/exercises/test}, and Exercise~\ref{c5:ex:17} runs it. It's cumulative:
+it carries the stub tests from Chapter~\ref{c4:ch:network} over unchanged, updates the network
+tests for the new return value of \code{train()} (see Exercise~\ref{c5:ex:15}), and adds unit tests
+for \code{Dense} and for the helpers in \file{ml/utils}. It tests the directory above it by
 default; \code{make ML_DIR=<path>} points it at a tree of your own elsewhere.
 
 The solution is published in the companion repository after the lecture, and
@@ -27,7 +28,7 @@ The solution is published in the companion repository after the lecture, and
 \label{c5:set:1}
 You'll extend your \code{ml} codebase from Chapter~\ref{c4:ch:network} by implementing a concrete
 subclass \code{Dense}, which takes over from \code{ml::dense_layer::Stub} as the layer your network
-is built from. The stub itself stays in the codebase; see Exercise~\ref{c5:ex:15}.
+is built from. The stub itself stays in the codebase; see Exercise~\ref{c5:ex:16}.
 
 \codeexercise{The \code{ActFunc} enum class}
 \label{c5:ex:1}
@@ -57,39 +58,41 @@ below:
 Create a new file named \file{dense.cpp} in \file{source/ml/dense_layer}. The file path should
 therefore be \file{source/ml/dense_layer/dense.cpp}.
 
-\textbf{Note! Don't forget to add this file to your makefile, see below!}
+\textbf{Note! Don't forget to add this file to your makefile!} The only change is the new
+\file{source/ml/dense_layer/dense.cpp} line in \code{SRC_FILES}:
 
 \begin{makecode}
-# Application target.
-TARGET := app
+# Target application.
+TARGET := neural_network
+
+# C++ compiler.
+CXX_COMPILER := g++
+
+# C++ compiler flags.
+CXX_FLAGS := -Wall -Werror -std=c++17 -Iinclude
 
 # Source files.
-# File added to the build here.
-SRC_FILES := source/main.cpp\
-                source/ml/dense_layer/dense.cpp\
-                source/ml/neural_network/shallow.cpp\
-                source/ml/utils.cpp\
+SRC_FILES := source/main.cpp \
+             source/ml/dense_layer/dense.cpp \
+             source/ml/neural_network/shallow.cpp \
+             source/ml/utils.cpp \
 
-# Include directory.
-INC_DIR := include
-
-# Compiler flags.
-COMPILER_FLAGS := -Wall -Werror -std=c++17
-
-# Build and run the application as default.
+# Build and run the target by default.
 default: build run
 
-# Build the application.
+# Build the target.
 build:
-	@g++ $(SRC_FILES) -o $(TARGET) -I$(INC_DIR) $(COMPILER_FLAGS)
+	@$(CXX_COMPILER) $(SRC_FILES) -o $(TARGET) $(CXX_FLAGS)
 
-# Run the application.
+# Run the target.
 run:
 	@./$(TARGET)
 
-# Clean the application.
+# Clean the target.
 clean:
 	@rm -f $(TARGET)
+
+.PHONY: default build run clean
 \end{makecode}
 
 \codeexercise{The \code{Dense} class: declaration}
@@ -170,9 +173,9 @@ file \file{source/ml/dense_layer/dense.cpp}.
     \item \code{myOutput}, \code{myPreActivationOutput}, and \code{myError} should hold
       \code{nodeCount} floating-point values equal to 0.0 at the start.
     \item \code{myBias} should hold \code{nodeCount} floating-point values randomized in
-      $[0.0, 1.0]$.
+      $[-1.0, 1.0]$.
     \item \code{myWeights} should hold \code{nodeCount} $\times$ \code{weightCount} floating-point
-      values randomized in $[0.0, 1.0]$.
+      values randomized in $[-1.0, 1.0]$.
     \item The randomizing itself is written once, in \code{initParams()}, and called from here; see
       Exercise~\ref{c5:ex:10}.
     \item \code{myActFunc} should be assigned the given activation function.
@@ -223,9 +226,9 @@ if ((0U == nodeCount) || (0U == weightCount))
 \exerciseset{Implementing the Dense Layer}
 \label{c5:set:2}
 You'll complete the class \code{Dense} you just declared by implementing the methods
-\code{initParams()}, \code{feedforward()}, \code{backpropagate()}, and \code{optimize()}. See
-\secref{c5:sec:math} for an overview of how the math from Chapter~\ref{c3:ch:nn} maps onto the
-code below.
+\code{initParams()}, \code{feedforward()}, \code{backpropagate()}, and \code{optimize()}, then
+change \code{Shallow::train()} to report the precision it reached. See \secref{c5:sec:math} for an
+overview of how the math from Chapter~\ref{c3:ch:nn} maps onto the code below.
 
 \codeexercise{Helper functions}
 \label{c5:ex:9}
@@ -235,17 +238,26 @@ Chapter~\ref{c4:ch:network}, in the namespace \code{ml}. Declare each one in the
 it in the \file{.cpp}, alongside the \code{initRandGen()} already there.
 \begin{itemize}
   \item \code{randomStartVal()}: function to generate and return a random number in the range
-    $[0.0, 1.0]$.
+    $[-1.0, 1.0]$, closed at both ends.
   \begin{itemize}
     \item \textbf{Implementation:}
     \begin{itemize}
-      \item Generate a random number in the range $[0.0, 1.0]$ by calling \code{std::rand()}, which
-        generates a random number in \code{[0, RAND_MAX]}, and dividing by \code{RAND_MAX}. Both
-        ranges are closed at each end: a draw of exactly \code{RAND_MAX} gives exactly \code{1.0}.
+      \item First generate a random number in the range $[0.0, 1.0]$ by calling
+        \code{std::rand()}, which generates a random number in \code{[0, RAND_MAX]}, and dividing
+        by \code{RAND_MAX}.
       \item One of the operands must be converted to a floating-point number to avoid integer
         division, e.g.\ \code{static_cast<double>(RAND_MAX)}.
+      \item Then rescale the number to the range $[-1.0, 1.0]$ by multiplying by \code{2.0} and
+        subtracting \code{1.0}. A draw of exactly \code{0} then gives exactly \code{-1.0}, and a
+        draw of exactly \code{RAND_MAX} gives exactly \code{1.0}.
     \end{itemize}
     \item Should be marked \code{[[nodiscard]]} and \code{noexcept}.
+    \item \textbf{Note:} the start values must be able to go negative. If every weight and bias
+      starts positive, the input \code{\{1, 1\}} starts out giving the largest weighted sum in
+      every node, the opposite of what XOR asks for, and training must first drive some of the
+      weights negative before the network gets anywhere. Start values symmetric around zero also
+      start \code{Tanh} layers in the sensitive part of the function rather than in saturation,
+      where the derivative is close to zero.
     \item It belongs next to \code{initRandGen()}: both wrap \code{std::rand()}, and calling this
       one without having called that one first gives the same sequence on every run.
   \end{itemize}
@@ -467,55 +479,141 @@ Implement \code{backpropagate()} for hidden layers (with error and weights from 
 \task{Return value}
 \code{true} once every node's bias and weights have been updated.
 
-\codeexercise{Compiling and testing}
+\codeexercise{Reporting the precision from \code{train()}}
 \label{c5:ex:15}
+In Chapter~\ref{c4:ch:network}, \code{Shallow::train()} returns \code{true} whenever its arguments
+are valid, whether the network learned anything or not. With two stubs that was all there was to
+say, since nothing could be learned. Now that the network actually trains, the caller needs to know
+how well it did, for instance to decide whether to train again (see Exercise~\ref{c5:ex:16}).
+Change \code{train()} to return the precision it reached instead.
+
+\textbf{\code{std::optional}.} \code{train()} now has two kinds of result: a precision, or no
+result at all when training couldn't be carried out. \code{std::optional<double>}, from the header
+\code{<optional>}, holds exactly that, either a \code{double} or nothing:
+\begin{itemize}
+  \item Returning a \code{double} from a function declared to return
+    \code{std::optional<double>} stores it, so \code{return currPrecision;} works as written.
+  \item \code{return std::nullopt;} returns an empty optional, i.e.\ no value.
+  \item The caller checks for a value with \code{has_value()} (or simply \code{if (precision)}),
+    and reads it with \code{*precision} or \code{precision.value()}. Only read it after checking:
+    \code{*precision} on an empty optional is undefined behavior, while \code{value()} throws an
+    exception.
+\end{itemize}
+
+\textbf{Why not return \code{-1.0} on invalid arguments?} The precision is \code{1.0 - MAE}, and
+the mean absolute error has no upper bound. A network whose predictions miss by \code{2.0} on
+average has a precision of exactly \code{-1.0}, so any negative number could be a real result. An
+empty optional can't be mistaken for a precision.
+
+\task{Declaration}
+In \file{ml/neural_network/shallow.hpp}, change the declaration of \code{train()} to
+
+\begin{cppcode}
+[[nodiscard]] std::optional<double> train(std::size_t epochCount,
+                                          double precisionThreshold = 0.999999) noexcept;
+\end{cppcode}
+
+\begin{itemize}
+  \item Include \code{<optional>} in \file{shallow.hpp}.
+  \item Mark it \code{[[nodiscard]]}: a caller that ignores the result has no idea whether
+    training worked.
+  \item Update the \code{@return} line of its doc comment to match.
+\end{itemize}
+
+\task{Implementation}
+In \file{source/ml/neural_network/shallow.cpp}, update the return type of the definition, then
+change each \code{return}:
+\begin{itemize}
+  \item Replace every \code{return false;} with \code{return std::nullopt;}: the two argument
+    checks, and the three layer calls inside the epoch loop. Each of them means training couldn't
+    be carried out at all.
+  \item At the early stop, return the precision you just measured, \code{currPrecision}, instead
+    of \code{true}. The early stop line printed there stays as it is.
+  \item After the epoch loop, replace \code{return true;} with \code{return precision();}. Measure
+    once more rather than returning the last evaluated precision: that value is up to 99 epochs
+    old, and a run of 100 epochs or fewer has never been evaluated at all.
+\end{itemize}
+
+\task{Return value}
+\code{std::nullopt} on invalid arguments or a failed layer call. Otherwise the precision the
+network reached: at least \code{precisionThreshold} if training stopped early, and whatever the
+final measurement gives if the epochs ran out.
+
+\codeexercise{Compiling and testing}
+\label{c5:ex:16}
 Update \file{main.cpp} to use your new layer:
 \begin{itemize}
   \item Replace the two \code{ml::dense_layer::Stub} instances with \code{ml::dense_layer::Dense},
     keeping the same wiring: the output layer's weight count must still match the hidden layer's
     node count.
-  \item Give both layers \code{ActFunc::Tanh}, and make the hidden layer wider than the task
-    strictly needs, e.g.\ 8 nodes. Keep the 2-bit XOR training data from
+  \item Make the hidden layer wider than the task strictly needs, 15 nodes, and leave its
+    activation function at the default \code{ActFunc::Relu}. Give the output layer
+    \code{ActFunc::Tanh}. A ReLU output node that dies takes the whole network with it, since every
+    prediction is then \code{0}. Keep the 2-bit XOR training data from
     Chapter~\ref{c4:ch:network}.
-  \item Train for a good few thousand epochs (e.g.\ 10000), then predict once per training set and
-    print the results as before. There's no learning rate to pass any more: the network sets its
-    own, and stops as soon as it reaches the precision threshold, so the epoch count is an upper
-    bound rather than a number to tune.
+  \item Give the training parameters named constants in \code{trainAndTest()}: an epoch count of
+    \code{100000}, a precision threshold of \code{0.99}, and an attempt count of \code{10}.
+  \item Pass the threshold to \code{train()} explicitly. The default of \code{0.999999} is
+    practically never reached, so every attempt would run all 100000 epochs and still fall short
+    of it.
 \end{itemize}
+Then train in a loop, at most once per attempt:
+\begin{itemize}
+  \item Call \code{train()} and keep the returned optional:
+    \code{const auto precision\{network.train(epochCount, precisionThreshold)\}}.
+  \item If it holds no value, print \code{"Training failed!"} and return \code{false}. The
+    arguments are invalid or the network is wired wrong, so another attempt would fail the same
+    way.
+  \item If the precision reaches the threshold, print the predictions after training as before and
+    return \code{true}.
+  \item Otherwise, print the attempt number and the precision it reached, e.g.\
+    \code{"Attempt 1 reached precision 0.75, retrying!"}, and go round again.
+  \item If every attempt falls short, print \code{"Training failed after 10 attempts!"} (using the
+    constant rather than a literal) and return \code{false}.
+\end{itemize}
+There's no learning rate to pass: the network sets its own, and stops as soon as it reaches the
+precision threshold, so the epoch count is an upper bound rather than a number to tune. Each call to
+\code{train()} resets both layers first (see Chapter~\ref{c4:ch:network}), so every attempt starts
+from newly drawn parameters rather than the ones the previous attempt got stuck in.
+
 \textbf{Don't delete \file{stub.hpp}.} \code{Dense} replaces the stub in your \emph{network}, not
 in your codebase. The test suite still compiles both, and still uses the stub to test
 \code{Shallow}, since a layer that computes nothing is what makes the network's wiring visible. See
-Exercise~\ref{c5:ex:16}.
+Exercise~\ref{c5:ex:17}.
 
 Compile and test-run the program. Unlike Chapter~\ref{c4:ch:network}, where every prediction was
 the stub's fixed output, each prediction should now land within a few hundredths of its training
 target. Your exact numbers will differ from run to run, because the bias and weights start
 randomized.
 
-The early-stop line from \code{train()} should appear above the predictions, reporting a precision
-and an epoch count well short of the 10000 you asked for. Both vary from run to run: the starting
+The early stop line from \code{train()} should appear above the predictions, reporting a precision
+and an epoch count well short of the 100000 you asked for. Both vary from run to run: the starting
 parameters are random, and so is the training order. A run that stops after a few hundred epochs
-and one that runs several thousand are both normal.
+and one that needs tens of thousands are both normal; the average is around 2500.
 
-\textbf{When a run doesn't converge.} Roughly two XOR networks in a thousand settle into a set of
-parameters they can't improve on, predicting something near 0.5 for every input however long they
-train. Call \code{train()} again: it resets both layers first, so the second call starts from newly
-drawn parameters rather than the ones that got stuck. That's the reset from
-Chapter~\ref{c4:ch:network} earning its keep, and it's what the test suite's convergence test relies
-on.
+\textbf{When an attempt doesn't converge.} Roughly two attempts in a hundred settle into a set of
+parameters they can't improve on, typically with one or two of the four predictions well off target
+however long they train. That's what the attempt loop is for. A second attempt starts from scratch
+and nearly always gets there: in 1000 runs of the program, not one used up all ten attempts. That's
+the reset from Chapter~\ref{c4:ch:network} earning its keep, and it's what the test suite's
+convergence test relies on as well.
 
-\textbf{Worth trying:} switch both layers to \code{ActFunc::Relu} and shrink the hidden layer to 2
-nodes. Roughly one run in four then fails to learn XOR at all, however long you train.
-\code{randomStartVal()} never returns a negative number, so every node starts on ReLU's positive
-side, and a node whose weighted sum is driven negative for every input has a derivative of exactly
-zero from then on: it stops learning and can't recover. That's the dying ReLU problem from
-Chapter~\ref{c3:ch:nn}, and it's why the test suite trains with \code{Tanh}.
+\textbf{Worth trying:} switch the output layer to \code{ActFunc::Relu} as well and shrink the
+hidden layer to 2 nodes. Roughly six attempts in seven then fail to learn XOR at all, however long
+they train, and even with ten attempts about one run of the program in five ends with
+\code{"Training failed after 10 attempts!"}. A node whose weighted sum is negative for every input
+has a derivative of exactly zero: it stops learning and can't recover. Since
+\code{randomStartVal()} draws from $[-1.0, 1.0]$, a node can start out that way, and with only
+three ReLU nodes in the network, about two networks in three contain one before training has even
+begun. That's the dying ReLU problem from Chapter~\ref{c3:ch:nn}, and it's why the test suite
+trains with \code{Tanh}.
 
 \codeexercise{Running the tests}
-\label{c5:ex:16}
+\label{c5:ex:17}
 The final test suite is available in \file{lectures/L05/exercises/test}. It's cumulative:
-it carries the stub and network tests from Chapter~\ref{c4:ch:network} over unchanged and adds unit
-tests for \code{Dense} and for the helpers in \file{ml/utils}.
+it carries the stub tests from Chapter~\ref{c4:ch:network} over unchanged, updates the network
+tests for the new return value of \code{train()} (see Exercise~\ref{c5:ex:15}), and adds unit tests
+for \code{Dense} and for the helpers in \file{ml/utils}.
 
 Once you've carried your code forward into this lecture's exercises directory, build and run it:
 
@@ -523,10 +621,13 @@ Once you've carried your code forward into this lecture's exercises directory, b
 make -C test
 \end{shell}
 
-\noindent All 59 test cases should pass. Because \code{Dense} randomizes its own bias and weights,
+\noindent All 64 test cases should pass. Because \code{Dense} randomizes its own bias and weights,
 none of its output can be predicted from the constructor arguments, so the tests recover the bias
-by feeding the layer a vector of zeros: every weight term drops out and the weighted sum is the
-bias alone. That makes every expected value exact rather than approximate.
+from the layer's output instead. Without an activation function, a vector of zeros is enough: every
+weight term drops out and the weighted sum is the bias alone. \code{Tanh} tests feed the same zeros
+and invert the output with \code{std::atanh()}. ReLU would clamp a negative bias to zero, so the
+ReLU tests instead lift each node's weighted sum by a known amount, far above any start value, and
+subtract it again. That makes every expected value exact rather than approximate.
 
 \code{InitParamsDrawsNewValues} is the first test in the course where \code{initParams()} has
 anything to do. The stub tests only check that calling it changes nothing, which is all an empty

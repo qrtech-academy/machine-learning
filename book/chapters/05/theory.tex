@@ -134,10 +134,21 @@ activation-function helpers, rather than inside the layer itself:
   \item \code{initRandGen()} ensures the random number generator (\code{std::rand()}) is seeded
     exactly once, regardless of how many layers are created. It's the same function you wrote in
     Chapter~\ref{c4:ch:network}, which is exactly why it lives in a shared file.
-  \item \code{randomStartVal()} generates the actual random number in $[0.0, 1.0]$ that each bias
-    and weight value is initialized with. Note this is a deliberately simple choice for the course:
-    every parameter starts positive, with a mean of 0.5. Production networks initialize
-    symmetrically around zero and scale by the number of inputs (Xavier or He initialization),
-    which matters most for \code{Tanh} layers, since an all-positive start puts them straight into
-    saturation where the gradients are small.
+  \item \code{randomStartVal()} generates the actual random number in $[-1.0, 1.0]$ that each bias
+    and weight value is initialized with. The range is closed at both ends: the function first
+    divides by \code{RAND_MAX}, which gives a number in $[0.0, 1.0]$, and then rescales it with
+    \code{2.0 * x - 1.0}. A draw of exactly \code{0} therefore gives exactly \code{-1.0}, and a
+    draw of exactly \code{RAND_MAX} gives exactly \code{1.0}.
+  \item The start values are symmetric around zero, with a mean of 0.0. That matters for two
+    reasons:
+  \begin{itemize}
+    \item With only positive start values, a larger input always gives a larger weighted sum in
+      every node. A network that must learn XOR, where \code{\{1, 1\}} should give \code{0}, then
+      starts out ranking \code{\{1, 1\}} highest, and training must undo that before it can make
+      progress.
+    \item \code{Tanh} layers with all positive start values go straight into saturation, where the
+      derivative is close to zero and training is slow.
+  \end{itemize}
+  \item Note this is still a deliberately simple choice for the course. Production networks also
+    scale the range by the number of inputs (Xavier or He initialization).
 \end{itemize}

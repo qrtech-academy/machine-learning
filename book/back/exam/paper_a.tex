@@ -223,9 +223,9 @@ Compute the derivative the correct way and the derivative the wrong way, and giv
 them. Then show that for a \code{Relu} node the two ways agree at $s = 1.5$ and at $s = -0.8$, and
 state what that agreement costs a test suite. \worth{4}
 
-\qpart{c} \code{ml::randomStartVal()} returns values in the range $[0, 1]$ only. Explain how that
-interacts with ReLU to leave a hidden node unable to learn ever again, and state the two
-countermeasures the book names. \worth{3}
+\qpart{c} \code{ml::randomStartVal()} returns values in the range $[-1, 1]$. Explain how that
+interacts with ReLU to leave a hidden node unable to learn ever again, possibly before the first
+epoch, and state the two countermeasures the book names. \worth{3}
 
 % ------------------------------------------------------------------------------------------
 \question{The dense layer, written out}{12}
