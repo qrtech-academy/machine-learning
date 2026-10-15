@@ -6,7 +6,7 @@ it's been wired to since **L03**.
 ---
 
 ## Declaring the Dense Layer
-You'll extend your `ml` codebase from **L04** by implementing a concrete subclass `Dense`, which takes over from `ml::dense_layer::Stub` as the layer your network is built from. The stub itself stays in the codebase; see section 7 of the next part. See [appendix A](./a_theory.md) for a walkthrough of the dense layer's architecture before you start.
+You'll extend your `ml` codebase from **L04** by implementing a concrete subclass `Dense`, which takes over from `ml::dense_layer::Stub` as the layer your network is built from. The stub itself stays in the codebase; see section 8 of the next part. See [appendix A](./a_theory.md) for a walkthrough of the dense layer's architecture before you start.
 
 ---
 
@@ -30,39 +30,41 @@ Create a new file named `dense.hpp` in `include/ml/dense_layer`. The file path s
 ### 3. Create `dense.cpp`
 Create a new file named `dense.cpp` in `source/ml/dense_layer`. The file path should therefore be `source/ml/dense_layer/dense.cpp`.
 
-**Note! Don't forget to add this file to your makefile, see below!**
+**Note! Don't forget to add this file to your makefile!** The only change is the new
+`source/ml/dense_layer/dense.cpp` line in `SRC_FILES`:
 
 ```makefile
-# Application target.
-TARGET := app
+# Target application.
+TARGET := neural_network
+
+# C++ compiler.
+CXX_COMPILER := g++
+
+# C++ compiler flags.
+CXX_FLAGS := -Wall -Werror -std=c++17 -Iinclude
 
 # Source files.
-# File added to the build here.
-SRC_FILES := source/main.cpp\
-                source/ml/dense_layer/dense.cpp\
-                source/ml/neural_network/shallow.cpp\
-                source/ml/utils.cpp\
+SRC_FILES := source/main.cpp \
+             source/ml/dense_layer/dense.cpp \
+             source/ml/neural_network/shallow.cpp \
+             source/ml/utils.cpp \
 
-# Include directory.
-INC_DIR := include
-
-# Compiler flags.
-COMPILER_FLAGS := -Wall -Werror -std=c++17
-
-# Build and run the application as default.
+# Build and run the target by default.
 default: build run
 
-# Build the application.
+# Build the target.
 build:
-	@g++ $(SRC_FILES) -o $(TARGET) -I$(INC_DIR) $(COMPILER_FLAGS)
+	@$(CXX_COMPILER) $(SRC_FILES) -o $(TARGET) $(CXX_FLAGS)
 
-# Run the application.
+# Run the target.
 run:
 	@./$(TARGET)
 
-# Clean the application.
+# Clean the target.
 clean:
 	@rm -f $(TARGET)
+
+.PHONY: default build run clean
 ```
 
 ---
@@ -118,8 +120,8 @@ Define all methods, constructors, etc. that aren't marked `delete` or `default` 
 **Constructor:**
 * In the constructor, all member variables should be initialized:
     * `myOutput`, `myPreActivationOutput`, and `myError` should hold `nodeCount` floating-point values equal to 0.0 at the start.
-    * `myBias` should hold `nodeCount` floating-point values randomized in `[0.0, 1.0]`.
-    * `myWeights` should hold `nodeCount` x `weightCount` floating-point values randomized in `[0.0, 1.0]`.
+    * `myBias` should hold `nodeCount` floating-point values randomized in `[-1.0, 1.0]`.
+    * `myWeights` should hold `nodeCount` x `weightCount` floating-point values randomized in `[-1.0, 1.0]`.
     * The randomizing itself is written once, in `initParams()`, and called from here; see section 2 of the next part.
     * `myActFunc` should be assigned the given activation function.
 * If `nodeCount` or `weightCount` equals 0, the error message `Invalid dense layer parameters: nodeCount and weightCount must be greater than 0!` should be printed to standard error, after which the program should terminate by calling `std::terminate()`, as shown below:
@@ -147,7 +149,7 @@ if ((0U == nodeCount) || (0U == weightCount))
 ---
 
 ## Implementing the Dense Layer
-You'll complete the class `Dense` you just declared by implementing the methods `initParams()`, `feedforward()`, `backpropagate()`, and `optimize()`. See [appendix A](./a_theory.md) for an overview of how
+You'll complete the class `Dense` you just declared by implementing the methods `initParams()`, `feedforward()`, `backpropagate()`, and `optimize()`, then change `Shallow::train()` to report the precision it reached. See [appendix A](./a_theory.md) for an overview of how
 the math from **L03** maps onto the code below.
 
 ---
@@ -157,11 +159,13 @@ the math from **L03** maps onto the code below.
 `source/ml/utils.cpp`, the pair you created in **L04**, in the namespace `ml`. Declare each one in
 the header and define it in the `.cpp`, alongside the `initRandGen()` already there.
 
-* `randomStartVal()`: function to generate and return a random number in the range `[0.0, 1.0]`.
+* `randomStartVal()`: function to generate and return a random number in the range `[-1.0, 1.0]`, closed at both ends.
     * **Implementation:**
-        * Generate a random number in the range `[0.0, 1.0]` by calling `std::rand()`, which generates a random number in `[0, RAND_MAX]`, and dividing by RAND_MAX. Both ranges are closed at each end: a draw of exactly `RAND_MAX` gives exactly `1.0`.
+        * First generate a random number in the range `[0.0, 1.0]` by calling `std::rand()`, which generates a random number in `[0, RAND_MAX]`, and dividing by `RAND_MAX`.
         * One of the operands must be converted to a floating-point number to avoid integer division, e.g. `static_cast<double>(RAND_MAX)`.
+        * Then rescale the number to the range `[-1.0, 1.0]` by multiplying by `2.0` and subtracting `1.0`. A draw of exactly `0` then gives exactly `-1.0`, and a draw of exactly `RAND_MAX` gives exactly `1.0`.
     * Should be marked `[[nodiscard]]` and `noexcept`.
+    * **Note:** the start values must be able to go negative. If every weight and bias starts positive, the input `{1, 1}` starts out giving the largest weighted sum in every node, the opposite of what XOR asks for, and training must first drive some of the weights negative before the network gets anywhere. Start values symmetric around zero also start `Tanh` layers in the sensitive part of the function rather than in saturation, where the derivative is close to zero.
     * It belongs next to `initRandGen()`: both wrap `std::rand()`, and calling this one without having called that one first gives the same sequence on every run.
 
 * `actFuncOutput()`: function to compute and return the output (floating-point) of a given activation function.
@@ -293,49 +297,120 @@ Implement `backpropagate()` for hidden layers (with error and weights from the n
 
 ---
 
-### 7. Compiling and testing
+### 7. Reporting the precision from `train()`
+In **L04**, `Shallow::train()` returns `true` whenever its arguments are valid, whether the network
+learned anything or not. With two stubs that was all there was to say, since nothing could be
+learned. Now that the network actually trains, the caller needs to know how well it did, for
+instance to decide whether to train again (see section 8). Change `train()` to return the precision
+it reached instead.
+
+**`std::optional`.** `train()` now has two kinds of result: a precision, or no result at all when
+training couldn't be carried out. `std::optional<double>`, from the header `<optional>`, holds
+exactly that, either a `double` or nothing:
+* Returning a `double` from a function declared to return `std::optional<double>` stores it, so
+  `return currPrecision;` works as written.
+* `return std::nullopt;` returns an empty optional, i.e. no value.
+* The caller checks for a value with `has_value()` (or simply `if (precision)`), and reads it with
+  `*precision` or `precision.value()`. Only read it after checking: `*precision` on an empty
+  optional is undefined behavior, while `value()` throws an exception.
+
+**Why not return `-1.0` on invalid arguments?** The precision is `1.0 - MAE`, and the mean absolute
+error has no upper bound. A network whose predictions miss by `2.0` on average has a precision of
+exactly `-1.0`, so any negative number could be a real result. An empty optional can't be mistaken
+for a precision.
+
+**Declaration:** in `ml/neural_network/shallow.hpp`, change the declaration of `train()` to
+
+```cpp
+[[nodiscard]] std::optional<double> train(std::size_t epochCount,
+                                          double precisionThreshold = 0.999999) noexcept;
+```
+
+* Include `<optional>` in `shallow.hpp`.
+* Mark it `[[nodiscard]]`: a caller that ignores the result has no idea whether training worked.
+* Update the `@return` line of its doc comment to match.
+
+**Implementation:** in `source/ml/neural_network/shallow.cpp`, update the return type of the
+definition, then change each `return`:
+* Replace every `return false;` with `return std::nullopt;`: the two argument checks, and the three
+  layer calls inside the epoch loop. Each of them means training couldn't be carried out at all.
+* At the early stop, return the precision you just measured, `currPrecision`, instead of `true`.
+  The early stop line printed there stays as it is.
+* After the epoch loop, replace `return true;` with `return precision();`. Measure once more rather
+  than returning the last evaluated precision: that value is up to 99 epochs old, and a run of 100
+  epochs or fewer has never been evaluated at all.
+
+**Return value:** `std::nullopt` on invalid arguments or a failed layer call. Otherwise the
+precision the network reached: at least `precisionThreshold` if training stopped early, and whatever
+the final measurement gives if the epochs ran out.
+
+---
+
+### 8. Compiling and testing
 Update `main.cpp` to use your new layer:
 * Replace the two `ml::dense_layer::Stub` instances with `ml::dense_layer::Dense`, keeping the same
   wiring: the output layer's weight count must still match the hidden layer's node count.
-* Give both layers `ActFunc::Tanh`, and make the hidden layer wider than the task strictly needs,
-  e.g. 8 nodes. Keep the 2-bit XOR training data from **L04**.
-* Train for a good few thousand epochs (e.g. 10000), then predict once per training set and print
-  the results as before. There's no learning rate to pass any more: the network sets its own, and
-  stops as soon as it reaches the precision threshold, so the epoch count is an upper bound rather
-  than a number to tune.
+* Make the hidden layer wider than the task strictly needs, 15 nodes, and leave its activation
+  function at the default `ActFunc::Relu`. Give the output layer `ActFunc::Tanh`. A ReLU output
+  node that dies takes the whole network with it, since every prediction is then `0`. Keep the
+  2-bit XOR training data from **L04**.
+* Give the training parameters named constants in `trainAndTest()`: an epoch count of `100000`, a
+  precision threshold of `0.99`, and an attempt count of `10`.
+* Pass the threshold to `train()` explicitly. The default of `0.999999` is practically never
+  reached, so every attempt would run all 100000 epochs and still fall short of it.
+
+Then train in a loop, at most once per attempt:
+* Call `train()` and keep the returned optional: `const auto precision{network.train(epochCount, precisionThreshold)}`.
+* If it holds no value, print `"Training failed!"` and return `false`. The arguments are invalid or
+  the network is wired wrong, so another attempt would fail the same way.
+* If the precision reaches the threshold, print the predictions after training as before and return
+  `true`.
+* Otherwise, print the attempt number and the precision it reached, e.g.
+  `"Attempt 1 reached precision 0.75, retrying!"`, and go round again.
+* If every attempt falls short, print `"Training failed after 10 attempts!"` (using the constant
+  rather than a literal) and return `false`.
+
+There's no learning rate to pass: the network sets its own, and stops as soon as it reaches the
+precision threshold, so the epoch count is an upper bound rather than a number to tune. Each call to
+`train()` resets both layers first (see **L04**), so every attempt starts from newly drawn
+parameters rather than the ones the previous attempt got stuck in.
 
 **Don't delete `stub.hpp`.** `Dense` replaces the stub in your *network*, not in your codebase. The
 test suite still compiles both, and still uses the stub to test `Shallow`, since a layer that
-computes nothing is what makes the network's wiring visible. See section 8.
+computes nothing is what makes the network's wiring visible. See section 9.
 
 Compile and test-run the program. Unlike **L04**, where every prediction was the stub's fixed
 output, each prediction should now land within a few hundredths of its training target. Your exact
 numbers will differ from run to run, because the bias and weights start randomized.
 
-The early-stop line from `train()` should appear above the predictions, reporting a precision and
-an epoch count well short of the 10000 you asked for. Both vary from run to run: the starting
+The early stop line from `train()` should appear above the predictions, reporting a precision and
+an epoch count well short of the 100000 you asked for. Both vary from run to run: the starting
 parameters are random, and so is the training order. A run that stops after a few hundred epochs
-and one that runs several thousand are both normal.
+and one that needs tens of thousands are both normal; the average is around 2500.
 
-**When a run doesn't converge.** Roughly two XOR networks in a thousand settle into a set of
-parameters they can't improve on, predicting something near 0.5 for every input however long they
-train. Call `train()` again: it resets both layers first, so the second call starts from newly
-drawn parameters rather than the ones that got stuck. That's the reset from **L04** earning its
-keep, and it's what the test suite's convergence test relies on.
+**When an attempt doesn't converge.** Roughly two attempts in a hundred settle into a set of
+parameters they can't improve on, typically with one or two of the four predictions well off target
+however long they train. That's what the attempt loop is for. A second attempt starts from scratch
+and nearly always gets there: in 1000 runs of the program, not one used up all ten attempts. That's
+the reset from **L04** earning its keep, and it's what the test suite's convergence test relies on
+as well.
 
-**Worth trying:** switch both layers to `ActFunc::Relu` and shrink the hidden layer to 2 nodes.
-Roughly one run in four then fails to learn XOR at all, however long you train. `randomStartVal()`
-never returns a negative number, so every node starts on ReLU's positive side, and a node whose
-weighted sum is driven negative for every input has a derivative of exactly zero from then on: it
-stops learning and can't recover. That's the dying ReLU problem from **L03**, and it's why the
-test suite trains with `Tanh`.
+**Worth trying:** switch the output layer to `ActFunc::Relu` as well and shrink the hidden layer to
+2 nodes. Roughly six attempts in seven then fail to learn XOR at all, however long they train, and
+even with ten attempts about one run of the program in five ends with `"Training failed after 10
+attempts!"`. A node whose weighted sum is negative for every input has a derivative of exactly zero:
+it stops learning and can't recover. Since `randomStartVal()` draws from `[-1.0, 1.0]`, a node can
+start out that way, and with only three ReLU nodes in the network, about two networks in three
+contain one before training has even begun. That's the dying ReLU problem from **L03**, and it's
+why the test suite trains with `Tanh`.
 
 ---
 
-### 8. Running the tests
+### 9. Running the tests
 The final test suite is available in [exercises/test](../exercises/test/). It's cumulative: it
-carries the **L04** stub and network tests over unchanged and adds unit tests for `Dense` and for
-the helpers in `ml/utils`.
+carries the **L04** stub tests over unchanged, updates the **L04** network tests for the new return
+value of `train()` (see section 7), and adds unit tests for `Dense` and for the helpers in
+`ml/utils`.
 
 Once you've carried your code forward into this lecture's exercises directory, build and run it:
 
@@ -343,9 +418,12 @@ Once you've carried your code forward into this lecture's exercises directory, b
 make -C test
 ```
 
-All 59 test cases should pass. Because `Dense` randomizes its own bias and weights, none of its
-output can be predicted from the constructor arguments, so the tests recover the bias by feeding
-the layer a vector of zeros: every weight term drops out and the weighted sum is the bias alone.
+All 64 test cases should pass. Because `Dense` randomizes its own bias and weights, none of its
+output can be predicted from the constructor arguments, so the tests recover the bias from the
+layer's output instead. Without an activation function, a vector of zeros is enough: every weight
+term drops out and the weighted sum is the bias alone. `Tanh` tests feed the same zeros and invert
+the output with `std::atanh()`. ReLU would clamp a negative bias to zero, so the ReLU tests instead
+lift each node's weighted sum by a known amount, far above any start value, and subtract it again.
 That makes every expected value exact rather than approximate.
 
 `InitParamsDrawsNewValues` is the first test in the course where `initParams()` has anything to do.

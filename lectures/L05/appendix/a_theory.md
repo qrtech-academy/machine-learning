@@ -114,6 +114,10 @@ $$\Delta c_n = \Delta e_n * L, \quad b_n = b_n + \Delta c_n, \quad w_j = w_j + \
 ### Helper Functions `initRandGen()` and `randomStartVal()`
 These don't correspond to any specific equation, but handle the random initialization of weights and biases described in **L03**. Both live in `ml/utils`, alongside the activation-function helpers, rather than inside the layer itself:
 * `initRandGen()` ensures the random number generator (`std::rand()`) is seeded exactly once, regardless of how many layers are created. It's the same function you wrote in **L04**, which is exactly why it lives in a shared file.
-* `randomStartVal()` generates the actual random number in `[0.0, 1.0]` that each bias and weight value is initialized with. Note this is a deliberately simple choice for the course: every parameter starts positive, with a mean of 0.5. Production networks initialize symmetrically around zero and scale by the number of inputs (Xavier or He initialization), which matters most for `Tanh` layers, since an all-positive start puts them straight into saturation where the gradients are small.
+* `randomStartVal()` generates the actual random number in `[-1.0, 1.0]` that each bias and weight value is initialized with. The range is closed at both ends: the function first divides by `RAND_MAX`, which gives a number in `[0.0, 1.0]`, and then rescales it with `2.0 * x - 1.0`. A draw of exactly `0` therefore gives exactly `-1.0`, and a draw of exactly `RAND_MAX` gives exactly `1.0`.
+* The start values are symmetric around zero, with a mean of 0.0. That matters for two reasons:
+    * With only positive start values, a larger input always gives a larger weighted sum in every node. A network that must learn XOR, where `{1, 1}` should give `0`, then starts out ranking `{1, 1}` highest, and training must undo that before it can make progress.
+    * `Tanh` layers with all positive start values go straight into saturation, where the derivative is close to zero and training is slow.
+* Note this is still a deliberately simple choice for the course. Production networks also scale the range by the number of inputs (Xavier or He initialization).
 
 ---

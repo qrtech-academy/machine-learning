@@ -3,6 +3,7 @@
  */
 #include <cmath>
 #include <cstddef>
+#include <optional>
 
 #include "ml/dense_layer/dense.hpp"
 #include "ml/dense_layer/interface.hpp"
@@ -46,11 +47,20 @@ struct Test
     /** Precision the convergence test trains towards, i.e. a mean absolute error of 0.01. */
     static constexpr double PrecisionThreshold{0.99};
 
+    /** Precision of an error-free network: the precision is this minus the mean absolute error. */
+    static constexpr double PerfectPrecision{1.0};
+
     /** Mean absolute error the convergence test must reach. */
     static constexpr double ConvergenceThreshold{0.05};
 
     /** Training runs the convergence test is allowed, each starting from fresh parameters. */
     static constexpr std::size_t TrainAttempts{3U};
+
+    /** Smallest start value of a bias or weight. */
+    static constexpr double StartValMin{-1.0};
+
+    /** Largest start value of a bias or weight. */
+    static constexpr double StartValMax{1.0};
 };
 
 // -----------------------------------------------------------------------------
@@ -59,6 +69,34 @@ Matrix1d recoverBias(DenseLayer& denseLayer) noexcept
     const Matrix1d zeroInput(denseLayer.weightCount(), 0.0);
     denseLayer.feedforward(zeroInput);
     return denseLayer.output();
+}
+
+// -----------------------------------------------------------------------------
+Matrix1d recoverReluBias(DenseLayer& denseLayer) noexcept
+{
+    // A zero input alone isn't enough, since ReLU clamps a negative bias to zero. Instead, feed
+    // each node an input that lifts its weighted sum by a known amount, far above any bias the
+    // layer starts with. The sum is then positive, ReLU passes it through unchanged, and
+    // subtracting the lift leaves the bias.
+    constexpr double lift{10.0};
+    Matrix1d bias(denseLayer.nodeCount(), 0.0);
+
+    for (std::size_t i{}; i < denseLayer.nodeCount(); ++i)
+    {
+        const auto& nodeWeights = denseLayer.weights()[i];
+        std::size_t largest{};
+
+        // Use the node's largest weight, to keep the input small and the rounding error low.
+        for (std::size_t j{1U}; j < nodeWeights.size(); ++j)
+        {
+            if (std::fabs(nodeWeights[j]) > std::fabs(nodeWeights[largest])) { largest = j; }
+        }
+        Matrix1d input(denseLayer.weightCount(), 0.0);
+        input[largest] = lift / nodeWeights[largest];
+        denseLayer.feedforward(input);
+        bias[i] = denseLayer.output()[i] - lift;
+    }
+    return bias;
 }
 
 // -----------------------------------------------------------------------------
@@ -114,7 +152,7 @@ TEST(DenseLayerDense, ConstructedMatrixShapes)
 }
 
 /**
- * @brief Verify that bias and weights start randomized inside the range [0.0, 1.0].
+ * @brief Verify that bias and weights start randomized inside the range [-1.0, 1.0].
  */
 TEST(DenseLayerDense, ConstructedParametersAreRandomized)
 {
@@ -125,7 +163,7 @@ TEST(DenseLayerDense, ConstructedParametersAreRandomized)
     for (const auto value : bias)
     {
         EXPECT_TRUE(std::isfinite(value));
-        EXPECT_TRUE((0.0 <= value) && (1.0 >= value));
+        EXPECT_TRUE((Test::StartValMin <= value) && (Test::StartValMax >= value));
         biasVaries = biasVaries || (value != bias[0U]);
     }
 
@@ -141,7 +179,7 @@ TEST(DenseLayerDense, ConstructedParametersAreRandomized)
         for (const auto weight : nodeWeights)
         {
             EXPECT_TRUE(std::isfinite(weight));
-            EXPECT_TRUE((0.0 <= weight) && (1.0 >= weight));
+            EXPECT_TRUE((Test::StartValMin <= weight) && (Test::StartValMax >= weight));
             weightsVary = weightsVary || (weight != denseLayer.weights()[0U][0U]);
         }
     }
@@ -149,6 +187,51 @@ TEST(DenseLayerDense, ConstructedParametersAreRandomized)
     // Test that the weights aren't all the same number.
     // Expect variation: nodes that start identical compute identical errors and stay identical.
     EXPECT_TRUE(weightsVary);
+}
+
+/**
+ * @brief Verify that the start values cover both signs, i.e. that the range [0.0, 1.0] has been
+ *        scaled to [-1.0, 1.0].
+ */
+TEST(DenseLayerDense, ConstructedParametersCoverBothSigns)
+{
+    // Use a large layer, so that a correct implementation fails only with a negligible
+    // probability (2 * 0.5^1000 for the weights alone).
+    constexpr std::size_t nodeCount{100U};
+    constexpr std::size_t weightCount{10U};
+
+    DenseLayer denseLayer{nodeCount, weightCount, ActFunc::None};
+    const auto bias = recoverBias(denseLayer);
+    bool negativeFound{false};
+    bool positiveFound{false};
+
+    for (const auto value : bias)
+    {
+        negativeFound = negativeFound || (0.0 > value);
+        positiveFound = positiveFound || (0.0 < value);
+    }
+
+    // Test the signs of the bias values.
+    // Expect both: all positive means the scaling is missing.
+    EXPECT_TRUE(negativeFound);
+    EXPECT_TRUE(positiveFound);
+
+    negativeFound = false;
+    positiveFound = false;
+
+    for (const auto& nodeWeights : denseLayer.weights())
+    {
+        for (const auto weight : nodeWeights)
+        {
+            negativeFound = negativeFound || (0.0 > weight);
+            positiveFound = positiveFound || (0.0 < weight);
+        }
+    }
+
+    // Test the signs of the weights.
+    // Expect both: all positive means the scaling is missing.
+    EXPECT_TRUE(negativeFound);
+    EXPECT_TRUE(positiveFound);
 }
 
 /**
@@ -197,16 +280,13 @@ TEST(DenseLayerDense, FeedforwardComputesWeightedSum)
  */
 TEST(DenseLayerDense, FeedforwardAppliesActivationFunction)
 {
-    // Large negative inputs against non-negative weights drive every sum below zero, so this
-    // exercises ReLU's clamp rather than just its pass-through branch.
+    // Large inputs of opposite sign flip the sign of most sums, so this exercises ReLU's clamp as
+    // well as its pass-through branch.
     const Matrix1d negativeInput{-50.0, -50.0};
-    const Matrix1d positiveInput{2.0, 3.0};
+    const Matrix1d positiveInput{50.0, 50.0};
 
     DenseLayer denseLayer{Test::NodeCount, Test::WeightCount, ActFunc::Relu};
-
-    // ReLU passes non-negative values through unchanged, and randomStartVal() never returns a
-    // negative number, so a zero input recovers the bias here exactly as ActFunc::None would.
-    const auto bias = recoverBias(denseLayer);
+    const auto bias = recoverReluBias(denseLayer);
 
     for (const auto& input : {negativeInput, positiveInput})
     {
@@ -556,18 +636,19 @@ TEST(DenseLayerDense, InitParamsDrawsNewValues)
     EXPECT_EQ(weightsAfter.size(), Test::NodeCount);
 
     // Test the new values against the range randomStartVal() draws from.
-    // Expect every one of them inside [0.0, 1.0], exactly as after construction.
+    // Expect every one of them inside [-1.0, 1.0], exactly as after construction.
     std::size_t changedCount{};
 
     for (std::size_t i{}; i < Test::NodeCount; ++i)
     {
-        EXPECT_TRUE((0.0 <= biasAfter[i]) && (1.0 >= biasAfter[i]));
+        EXPECT_TRUE((Test::StartValMin <= biasAfter[i]) && (Test::StartValMax >= biasAfter[i]));
 
         if (biasAfter[i] != biasBefore[i]) { ++changedCount; }
 
         for (std::size_t j{}; j < Test::WeightCount; ++j)
         {
-            EXPECT_TRUE((0.0 <= weightsAfter[i][j]) && (1.0 >= weightsAfter[i][j]));
+            EXPECT_TRUE((Test::StartValMin <= weightsAfter[i][j]) &&
+                        (Test::StartValMax >= weightsAfter[i][j]));
 
             if (weightsAfter[i][j] != weightsBefore[i][j]) { ++changedCount; }
         }
@@ -595,19 +676,28 @@ TEST(DenseLayerDense, NetworkLearnsXorPattern)
     const auto errorBeforeTraining = meanAbsoluteError(network, trainInput, trainOutput);
     EXPECT_TRUE(std::isfinite(errorBeforeTraining));
 
-    // Train until the network converges, giving it a few attempts to get there. A network that
-    // settles into a bad set of parameters can't train its way out of them, and train() resets
-    // both layers before its first epoch, so every attempt starts from newly drawn values.
-    double errorAfterTraining{};
+    // Train until the network reaches the precision threshold, giving it a few attempts to get
+    // there. A network that settles into a bad set of parameters can't train its way out of them,
+    // and train() resets both layers before its first epoch, so every attempt starts from newly
+    // drawn values.
+    std::optional<double> precision{};
 
     for (std::size_t attempt{}; attempt < Test::TrainAttempts; ++attempt)
     {
-        EXPECT_TRUE(network.train(Test::EpochCount, Test::PrecisionThreshold));
-        errorAfterTraining = meanAbsoluteError(network, trainInput, trainOutput);
+        precision = network.train(Test::EpochCount, Test::PrecisionThreshold);
+        EXPECT_TRUE(precision.has_value());
 
-        if (errorAfterTraining < Test::ConvergenceThreshold) { break; }
+        if (Test::PrecisionThreshold <= precision.value_or(0.0)) { break; }
     }
+    const auto errorAfterTraining = meanAbsoluteError(network, trainInput, trainOutput);
     EXPECT_TRUE(std::isfinite(errorAfterTraining));
+
+    // Test the returned precision against the network's own error.
+    // Expect them to agree: train() returns 1.0 minus the mean absolute error it just measured, and
+    // nothing has trained the network since.
+    EXPECT_TRUE(Test::PrecisionThreshold <= precision.value_or(0.0));
+    EXPECT_NEAR(precision.value_or(0.0), Test::PerfectPrecision - errorAfterTraining,
+                Test::ExactTolerance);
 
     // Test the error against the threshold and against the untrained baseline.
     // Expect both: the threshold alone would pass on a network that started out lucky.

@@ -22,10 +22,16 @@ struct Test
 
     /** Number of draws taken by the randomStartVal() tests. */
     static constexpr std::size_t DrawCount{1000U};
+
+    /** Smallest value randomStartVal() may return. */
+    static constexpr double StartValMin{-1.0};
+
+    /** Largest value randomStartVal() may return. */
+    static constexpr double StartValMax{1.0};
 };
 
 /**
- * @brief Verify that every random start value is finite and inside the range [0.0, 1.0].
+ * @brief Verify that every random start value is finite and inside the range [-1.0, 1.0].
  */
 TEST(Utils, RandomStartValRange)
 {
@@ -35,8 +41,32 @@ TEST(Utils, RandomStartValRange)
     {
         const auto value = ml::randomStartVal();
         EXPECT_TRUE(std::isfinite(value));
-        EXPECT_TRUE((0.0 <= value) && (1.0 >= value));
+        EXPECT_TRUE((Test::StartValMin <= value) && (Test::StartValMax >= value));
     }
+}
+
+/**
+ * @brief Verify that the random start values cover both signs, i.e. that the range [0.0, 1.0]
+ *        has been scaled to [-1.0, 1.0].
+ */
+TEST(Utils, RandomStartValCoversBothSigns)
+{
+    ml::initRandGen();
+    bool negativeFound{false};
+    bool positiveFound{false};
+
+    for (std::size_t i{}; (i < Test::DrawCount) && !(negativeFound && positiveFound); ++i)
+    {
+        const auto value = ml::randomStartVal();
+        negativeFound    = negativeFound || (0.0 > value);
+        positiveFound    = positiveFound || (0.0 < value);
+    }
+
+    // Test the signs of the draws.
+    // Expect both: all positive means the scaling is missing. A correct implementation fails only
+    // with a negligible probability (2 * 0.5^1000).
+    EXPECT_TRUE(negativeFound);
+    EXPECT_TRUE(positiveFound);
 }
 
 /**

@@ -2,6 +2,9 @@
  * @file Component tests for ml::neural_network::Shallow.
  */
 #include <cstddef>
+#include <optional>
+#include <type_traits>
+#include <utility>
 
 #include "ml/dense_layer/stub.hpp"
 #include "ml/neural_network/interface.hpp"
@@ -48,6 +51,27 @@ struct Test
 
     /** Output value reported by the output layer, distinct from the hidden layer's. */
     static constexpr double OutputOutputValue{0.75};
+
+    /**
+     * Precision of a network of stubs predicting OutputOutputValue against the XOR pattern:
+     * 1.0 minus the mean of |0 - 0.75|, |1 - 0.75|, |1 - 0.75| and |0 - 0.75|.
+     */
+    static constexpr double XorPrecision{0.5};
+
+    /** Output value far enough from the XOR pattern to push the precision below zero. */
+    static constexpr double DistantOutputValue{-1.5};
+
+    /**
+     * Precision of a network of stubs predicting DistantOutputValue against the XOR pattern:
+     * 1.0 minus the mean of 1.5, 2.5, 2.5 and 1.5.
+     */
+    static constexpr double NegativePrecision{-1.0};
+
+    /** Feedforward passes the final precision measurement adds, one per training set. */
+    static constexpr std::size_t FinalEvaluationCount{SetCount};
+
+    /** Precision of a network that predicts every reference value exactly. */
+    static constexpr double PerfectPrecision{1.0};
 };
 
 /** Training data inputs: the 2-bit XOR pattern. */
@@ -173,16 +197,18 @@ TEST(NeuralNetworkShallow, TrainFeedsEveryTrainingSetEveryEpoch)
 {
     constexpr std::size_t epochCounts[]{1U, 2U, 10U};
 
-    // Every count stays below the evaluation interval, so no precision pass is added to the tally.
+    // Every count stays below the evaluation interval, so the only precision pass added to the
+    // tally is the final measurement train() makes once the epochs have run out.
     for (const auto epochCount : epochCounts)
     {
         DenseLayer hiddenLayer{Test::HiddenCount, Test::InputCount};
         DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount};
         NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, TrainOutput};
 
-        EXPECT_TRUE(network.train(epochCount, Test::PrecisionThreshold));
-        EXPECT_EQ(hiddenLayer.feedforwardCount(), epochCount * Test::SetCount);
-        EXPECT_EQ(outputLayer.feedforwardCount(), epochCount * Test::SetCount);
+        EXPECT_TRUE(network.train(epochCount, Test::PrecisionThreshold).has_value());
+        const auto expectedCount = (epochCount * Test::SetCount) + Test::FinalEvaluationCount;
+        EXPECT_EQ(hiddenLayer.feedforwardCount(), expectedCount);
+        EXPECT_EQ(outputLayer.feedforwardCount(), expectedCount);
     }
 }
 
@@ -197,7 +223,7 @@ TEST(NeuralNetworkShallow, TrainRejectsZeroEpochCount)
     DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount};
     NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, TrainOutput};
 
-    EXPECT_FALSE(network.train(zeroEpochs, Test::PrecisionThreshold));
+    EXPECT_FALSE(network.train(zeroEpochs, Test::PrecisionThreshold).has_value());
 
     // Test the counts after the rejected call.
     // Expect them untouched: a rejected training run mustn't feed anything forward.
@@ -219,7 +245,7 @@ TEST(NeuralNetworkShallow, TrainRejectsInvalidPrecisionThreshold)
         DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount};
         NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, TrainOutput};
 
-        EXPECT_FALSE(network.train(epochCount, precisionThreshold));
+        EXPECT_FALSE(network.train(epochCount, precisionThreshold).has_value());
         EXPECT_EQ(hiddenLayer.feedforwardCount(), std::size_t{});
     }
 }
@@ -240,8 +266,9 @@ TEST(NeuralNetworkShallow, TrainAcceptsValidPrecisionThreshold)
         DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount};
         NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, TrainOutput};
 
-        EXPECT_TRUE(network.train(epochCount, precisionThreshold));
-        EXPECT_EQ(hiddenLayer.feedforwardCount(), epochCount * Test::SetCount);
+        EXPECT_TRUE(network.train(epochCount, precisionThreshold).has_value());
+        EXPECT_EQ(hiddenLayer.feedforwardCount(),
+                  (epochCount * Test::SetCount) + Test::FinalEvaluationCount);
     }
 }
 
@@ -256,8 +283,9 @@ TEST(NeuralNetworkShallow, TrainDefaultPrecisionThreshold)
     DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount};
     NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, TrainOutput};
 
-    EXPECT_TRUE(network.train(epochCount));
-    EXPECT_EQ(hiddenLayer.feedforwardCount(), epochCount * Test::SetCount);
+    EXPECT_TRUE(network.train(epochCount).has_value());
+    EXPECT_EQ(hiddenLayer.feedforwardCount(),
+              (epochCount * Test::SetCount) + Test::FinalEvaluationCount);
 }
 
 /**
@@ -278,11 +306,13 @@ TEST(NeuralNetworkShallow, TrainEvaluatesPrecisionEveryHundredthEpoch)
         DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount};
         NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, TrainOutput};
 
-        EXPECT_TRUE(network.train(epochCount, Test::PrecisionThreshold));
+        EXPECT_TRUE(network.train(epochCount, Test::PrecisionThreshold).has_value());
 
-        // Test the tally against the training passes plus one pass per evaluation.
-        // Expect no evaluation at all for a single epoch: the first epoch is never evaluated.
-        const auto expectedCount = (epochCount + evaluationCount) * Test::SetCount;
+        // Test the tally against the training passes plus one pass per evaluation, plus the final
+        // measurement. Expect no evaluation at all for a single epoch: the first epoch is never
+        // evaluated.
+        const auto expectedCount =
+            ((epochCount + evaluationCount) * Test::SetCount) + Test::FinalEvaluationCount;
         EXPECT_EQ(hiddenLayer.feedforwardCount(), expectedCount);
         EXPECT_EQ(outputLayer.feedforwardCount(), expectedCount);
     }
@@ -301,11 +331,15 @@ TEST(NeuralNetworkShallow, TrainStopsWhenPrecisionThresholdIsReached)
     DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount, Test::OutputOutputValue};
     NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, ExactTrainOutput};
 
-    EXPECT_TRUE(network.train(epochCount, Test::PrecisionThreshold));
+    // Test the precision returned on the early stop.
+    // Expect the value just measured: every reference value is predicted exactly.
+    const auto precision = network.train(epochCount, Test::PrecisionThreshold);
+    EXPECT_TRUE(precision.has_value());
+    EXPECT_NEAR(precision.value_or(0.0), Test::PerfectPrecision, Test::Tolerance);
 
     // Test the tally against the epochs run up to the first evaluation, plus that evaluation's own
-    // pass. Expect training to have stopped there: every reference value is already predicted
-    // exactly, so the precision is 1.0 and nothing is left to learn.
+    // pass. Expect training to have stopped there, with no final measurement after it: the
+    // precision is 1.0 and nothing is left to learn.
     const auto expectedCount = (evaluationEpoch + 1U) * Test::SetCount;
     EXPECT_EQ(hiddenLayer.feedforwardCount(), expectedCount);
     EXPECT_EQ(outputLayer.feedforwardCount(), expectedCount);
@@ -328,7 +362,7 @@ TEST(NeuralNetworkShallow, TrainFailsOnMismatchedTrainingInput)
     DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount};
     NeuralNetwork network{hiddenLayer, outputLayer, mismatchedTrainInput, TrainOutput};
 
-    EXPECT_FALSE(network.train(epochCount, Test::PrecisionThreshold));
+    EXPECT_FALSE(network.train(epochCount, Test::PrecisionThreshold).has_value());
 
     // Test the counts after the failed call.
     // Expect a single rejected input to the hidden layer, and nothing passed on to the output
@@ -353,13 +387,61 @@ TEST(NeuralNetworkShallow, TrainFailsOnMismatchedTrainingOutput)
     DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount};
     NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, mismatchedTrainOutput};
 
-    EXPECT_FALSE(network.train(epochCount, Test::PrecisionThreshold));
+    EXPECT_FALSE(network.train(epochCount, Test::PrecisionThreshold).has_value());
 
     // Test the counts after the failed call.
     // Expect one feedforward through each layer: the first set fed forward fine, and training
     // stopped at its backpropagation rather than moving on to the next set.
     EXPECT_EQ(hiddenLayer.feedforwardCount(), one);
     EXPECT_EQ(outputLayer.feedforwardCount(), one);
+}
+
+/**
+ * @brief Verify that training returns the precision as an optional floating-point number.
+ */
+TEST(NeuralNetworkShallow, TrainReturnsOptionalPrecision)
+{
+    using ReturnType = decltype(std::declval<NeuralNetwork&>().train(std::size_t{}, double{}));
+    EXPECT_TRUE((std::is_same_v<ReturnType, std::optional<double>>));
+}
+
+/**
+ * @brief Verify that training which runs out of epochs returns the precision measured after the
+ *        last epoch.
+ */
+TEST(NeuralNetworkShallow, TrainReturnsFinalPrecision)
+{
+    constexpr std::size_t epochCount{2U};
+
+    DenseLayer hiddenLayer{Test::HiddenCount, Test::InputCount, Test::HiddenOutputValue};
+    DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount, Test::OutputOutputValue};
+    NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, TrainOutput};
+
+    // Test a run too short for any evaluation.
+    // Expect the precision anyway: train() measures once more after the last epoch, rather than
+    // handing back a value it never computed.
+    const auto precision = network.train(epochCount, Test::PrecisionThreshold);
+    EXPECT_TRUE(precision.has_value());
+    EXPECT_NEAR(precision.value_or(0.0), Test::XorPrecision, Test::Tolerance);
+}
+
+/**
+ * @brief Verify that a precision below zero is returned as a value, not mistaken for a failure.
+ */
+TEST(NeuralNetworkShallow, TrainReturnsNegativePrecision)
+{
+    constexpr std::size_t epochCount{2U};
+
+    DenseLayer hiddenLayer{Test::HiddenCount, Test::InputCount, Test::HiddenOutputValue};
+    DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount, Test::DistantOutputValue};
+    NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, TrainOutput};
+
+    // Test a network whose predictions miss by 2.0 on average.
+    // Expect a precision of exactly -1.0, returned as a value: this is why train() can't use a
+    // negative number to signal invalid arguments.
+    const auto precision = network.train(epochCount, Test::PrecisionThreshold);
+    EXPECT_TRUE(precision.has_value());
+    EXPECT_NEAR(precision.value_or(0.0), Test::NegativePrecision, Test::Tolerance);
 }
 
 /**
@@ -373,7 +455,7 @@ TEST(NeuralNetworkShallow, PredictAfterTraining)
     DenseLayer outputLayer{Test::OutputCount, Test::HiddenCount, Test::OutputOutputValue};
     NeuralNetwork network{hiddenLayer, outputLayer, TrainInput, TrainOutput};
 
-    EXPECT_TRUE(network.train(epochCount, Test::PrecisionThreshold));
+    EXPECT_TRUE(network.train(epochCount, Test::PrecisionThreshold).has_value());
     hiddenLayer.clearFeedforwardCount();
     outputLayer.clearFeedforwardCount();
 
