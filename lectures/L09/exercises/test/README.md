@@ -78,7 +78,7 @@ thing it specifies exists.
 ---
 
 ## What's Covered
-All 44 test cases should pass: the 22 carried over from L08 plus 22 new ones.
+All 45 test cases should pass: the 23 carried over from L08 plus 22 new ones.
 
 ### `ml::conv_layer::Conv`
 Unchanged from L08; see [that suite's README](../../../L08/exercises/test/README.md) for

@@ -103,7 +103,7 @@ void printMatrix(const Matrix2d& matrix) noexcept;
 /**
  * @brief Get a randomized starting value for trainable parameters.
  *
- * @return Random value in the range [0.0, 1.0] (inclusive).
+ * @return Random value in the range [-1.0, 1.0] (inclusive).
  */
 [[nodiscard]] double randomStartVal() noexcept;
 

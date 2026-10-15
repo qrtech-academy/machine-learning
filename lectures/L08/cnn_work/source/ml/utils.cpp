@@ -119,7 +119,7 @@ bool checkLearningRate(const double learningRate) noexcept
 // -----------------------------------------------------------------------------
 double randomStartVal() noexcept
 {
-    constexpr double min{0.0};
+    constexpr double min{-1.0};
     constexpr double max{1.0};
     return random::Generator::getInstance().float64(min, max);
 }

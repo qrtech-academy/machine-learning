@@ -32,8 +32,9 @@ std::int32_t Generator::int32(const std::int32_t min, const std::int32_t max) co
 // -----------------------------------------------------------------------------
 double Generator::float64(const double min, const double max) const noexcept
 {
+    constexpr double randMax{static_cast<double>(RAND_MAX)};
     if (min >= max) { return min; }
-    return (std::rand() / static_cast<double>(RAND_MAX)) * (max - min) + min;
+    return (std::rand() / randMax) * (max - min) + min;
 }
 
 // -----------------------------------------------------------------------------

@@ -79,7 +79,7 @@ thing it specifies exists.
 ---
 
 ## What's Covered
-All 22 test cases should pass.
+All 23 test cases should pass.
 
 ### `ml::conv_layer::Conv`
 
@@ -88,7 +88,8 @@ All 22 test cases should pass.
 | `ConstructedDimensions`                              | same size in and out                 |
 | `ConstructedMatrixShapes`                            | output and gradients are input-sized |
 | `ConstructedKernelShape`                             | kernel is square, as asked           |
-| `ConstructedParametersAreRandomized`                 | bias and weights in `[0.0, 1.0]`     |
+| `ConstructedParametersAreRandomized`                 | bias and weights in `[-1.0, 1.0]`    |
+| `ConstructedParametersCoverBothSigns`                | both signs among bias and weights    |
 | `LargerKernelKeepsOutputSize`                        | a 3x3 kernel preserves size          |
 | `FeedforwardMatchesHandComputedConvolution`          | bias plus each window's dot product  |
 | `ZeroInputYieldsBiasEverywhere`                      | zero input gives the bias            |

@@ -41,9 +41,9 @@ public:
      * @brief Generate a random 64-bit floating point value within the specified range.
      *
      * @param[in] min Minimum value (inclusive).
-     * @param[in] max Maximum value (exclusive).
+     * @param[in] max Maximum value (inclusive).
      *
-     * @return Random double in the range [min, max).
+     * @return Random double in the range [min, max].
      */
     [[nodiscard]] virtual double float64(double min, double max) const noexcept = 0;
 };

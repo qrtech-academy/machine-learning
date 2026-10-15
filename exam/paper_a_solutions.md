@@ -354,12 +354,15 @@ case each of them handles.
 
 ### (c) 3 marks
 
-`randomStartVal()` divides `std::rand()` by `RAND_MAX`, so it returns a value in $[0, 1]$ and never
-a negative one. Every bias and every weight therefore starts positive, and every node starts on
-ReLU's positive side.
+`randomStartVal()` rescales `std::rand() / RAND_MAX` with $2x - 1$, so every bias and every weight
+starts somewhere in $[-1, 1]$, negative values included. A node can therefore start with a weighted
+sum that is negative for every input. For 2-bit XOR that takes $b < 0$ (the input `{0, 0}`), plus
+$b + w_1 < 0$, $b + w_2 < 0$ and $b + w_1 + w_2 < 0$, and nothing in the draw prevents it. Such a
+node is dead before the first epoch. A node that starts alive can also be driven there later, for
+instance by a learning rate large enough to overshoot.
 *(1 mark)*
 
-If training then drives some node's weighted sum negative for **every** input in the training data,
+Once some node's weighted sum is negative for **every** input in the training data,
 $\sigma'(s) = 0$ for that node on every set. Its $\Delta e$ is zero, so its bias and weights never
 change again, and because they never change, the sum can never come back above zero. The node is
 permanently stuck, and nothing upstream or downstream can rescue it, because it also stops passing
@@ -374,8 +377,9 @@ any blame backwards.
   precisely so the suite does not fail at random.
 
 Also creditable: widening the hidden layer, so that losing a node is survivable. L05 records that
-with only two hidden nodes and ReLU, roughly one run in four fails to learn XOR at all, however long
-it trains.
+with only two hidden nodes and ReLU, roughly six runs in seven fail to learn XOR at all, however
+long they train, and that about two networks in three contain a dead node before training has even
+begun.
 *(1 mark)*
 
 ---

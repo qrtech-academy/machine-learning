@@ -62,7 +62,7 @@ training tests account for nearly all of it.
 ---
 
 ## What's Covered
-All 73 test cases should pass: 44 carried over from L09, plus 16 for the flatten layer and 13 for
+All 74 test cases should pass: 45 carried over from L09, plus 16 for the flatten layer and 13 for
 the network.
 
 ### `ml::conv_layer::Conv` and `ml::conv_layer::MaxPool`

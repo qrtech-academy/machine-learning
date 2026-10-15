@@ -146,7 +146,7 @@ make -C exercises/test
 ```
 
 You don't need to copy anything: unlike L01-L05, the suite's `ML_DIR` already points at
-`cnn_work`, where you're writing the code. All 22 test cases should pass.
+`cnn_work`, where you're writing the code. All 23 test cases should pass.
 
 Until `Conv` exists the build fails with `'Conv' in namespace 'ml::conv_layer' does not name a
 type`; the suite is the specification, so it doesn't compile until the class does. Note also that

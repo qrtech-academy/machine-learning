@@ -102,7 +102,7 @@ make -C exercises/test
 ```
 
 There's nothing to copy: `ML_DIR` already points back at the `cnn_work` codebase you started in
-L08. All 73 test cases should pass, in about a second.
+L08. All 74 test cases should pass, in about a second.
 
 The component tests are new in this lecture, and they're the reason this suite couldn't exist
 earlier: they build a whole network through the real factory and train it, so they only pass once

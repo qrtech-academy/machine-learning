@@ -120,7 +120,7 @@ make -C exercises/test
 ```
 
 There's nothing to copy: `ML_DIR` already points back at the `cnn_work` codebase you started in
-L08. All 44 test cases should pass.
+L08. All 45 test cases should pass.
 
 Because the pooling layer randomizes nothing, its expected values are written out in full rather
 than recomputed the way the conv layer's are; and the main worked case is the hand-training

@@ -51,6 +51,12 @@ struct Test
 
     /** Index of the first row/column of a matrix. */
     static constexpr std::size_t FirstIndex{0U};
+
+    /** Smallest start value of the bias or a kernel weight. */
+    static constexpr double StartValMin{-1.0};
+
+    /** Largest start value of the bias or a kernel weight. */
+    static constexpr double StartValMax{1.0};
 };
 
 // -----------------------------------------------------------------------------
@@ -174,24 +180,21 @@ TEST(ConvLayerConv, ConstructedKernelShape)
 }
 
 /**
- * @brief Verify that the bias and kernel weights start randomized inside the range [0.0, 1.0].
+ * @brief Verify that the bias and kernel weights start randomized inside the range [-1.0, 1.0].
  */
 TEST(ConvLayerConv, ConstructedParametersAreRandomized)
 {
-    constexpr double randMin{0.0};
-    constexpr double randMax{1.0};
-
     bool kernelVaries{false};
     const ConvLayer convLayer{Test::InputSize, Test::KernelSize};
-    EXPECT_TRUE(randMin <= convLayer.bias());
-    EXPECT_TRUE(randMax >= convLayer.bias());
+    EXPECT_TRUE(Test::StartValMin <= convLayer.bias());
+    EXPECT_TRUE(Test::StartValMax >= convLayer.bias());
 
     for (const auto& row : convLayer.kernel())
     {
         for (const auto value : row)
         {
-            EXPECT_TRUE(randMin <= value);
-            EXPECT_TRUE(randMax >= value);
+            EXPECT_TRUE(Test::StartValMin <= value);
+            EXPECT_TRUE(Test::StartValMax >= value);
 
             // Expect at least one weight to differ from the first one.
             if (value != convLayer.kernel()[Test::FirstIndex][Test::FirstIndex])
@@ -201,6 +204,47 @@ TEST(ConvLayerConv, ConstructedParametersAreRandomized)
         }
     }
     EXPECT_TRUE(kernelVaries);
+}
+
+/**
+ * @brief Verify that the start values cover both signs, i.e. that the range [0.0, 1.0] has been
+ *        scaled to [-1.0, 1.0].
+ */
+TEST(ConvLayerConv, ConstructedParametersCoverBothSigns)
+{
+    // A layer holds a single bias, so build many layers, each with the largest kernel allowed. A
+    // correct implementation then fails only with a negligible probability (2 * 0.5^100 for the
+    // bias values, far less for the weights).
+    constexpr std::size_t layerCount{100U};
+    constexpr std::size_t kernelSize{11U};
+
+    bool negativeBiasFound{false};
+    bool positiveBiasFound{false};
+    bool negativeWeightFound{false};
+    bool positiveWeightFound{false};
+
+    for (std::size_t i{}; i < layerCount; ++i)
+    {
+        const ConvLayer convLayer{kernelSize, kernelSize};
+        negativeBiasFound = negativeBiasFound || (Test::ZeroValue > convLayer.bias());
+        positiveBiasFound = positiveBiasFound || (Test::ZeroValue < convLayer.bias());
+
+        for (const auto& row : convLayer.kernel())
+        {
+            for (const auto value : row)
+            {
+                negativeWeightFound = negativeWeightFound || (Test::ZeroValue > value);
+                positiveWeightFound = positiveWeightFound || (Test::ZeroValue < value);
+            }
+        }
+    }
+
+    // Test the signs of the bias values and the kernel weights.
+    // Expect both signs among each: all positive means the scaling is missing.
+    EXPECT_TRUE(negativeBiasFound);
+    EXPECT_TRUE(positiveBiasFound);
+    EXPECT_TRUE(negativeWeightFound);
+    EXPECT_TRUE(positiveWeightFound);
 }
 
 /**
