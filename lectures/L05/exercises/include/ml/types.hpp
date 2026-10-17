@@ -20,4 +20,13 @@ using Matrix3d = std::vector<Matrix2d>;
 /** One-dimensional matrix of unsigned integers. */
 using MatrixU32 = std::vector<std::uint32_t>;
 
+/**
+ * @brief Enumeration of activation functions.
+ */
+enum class ActFunc : std::uint8_t
+{
+    Relu, ///< ReLU (Rectified Linear Unit).
+    Tanh, ///< Hyperbolic tangent.
+    None, ///< No activation, i.e. the identity function.
+};
 } // namespace ml

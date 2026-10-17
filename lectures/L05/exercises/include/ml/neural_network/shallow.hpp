@@ -4,6 +4,7 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 
 #include "ml/neural_network/interface.hpp"
 #include "ml/types.hpp"
@@ -56,9 +57,12 @@ public:
      * @param[in] epochCount Number of epochs to train the network.
      * @param[in] precisionThreshold Threshold, we terminate the training when reached.
      *
-     * @return True if training was performed, false if the input arguments were invalid.
+     * @return The precision reached, or std::nullopt if the input arguments were invalid or a
+     *         layer call failed. The precision is 1.0 minus the mean absolute error, so it can be
+     *         negative.
      */
-    bool train(std::size_t epochCount, double precisionThreshold = 0.999999) noexcept;
+    [[nodiscard]] std::optional<double> train(std::size_t epochCount,
+                                              double precisionThreshold = 0.999999) noexcept;
 
     Shallow()                          = delete; // No default constructor.
     Shallow(const Shallow&)            = delete; // No copy constructor.

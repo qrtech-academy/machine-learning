@@ -148,7 +148,7 @@ Add the following private member variables to the class:
 \begin{itemize}
   \item \code{myOutput}: vector holding the nodes' output (floating-point). Should hold
     \code{nodeCount} values.
-  \item \code{myPreActivationOutput}: vector holding the nodes' weighted sum before the activation
+  \item \code{myPreActOutput}: vector holding the nodes' weighted sum before the activation
     function has been applied (floating-point). Should hold \code{nodeCount} values. Used by
     \code{backpropagate()} (implemented in Set~2) to correctly compute the activation function's
     derivative.
@@ -170,7 +170,7 @@ file \file{source/ml/dense_layer/dense.cpp}.
 \begin{itemize}
   \item In the constructor, all member variables should be initialized:
   \begin{itemize}
-    \item \code{myOutput}, \code{myPreActivationOutput}, and \code{myError} should hold
+    \item \code{myOutput}, \code{myPreActOutput}, and \code{myError} should hold
       \code{nodeCount} floating-point values equal to 0.0 at the start.
     \item \code{myBias} should hold \code{nodeCount} floating-point values randomized in
       $[-1.0, 1.0]$.
@@ -369,7 +369,7 @@ all, since the bias and weights are private to the layer.
       \code{sum += myWeights[i][j] * input[j]}.
   \end{enumerate}
   \item Store the weighted sum before the activation function is applied:\newline
-    \code{myPreActivationOutput[i] = sum}. This value is needed by \code{backpropagate()} below to
+    \code{myPreActOutput[i] = sum}. This value is needed by \code{backpropagate()} below to
     correctly compute the activation function's derivative.
   \item Apply the activation function to the sum:
     \code{myOutput[i] = actFuncOutput(myActFunc, sum)}.
@@ -399,9 +399,9 @@ Implement \code{backpropagate()} for output layers (with reference values).
   \begin{enumerate}
     \item Compute the raw error: \code{const auto err{reference[i] - myOutput[i]}}.
     \item Compute the gradient error:\newline
-      \code{myError[i] = err * actFuncDelta(myActFunc, myPreActivationOutput[i])}.
+      \code{myError[i] = err * actFuncDelta(myActFunc, myPreActOutput[i])}.
 
-      \note[Note!] Use \code{myPreActivationOutput[i]} (the weighted sum before the activation
+      \note[Note!] Use \code{myPreActOutput[i]} (the weighted sum before the activation
       function was applied in \code{feedforward()}), not \code{myOutput[i]}.
       \code{actFuncDelta()} expects the activation function's \emph{input}, not its output;
       otherwise the derivative comes out wrong for \code{ActFunc::Tanh} (it happens to work for
@@ -438,8 +438,8 @@ Implement \code{backpropagate()} for hidden layers (with error and weights from 
       \item \code{err += nextLayer.error()[j] * nextLayer.weights()[j][i]}.
     \end{itemize}
     \item Compute the gradient error:\newline
-      \code{myError[i] = err * actFuncDelta(myActFunc, myPreActivationOutput[i])}\newline (see the note in
-      Exercise~\ref{c5:ex:12} for why \code{myPreActivationOutput[i]} is used instead of
+      \code{myError[i] = err * actFuncDelta(myActFunc, myPreActOutput[i])}\newline (see the note in
+      Exercise~\ref{c5:ex:12} for why \code{myPreActOutput[i]} is used instead of
       \code{myOutput[i]}).
   \end{enumerate}
 \end{itemize}
@@ -552,24 +552,27 @@ Update \file{main.cpp} to use your new layer:
     prediction is then \code{0}. Keep the 2-bit XOR training data from
     Chapter~\ref{c4:ch:network}.
   \item Give the training parameters named constants in \code{trainAndTest()}: an epoch count of
-    \code{100000}, a precision threshold of \code{0.99}, and an attempt count of \code{10}.
-  \item Pass the threshold to \code{train()} explicitly. The default of \code{0.999999} is
-    practically never reached, so every attempt would run all 100000 epochs and still fall short
-    of it.
+    \code{1000000}, a target precision of \code{0.9995}, and a retry count of \code{10}.
+  \item Pass the target precision to \code{train()} explicitly, as its precision threshold. The
+    default of \code{0.999999} is practically never reached, so every call would run all 1000000
+    epochs and still fall short of it.
+  \item In \code{printMatrix()}, print each value with two decimals (\code{"\%.2f"}) instead of
+    \code{"\%g"}. The trained predictions differ from their targets by a few thousandths, which
+    \code{"\%g"} prints as long tails such as \code{0.000214783}.
 \end{itemize}
-Then train in a loop, at most once per attempt:
+Then train in a loop, calling \code{train()} at most once per retry:
 \begin{itemize}
   \item Call \code{train()} and keep the returned optional:
-    \code{const auto precision\{network.train(epochCount, precisionThreshold)\}}.
-  \item If it holds no value, print \code{"Training failed!"} and return \code{false}. The
-    arguments are invalid or the network is wired wrong, so another attempt would fail the same
-    way.
-  \item If the precision reaches the threshold, print the predictions after training as before and
+    \code{const auto precision = network.train(epochCount, targetPrecision)}.
+  \item If it holds no value, print \code{"Training failed!"} to standard error and return
+    \code{false}. The arguments are invalid or the network is wired wrong, so another call would
+    fail the same way.
+  \item If the precision reaches the target, print the predictions after training as before and
     return \code{true}.
-  \item Otherwise, print the attempt number and the precision it reached, e.g.\
-    \code{"Attempt 1 reached precision 0.75, retrying!"}, and go round again.
-  \item If every attempt falls short, print \code{"Training failed after 10 attempts!"} (using the
-    constant rather than a literal) and return \code{false}.
+  \item Otherwise, print the precision it reached, e.g.\
+    \code{"Precision 0.75 is below target, retrying..."}, and go round again.
+  \item If every retry falls short, print \code{"Failed to train the network with 10 retries!"} to
+    standard error (using the constant rather than a literal) and return \code{false}.
 \end{itemize}
 There's no learning rate to pass: the network sets its own, and stops as soon as it reaches the
 precision threshold, so the epoch count is an upper bound rather than a number to tune. Each call to
@@ -582,26 +585,29 @@ in your codebase. The test suite still compiles both, and still uses the stub to
 Exercise~\ref{c5:ex:17}.
 
 Compile and test-run the program. Unlike Chapter~\ref{c4:ch:network}, where every prediction was
-the stub's fixed output, each prediction should now land within a few hundredths of its training
-target. Your exact numbers will differ from run to run, because the bias and weights start
-randomized.
+the stub's fixed output, each prediction should now land within a few thousandths of its training
+target, so it prints as \code{0.00} or \code{1.00}. A \code{-0.00} is fine too: the \code{Tanh}
+output can land a hair below zero. The exact values behind them differ from run to
+run, because the bias and weights start randomized.
 
 The early stop line from \code{train()} should appear above the predictions, reporting a precision
-and an epoch count well short of the 100000 you asked for. Both vary from run to run: the starting
-parameters are random, and so is the training order. A run that stops after a few hundred epochs
-and one that needs tens of thousands are both normal; the average is around 2500.
+and an epoch count well short of the 1000000 you asked for. Both vary from run to run: the starting
+parameters are random, and so is the training order. A run that stops after about 120000 epochs and
+one that needs 850000 are both normal; the average is around 250000, which takes a fraction of a
+second.
 
-\textbf{When an attempt doesn't converge.} Roughly two attempts in a hundred settle into a set of
-parameters they can't improve on, typically with one or two of the four predictions well off target
-however long they train. That's what the attempt loop is for. A second attempt starts from scratch
-and nearly always gets there: in 1000 runs of the program, not one used up all ten attempts. That's
+\textbf{When an attempt doesn't converge.} Roughly two calls to \code{train()} in a hundred settle
+into a set of parameters they can't improve on, typically with one or two of the four predictions
+well off target however long they train. That's what the retry loop is for. A second call starts
+from scratch and nearly always gets there: in 1000 runs of the program, not one used up all ten
+retries. That's
 the reset from Chapter~\ref{c4:ch:network} earning its keep, and it's what the test suite's
 convergence test relies on as well.
 
 \textbf{Worth trying:} switch the output layer to \code{ActFunc::Relu} as well and shrink the
-hidden layer to 2 nodes. Roughly six attempts in seven then fail to learn XOR at all, however long
-they train, and even with ten attempts about one run of the program in five ends with
-\code{"Training failed after 10 attempts!"}. A node whose weighted sum is negative for every input
+hidden layer to 2 nodes. Roughly six calls to \code{train()} in seven then fail to learn XOR at
+all, however long they train, and even with ten retries about one run of the program in five ends
+with \code{"Failed to train the network with 10 retries!"}. A node whose weighted sum is negative for every input
 has a derivative of exactly zero: it stops learning and can't recover. Since
 \code{randomStartVal()} draws from $[-1.0, 1.0]$, a node can start out that way, and with only
 three ReLU nodes in the network, about two networks in three contain one before training has even

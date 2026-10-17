@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
+#include <optional>
 
 #include "ml/dense_layer/interface.hpp"
 #include "ml/neural_network/shallow.hpp"
@@ -100,14 +101,15 @@ const Matrix1d& Shallow::predict(const Matrix1d& input) noexcept
 }
 
 // -----------------------------------------------------------------------------
-bool Shallow::train(const std::size_t epochCount, const double precisionThreshold) noexcept
+std::optional<double> Shallow::train(const std::size_t epochCount,
+                                     const double precisionThreshold) noexcept
 {
     static constexpr double initialLearningRate{0.01};
 
-    // Check the input arguments, return false if invalid.
-    if (0U == epochCount) { return false; }
+    // Check the input arguments, return std::nullopt if invalid.
+    if (0U == epochCount) { return std::nullopt; }
     const bool thresholdValid{(0.0 < precisionThreshold) && (1.0 > precisionThreshold)};
-    if (!thresholdValid) { return false; }
+    if (!thresholdValid) { return std::nullopt; }
 
     double learningRate{initialLearningRate};
     double prevPrecision{};
@@ -125,9 +127,9 @@ bool Shallow::train(const std::size_t epochCount, const double precisionThreshol
             const auto& reference = myTrainOutput[i];
 
             // Run feedforward -> backpropagation -> optimization through the layers.
-            if (!feedforward(input)) { return false; }
-            if (!backpropagate(reference)) { return false; }
-            if (!optimize(input, learningRate)) { return false; }
+            if (!feedforward(input)) { return std::nullopt; }
+            if (!backpropagate(reference)) { return std::nullopt; }
+            if (!optimize(input, learningRate)) { return std::nullopt; }
         }
         // Stop training once the precision threshold has been reached.
         if (isEvaluationEpoch(epoch))
@@ -137,12 +139,12 @@ bool Shallow::train(const std::size_t epochCount, const double precisionThreshol
             if (precisionThreshold <= currPrecision)
             {
                 std::printf("Reached precision %g after %zu epochs!\n", currPrecision, epoch + 1U);
-                return true;
+                return currPrecision;
             }
             updateLearningRate(learningRate, prevPrecision, currPrecision);
         }
     }
-    return true;
+    return precision();
 }
 
 // -----------------------------------------------------------------------------

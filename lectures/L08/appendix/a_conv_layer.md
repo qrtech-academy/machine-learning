@@ -37,7 +37,7 @@ Add the following private member variables to `Conv`:
 * **`myKernel`**: the kernel weights (`Matrix2d`).
 * **`myKernelGradients`**: kernel gradients (`Matrix2d`).
 * **`myOutput`**: the layer's output (feature map); what `output()` returns (`Matrix2d`).
-* **`myPreActivationOutput`**: the sum before the activation function is applied, needed later by
+* **`myPreActOutput`**: the sum before the activation function is applied, needed later by
   `backpropagate()` to compute the activation's derivative (`Matrix2d`).
 * **`myBias`**: the bias value (`double`).
 * **`myBiasGradient`**: the bias gradient (`double`).
@@ -55,7 +55,7 @@ padding back off the input gradients, but you're free to structure this however 
   `inputSize < kernelSize`.
 * Compute the padding offset (`kernelSize / 2`) and the padded size (`inputSize + 2 * offset`).
 * Size `myInputPadded`/`myInputGradientsPadded` to the padded size, `myInputGradients`/`myOutput`/
-  `myPreActivationOutput` to `inputSize`, and `myKernel`/`myKernelGradients` to `kernelSize` (see
+  `myPreActOutput` to `inputSize`, and `myKernel`/`myKernelGradients` to `kernelSize` (see
   `ml::initMatrix()` in `ml/utils.hpp`).
 * Randomize the bias and every kernel weight using `ml::randomStartVal()`.
 * Get the activation function: `factory::Factory factory{}; myActFunc = factory.actFunc(actFunc);`
@@ -73,7 +73,7 @@ padding back off the input gradients, but you're free to structure this however 
   `input` isn't square (`ml::isMatrixSquare()`).
 * For each output position `(i, j)`: sum `myBias` plus the element-wise product of `myKernel` and
   the corresponding `kernelSize × kernelSize` window of `myInputPadded` starting at `(i, j)`. Store
-  the sum in `myPreActivationOutput[i][j]`, then store `myActFunc->output(sum)` in `myOutput[i][j]`.
+  the sum in `myPreActOutput[i][j]`, then store `myActFunc->output(sum)` in `myOutput[i][j]`.
 * Return `true`.
 
 ---
@@ -83,7 +83,7 @@ padding back off the input gradients, but you're free to structure this however 
 * Return `false` if `outputGradients`'s size doesn't match `myOutput`'s size, or if it isn't square.
 * Reset `myInputGradientsPadded`, `myInputGradients`, `myKernelGradients` to zero, and
   `myBiasGradient` to `0.0`.
-* For each output position `(i, j)`: compute `delta = myActFunc->delta(myPreActivationOutput[i][j])`
+* For each output position `(i, j)`: compute `delta = myActFunc->delta(myPreActOutput[i][j])`
   and `outGrad = outputGradients[i][j] * delta`. Add `outGrad` to `myBiasGradient`. Then, for each
   kernel position `(ki, kj)`: add `myInputPadded[i+ki][j+kj] * outGrad` to
   `myKernelGradients[ki][kj]`, and add `myKernel[ki][kj] * outGrad` to

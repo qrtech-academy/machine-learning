@@ -375,8 +375,8 @@ bool Dense::feedforward(const Matrix1d& input) noexcept
         {
             sum += myWeights[i][j] * input[j];
         }
-        myPreActivationOutput[i] = sum;
-        myOutput[i]              = actFuncOutput(myActFunc, sum);
+        myPreActOutput[i] = sum;
+        myOutput[i]       = actFuncOutput(myActFunc, sum);
     }
     return true;
 }
@@ -385,7 +385,7 @@ bool Dense::feedforward(const Matrix1d& input) noexcept
 \noindent\textit{(3 marks: 1 for the validation returning \code{false} without computing anything,
 1 for the weighted sum starting at the bias, 1 for applying the activation function to it.)}
 
-\textbf{The member variable is \code{myPreActivationOutput}.} It holds $s$, the weighted sum for each
+\textbf{The member variable is \code{myPreActOutput}.} It holds $s$, the weighted sum for each
 node \emph{before} the activation function was applied. Both overloads of \code{backpropagate()} need
 it, because the activation's derivative has to be evaluated at the activation's input, not at its
 output (Question~\ref{exa:q:4}(b)). It is not on the interface because no other layer ever reads it:
@@ -409,14 +409,14 @@ bool Dense::backpropagate(const Interface& nextLayer) noexcept
         {
             err += nextLayer.error()[j] * nextLayer.weights()[j][i];
         }
-        myError[i] = err * actFuncDelta(myActFunc, myPreActivationOutput[i]);
+        myError[i] = err * actFuncDelta(myActFunc, myPreActOutput[i]);
     }
     return true;
 }
 \end{cppcode}
 
 \noindent\textit{(3 marks: 1 for the validation, 1 for the sum over the next layer's nodes, 1 for
-multiplying by the derivative at \code{myPreActivationOutput[i]}.)}
+multiplying by the derivative at \code{myPreActOutput[i]}.)}
 
 \textbf{The indices.} $j$ ranges over the \textbf{next} layer's nodes, $0 \ldots$
 \code{nextLayer.nodeCount() - 1}. $i$ ranges over \textbf{this} layer's nodes, $0 \ldots$

@@ -113,7 +113,7 @@ private:
     Matrix1d myOutput;
 
     /** Pre-activation output matrix. */
-    Matrix1d myPreActivationOutput;
+    Matrix1d myPreActOutput;
 
     /** Error values. */
     Matrix1d myError;

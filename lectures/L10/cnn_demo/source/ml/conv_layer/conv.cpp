@@ -21,7 +21,7 @@ Conv::Conv(const std::size_t inputSize, const std::size_t kernelSize,
     , myKernel{}
     , myKernelGradients{}
     , myOutput{}
-    , myPreActivationOutput{}
+    , myPreActOutput{}
     , myBias{randomStartVal()}
     , myBiasGradient{}
     , myActFunc{nullptr}
@@ -64,8 +64,8 @@ bool Conv::feedforward(const Matrix2d& input) noexcept
                     sum += myInputPadded[i + ki][j + kj] * myKernel[ki][kj];
                 }
             }
-            myPreActivationOutput[i][j] = sum;
-            myOutput[i][j]              = myActFunc->output(sum);
+            myPreActOutput[i][j] = sum;
+            myOutput[i][j]       = myActFunc->output(sum);
         }
     }
     return true;
@@ -86,7 +86,7 @@ bool Conv::backpropagate(const Matrix2d& outputGradients) noexcept
 
         for (std::size_t j{}; j < myOutput.size(); ++j)
         {
-            const auto delta   = myActFunc->delta(myPreActivationOutput[i][j]);
+            const auto delta   = myActFunc->delta(myPreActOutput[i][j]);
             const auto outGrad = outputGradients[i][j] * delta;
 
             myBiasGradient += outGrad;
@@ -159,7 +159,7 @@ void Conv::init(const std::size_t inputSize, const std::size_t kernelSize,
     initMatrix(myKernelGradients, kernelSize);
 
     initMatrix(myOutput, inputSize);
-    initMatrix(myPreActivationOutput, inputSize);
+    initMatrix(myPreActOutput, inputSize);
 
     for (std::size_t i{}; i < kernelSize; ++i)
     {

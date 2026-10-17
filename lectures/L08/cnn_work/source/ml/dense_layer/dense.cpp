@@ -20,7 +20,7 @@ Dense::Dense(const std::size_t inputSize, const std::size_t outputSize,
     , myBias{}
     , myWeights{}
     , myOutput{}
-    , myPreActivationOutput{}
+    , myPreActOutput{}
     , myError{}
     , myActFunc{nullptr}
 {
@@ -56,8 +56,8 @@ bool Dense::feedforward(const std::vector<double>& input) noexcept
         {
             sum += myWeights[i][j] * input[j];
         }
-        myPreActivationOutput[i] = sum;
-        myOutput[i]              = myActFunc->output(sum);
+        myPreActOutput[i] = sum;
+        myOutput[i]       = myActFunc->output(sum);
     }
     return true;
 }
@@ -70,7 +70,7 @@ bool Dense::backpropagate(const std::vector<double>& outputGradients) noexcept
     for (std::size_t i{}; i < outputSize(); ++i)
     {
         const double error{outputGradients[i] - myOutput[i]};
-        myError[i] = error * myActFunc->delta(myPreActivationOutput[i]);
+        myError[i] = error * myActFunc->delta(myPreActOutput[i]);
     }
     initMatrix(myInputGradients);
 
@@ -127,7 +127,7 @@ void Dense::init(const std::size_t inputSize, const std::size_t outputSize,
     initMatrix(myBias, outputSize);
     initMatrix(myWeights, outputSize, inputSize);
     initMatrix(myOutput, outputSize);
-    initMatrix(myPreActivationOutput, outputSize);
+    initMatrix(myPreActOutput, outputSize);
     initMatrix(myError, outputSize);
 
     for (std::size_t i{}; i < outputSize; ++i)

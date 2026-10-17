@@ -74,7 +74,7 @@ Add the following private member variables to \code{Conv}:
   \item \textbf{\code{myKernelGradients}}: kernel gradients (\code{Matrix2d}).
   \item \textbf{\code{myOutput}}: the layer's output (feature map); what \code{output()} returns
     (\code{Matrix2d}).
-  \item \textbf{\code{myPreActivationOutput}}: the sum before the activation function is applied,
+  \item \textbf{\code{myPreActOutput}}: the sum before the activation function is applied,
     needed later by \code{backpropagate()} to compute the activation's derivative
     (\code{Matrix2d}).
   \item \textbf{\code{myBias}}: the bias value (\code{double}).
@@ -101,7 +101,7 @@ explicit Conv(std::size_t inputSize, std::size_t kernelSize,
   \item Compute the padding offset (\code{kernelSize / 2}) and the padded size
     (\code{inputSize + 2 * offset}).
   \item Size \code{myInputPadded} and \code{myInputGradientsPadded} to the padded size,
-    \code{myInputGradients}, \code{myOutput} and \code{myPreActivationOutput} to
+    \code{myInputGradients}, \code{myOutput} and \code{myPreActOutput} to
     \code{inputSize}, and \code{myKernel} and \code{myKernelGradients} to \code{kernelSize} (see
     \code{ml::initMatrix()} in \file{ml/utils.hpp}).
   \item Randomize the bias and every kernel weight using \code{ml::randomStartVal()}.
@@ -124,7 +124,7 @@ Implement \code{bool feedforward(const Matrix2d& input) noexcept}:
   \item For each output position \code{(i, j)}: sum \code{myBias} plus the element-wise product of
     \code{myKernel} and the corresponding \code{kernelSize × kernelSize} window of
     \code{myInputPadded} starting at \code{(i, j)}. Store the sum in
-    \code{myPreActivationOutput[i][j]}, then store \code{myActFunc->output(sum)} in
+    \code{myPreActOutput[i][j]}, then store \code{myActFunc->output(sum)} in
     \code{myOutput[i][j]}.
   \item Return \code{true}.
 \end{itemize}
@@ -139,7 +139,7 @@ Implement \code{bool backpropagate(const Matrix2d& outputGradients) noexcept}:
     to zero, and \code{myBiasGradient} to \code{0.0}.
   \item For each output position \code{(i, j)}, compute
 \begin{cppcode}
-delta   = myActFunc->delta(myPreActivationOutput[i][j])
+delta   = myActFunc->delta(myPreActOutput[i][j])
 outGrad = outputGradients[i][j] * delta
 \end{cppcode}
     and add \code{outGrad} to \code{myBiasGradient}. Then, for each kernel position

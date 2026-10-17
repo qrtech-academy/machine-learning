@@ -363,16 +363,16 @@ both layers first, so every retry starts from freshly drawn parameters.
 
 ### (a) 3 marks
 
-| Member                  | Size                          | L03 quantity                                  |
-| ----------------------- | ----------------------------- | --------------------------------------------- |
-| `myOutput`              | `nodeCount()`                 | $y$, each node's output, after the activation |
-| `myPreActivationOutput` | `nodeCount()`                 | $s$, each node's weighted sum, before it      |
-| `myError`               | `nodeCount()`                 | $\Delta e$, each node's computed error        |
-| `myBias`                | `nodeCount()`                 | $b$, each node's bias                         |
-| `myWeights`             | `nodeCount() x weightCount()` | $w$, each node's weights                      |
-| `myActFunc`             | none                          | $\sigma$, the layer's activation function     |
+| Member           | Size                          | L03 quantity                                  |
+| ---------------- | ----------------------------- | --------------------------------------------- |
+| `myOutput`       | `nodeCount()`                 | $y$, each node's output, after the activation |
+| `myPreActOutput` | `nodeCount()`                 | $s$, each node's weighted sum, before it      |
+| `myError`        | `nodeCount()`                 | $\Delta e$, each node's computed error        |
+| `myBias`         | `nodeCount()`                 | $b$, each node's bias                         |
+| `myWeights`      | `nodeCount() x weightCount()` | $w$, each node's weights                      |
+| `myActFunc`      | none                          | $\sigma$, the layer's activation function     |
 
-*(3 marks; deduct for a missing `myPreActivationOutput`, which is the one candidates forget and the
+*(3 marks; deduct for a missing `myPreActOutput`, which is the one candidates forget and the
 one part (c) is about)*
 
 ### (b) 5 marks

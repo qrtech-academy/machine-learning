@@ -104,7 +104,7 @@ Create a constructor that can be used to create a dense layer with arbitrary dim
 ### 7. Private member variables
 Add the following private member variables to the class:
 * `myOutput`: vector holding the nodes' output (floating-point). Should hold `nodeCount` values.
-* `myPreActivationOutput`: vector holding the nodes' weighted sum before the activation function has
+* `myPreActOutput`: vector holding the nodes' weighted sum before the activation function has
   been applied (floating-point). Should hold `nodeCount` values. Used by `backpropagate()`
   (implemented later this lecture) to correctly compute the activation function's derivative.
 * `myError`: vector holding the nodes' error (floating-point). Should hold `nodeCount` values.
@@ -119,7 +119,7 @@ Define all methods, constructors, etc. that aren't marked `delete` or `default` 
 
 **Constructor:**
 * In the constructor, all member variables should be initialized:
-    * `myOutput`, `myPreActivationOutput`, and `myError` should hold `nodeCount` floating-point values equal to 0.0 at the start.
+    * `myOutput`, `myPreActOutput`, and `myError` should hold `nodeCount` floating-point values equal to 0.0 at the start.
     * `myBias` should hold `nodeCount` floating-point values randomized in `[-1.0, 1.0]`.
     * `myWeights` should hold `nodeCount` x `weightCount` floating-point values randomized in `[-1.0, 1.0]`.
     * The randomizing itself is written once, in `initParams()`, and called from here; see section 2 of the next part.
@@ -229,7 +229,7 @@ interface, the network couldn't do it at all, since the bias and weights are pri
 * For each node `i`, compute the weighted sum:
     1. Start with the node's bias value: `auto sum{myBias[i]}`.
     2. Add each weight multiplied by the corresponding input: `for (std::size_t j{}; j < weightCount(); ++j)` where `sum += myWeights[i][j] * input[j]`.
-* Store the weighted sum before the activation function is applied: `myPreActivationOutput[i] = sum`.
+* Store the weighted sum before the activation function is applied: `myPreActOutput[i] = sum`.
   This value is needed by `backpropagate()` below to correctly compute the activation function's derivative.
 * Apply the activation function to the sum: `myOutput[i] = actFuncOutput(myActFunc, sum)`.
 
@@ -248,8 +248,8 @@ Implement `backpropagate()` for output layers (with reference values):
 * Iterate through every node in the layer: `for (std::size_t i{}; i < nodeCount(); ++i)`.
 * For each node `i`:
     1. Compute the raw error: `const auto err{reference[i] - myOutput[i]}`.
-    2. Compute the gradient error: `myError[i] = err * actFuncDelta(myActFunc, myPreActivationOutput[i])`.
-       **Note!** Use `myPreActivationOutput[i]` (the weighted sum before the activation function was
+    2. Compute the gradient error: `myError[i] = err * actFuncDelta(myActFunc, myPreActOutput[i])`.
+       **Note!** Use `myPreActOutput[i]` (the weighted sum before the activation function was
        applied in `feedforward()`), not `myOutput[i]`. `actFuncDelta()` expects the activation
        function's *input*, not its output; otherwise the derivative comes out wrong for
        `ActFunc::Tanh` (it happens to work for `ActFunc::Relu` by coincidence).
@@ -271,8 +271,8 @@ Implement `backpropagate()` for hidden layers (with error and weights from the n
     1. Initialize a variable to store the computed raw error: `double err{}`.
     2. Sum all errors from the next layer: `for (std::size_t j{}; j < nextLayer.nodeCount(); ++j)`
         * `err += nextLayer.error()[j] * nextLayer.weights()[j][i]`.
-    3. Compute the gradient error: `myError[i] = err * actFuncDelta(myActFunc, myPreActivationOutput[i])`
-       (see the note in the previous section for why `myPreActivationOutput[i]` is used instead
+    3. Compute the gradient error: `myError[i] = err * actFuncDelta(myActFunc, myPreActOutput[i])`
+       (see the note in the previous section for why `myPreActOutput[i]` is used instead
        of `myOutput[i]`).
 
 **Return value:** `true` once every node's error has been computed.
@@ -354,21 +354,25 @@ Update `main.cpp` to use your new layer:
   function at the default `ActFunc::Relu`. Give the output layer `ActFunc::Tanh`. A ReLU output
   node that dies takes the whole network with it, since every prediction is then `0`. Keep the
   2-bit XOR training data from **L04**.
-* Give the training parameters named constants in `trainAndTest()`: an epoch count of `100000`, a
-  precision threshold of `0.99`, and an attempt count of `10`.
-* Pass the threshold to `train()` explicitly. The default of `0.999999` is practically never
-  reached, so every attempt would run all 100000 epochs and still fall short of it.
+* Give the training parameters named constants in `trainAndTest()`: an epoch count of `1000000`, a
+  target precision of `0.9995`, and a retry count of `10`.
+* Pass the target precision to `train()` explicitly, as its precision threshold. The default of
+  `0.999999` is practically never reached, so every call would run all 1000000 epochs and still
+  fall short of it.
+* In `printMatrix()`, print each value with two decimals (`"%.2f"`) instead of `"%g"`. The trained
+  predictions differ from their targets by a few thousandths, which `"%g"` prints as long tails
+  such as `0.000214783`.
 
-Then train in a loop, at most once per attempt:
-* Call `train()` and keep the returned optional: `const auto precision{network.train(epochCount, precisionThreshold)}`.
-* If it holds no value, print `"Training failed!"` and return `false`. The arguments are invalid or
-  the network is wired wrong, so another attempt would fail the same way.
-* If the precision reaches the threshold, print the predictions after training as before and return
+Then train in a loop, calling `train()` at most once per retry:
+* Call `train()` and keep the returned optional: `const auto precision = network.train(epochCount, targetPrecision)`.
+* If it holds no value, print `"Training failed!"` to standard error and return `false`. The
+  arguments are invalid or the network is wired wrong, so another call would fail the same way.
+* If the precision reaches the target, print the predictions after training as before and return
   `true`.
-* Otherwise, print the attempt number and the precision it reached, e.g.
-  `"Attempt 1 reached precision 0.75, retrying!"`, and go round again.
-* If every attempt falls short, print `"Training failed after 10 attempts!"` (using the constant
-  rather than a literal) and return `false`.
+* Otherwise, print the precision it reached, e.g. `"Precision 0.75 is below target, retrying..."`,
+  and go round again.
+* If every retry falls short, print `"Failed to train the network with 10 retries!"` to standard
+  error (using the constant rather than a literal) and return `false`.
 
 There's no learning rate to pass: the network sets its own, and stops as soon as it reaches the
 precision threshold, so the epoch count is an upper bound rather than a number to tune. Each call to
@@ -380,25 +384,29 @@ test suite still compiles both, and still uses the stub to test `Shallow`, since
 computes nothing is what makes the network's wiring visible. See section 9.
 
 Compile and test-run the program. Unlike **L04**, where every prediction was the stub's fixed
-output, each prediction should now land within a few hundredths of its training target. Your exact
-numbers will differ from run to run, because the bias and weights start randomized.
+output, each prediction should now land within a few thousandths of its training target, so it
+prints as `0.00` or `1.00`. A `-0.00` is fine too: the `Tanh` output can land a hair below zero.
+The exact values behind them differ from run to run, because the bias and weights start
+randomized.
 
 The early stop line from `train()` should appear above the predictions, reporting a precision and
-an epoch count well short of the 100000 you asked for. Both vary from run to run: the starting
-parameters are random, and so is the training order. A run that stops after a few hundred epochs
-and one that needs tens of thousands are both normal; the average is around 2500.
+an epoch count well short of the 1000000 you asked for. Both vary from run to run: the starting
+parameters are random, and so is the training order. A run that stops after about 120000 epochs and
+one that needs 850000 are both normal; the average is around 250000, which takes a fraction of a
+second.
 
-**When an attempt doesn't converge.** Roughly two attempts in a hundred settle into a set of
-parameters they can't improve on, typically with one or two of the four predictions well off target
-however long they train. That's what the attempt loop is for. A second attempt starts from scratch
-and nearly always gets there: in 1000 runs of the program, not one used up all ten attempts. That's
+**When an attempt doesn't converge.** Roughly two calls to `train()` in a hundred settle into a set
+of parameters they can't improve on, typically with one or two of the four predictions well off
+target however long they train. That's what the retry loop is for. A second call starts from
+scratch and nearly always gets there: in 1000 runs of the program, not one used up all ten
+retries. That's
 the reset from **L04** earning its keep, and it's what the test suite's convergence test relies on
 as well.
 
 **Worth trying:** switch the output layer to `ActFunc::Relu` as well and shrink the hidden layer to
-2 nodes. Roughly six attempts in seven then fail to learn XOR at all, however long they train, and
-even with ten attempts about one run of the program in five ends with `"Training failed after 10
-attempts!"`. A node whose weighted sum is negative for every input has a derivative of exactly zero:
+2 nodes. Roughly six calls to `train()` in seven then fail to learn XOR at all, however long they
+train, and even with ten retries about one run of the program in five ends with `"Failed to train
+the network with 10 retries!"`. A node whose weighted sum is negative for every input has a derivative of exactly zero:
 it stops learning and can't recover. Since `randomStartVal()` draws from `[-1.0, 1.0]`, a node can
 start out that way, and with only three ReLU nodes in the network, about two networks in three
 contain one before training has even begun. That's the dying ReLU problem from **L03**, and it's

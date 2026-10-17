@@ -143,7 +143,7 @@ private:
     Matrix2d myOutput;
 
     /** Pre-activation output matrix. */
-    Matrix2d myPreActivationOutput;
+    Matrix2d myPreActOutput;
 
     /** Bias value. */
     double myBias;

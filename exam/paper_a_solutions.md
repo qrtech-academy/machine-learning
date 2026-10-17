@@ -405,8 +405,8 @@ bool Dense::feedforward(const Matrix1d& input) noexcept
         {
             sum += myWeights[i][j] * input[j];
         }
-        myPreActivationOutput[i] = sum;
-        myOutput[i]              = actFuncOutput(myActFunc, sum);
+        myPreActOutput[i] = sum;
+        myOutput[i]       = actFuncOutput(myActFunc, sum);
     }
     return true;
 }
@@ -415,7 +415,7 @@ bool Dense::feedforward(const Matrix1d& input) noexcept
 *(3 marks: 1 for the validation returning `false` without computing anything, 1 for the weighted sum
 starting at the bias, 1 for applying the activation function to it)*
 
-**The member variable is `myPreActivationOutput`.** It holds $s$, the weighted sum for each node
+**The member variable is `myPreActOutput`.** It holds $s$, the weighted sum for each node
 *before* the activation function was applied. Both overloads of `backpropagate()` need it, because
 the activation's derivative has to be evaluated at the activation's input, not at its output
 (Question 4b). It is not on the interface because no other layer ever reads it: it is this layer's
@@ -441,14 +441,14 @@ bool Dense::backpropagate(const Interface& nextLayer) noexcept
         {
             err += nextLayer.error()[j] * nextLayer.weights()[j][i];
         }
-        myError[i] = err * actFuncDelta(myActFunc, myPreActivationOutput[i]);
+        myError[i] = err * actFuncDelta(myActFunc, myPreActOutput[i]);
     }
     return true;
 }
 ```
 
 *(3 marks: 1 for the validation, 1 for the sum over the next layer's nodes, 1 for multiplying by the
-derivative at `myPreActivationOutput[i]`)*
+derivative at `myPreActOutput[i]`)*
 
 **The indices.** $j$ ranges over the **next** layer's nodes, $0 \ldots$
 `nextLayer.nodeCount() - 1`. $i$ ranges over **this** layer's nodes, $0 \ldots$ `nodeCount() - 1`,

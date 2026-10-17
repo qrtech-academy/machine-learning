@@ -18,7 +18,7 @@ A dense layer with `nodeCount` nodes and `weightCount` weights per node consists
 | Member variable | Size | Corresponds to (see L03) |
 |---|---|---|
 | `myOutput` | `nodeCount` | $y$ - each node's output (after the activation function) |
-| `myPreActivationOutput` | `nodeCount` | $s$ - each node's weighted sum (before the activation function) |
+| `myPreActOutput` | `nodeCount` | $s$ - each node's weighted sum (before the activation function) |
 | `myError` | `nodeCount` | $\Delta e$ - each node's computed error |
 | `myBias` | `nodeCount` | $b$ - each node's bias |
 | `myWeights` | `nodeCount` x `weightCount` | $w$ - each node's weights |
@@ -51,11 +51,11 @@ $$s = b + \sum_{i=0}^{n-1} w_i * x_i, \quad y = \sigma(s)$$
 | $b$ | `myBias[i]` |
 | $w_i$ | `myWeights[i][j]` |
 | $x_i$ | `input[j]` |
-| $s$ | `sum` (also stored in `myPreActivationOutput[i]`, see below) |
+| $s$ | `sum` (also stored in `myPreActOutput[i]`, see below) |
 | $\sigma(s)$ | `actFuncOutput(myActFunc, sum)` |
 | $y$ | `myOutput[i]` |
 
-`myPreActivationOutput[i]` is needed for backpropagation below, since the activation function's
+`myPreActOutput[i]` is needed for backpropagation below, since the activation function's
 derivative $y_p'$ must be computed from $s$ (the weighted sum before the activation function was
 applied), not from $y$ (the output after the activation function).
 
@@ -71,7 +71,7 @@ $$\delta = y_{ref} - y_p, \quad \Delta e = \delta * y_p'$$
 | $y_{ref}$ | `reference[i]` |
 | $y_p$ | `myOutput[i]` |
 | $\delta$ | `err` |
-| $y_p'$ | `actFuncDelta(myActFunc, myPreActivationOutput[i])` |
+| $y_p'$ | `actFuncDelta(myActFunc, myPreActOutput[i])` |
 | $\Delta e$ | `myError[i]` |
 
 **Hidden layer:**
@@ -83,7 +83,7 @@ $$\delta = \sum_{i=0}^{n-1} [\Delta e_i * w_i], \quad \Delta e = \delta * y_p'$$
 | $\Delta e_i$ (next layer) | `nextLayer.error()[j]` |
 | $w_i$ (next layer) | `nextLayer.weights()[j][i]` |
 | $\delta$ | `err` |
-| $y_p'$ | `actFuncDelta(myActFunc, myPreActivationOutput[i])` |
+| $y_p'$ | `actFuncDelta(myActFunc, myPreActOutput[i])` |
 | $\Delta e$ | `myError[i]` |
 
 $\Delta e$ is the *negative* gradient of the cost with respect to the node's weighted sum $s$, which

@@ -9,6 +9,7 @@ CXX_FLAGS := -Wall -Werror -std=c++17 -Iinclude
 
 # Source files.
 SRC_FILES := source/main.cpp \
+             source/ml/dense_layer/dense.cpp \
 			 source/ml/neural_network/shallow.cpp \
 			 source/ml/utils.cpp \
 

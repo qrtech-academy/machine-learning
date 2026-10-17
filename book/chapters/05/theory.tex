@@ -22,7 +22,7 @@ parts described below. These map directly onto the theory in Chapter~\ref{c3:ch:
   \thead{Member variable} & \thead{Size} & \thead{Corresponds to (see \secref{c3:sec:nn})} \\
   \midrule
   \code{myOutput} & \code{nodeCount} & $y$, each node's output (after the activation function) \\
-  \code{myPreActivationOutput} & \code{nodeCount} & $s$, each node's weighted sum (before the
+  \code{myPreActOutput} & \code{nodeCount} & $s$, each node's weighted sum (before the
     activation function) \\
   \code{myError} & \code{nodeCount} & $\Delta e$, each node's computed error \\
   \code{myBias} & \code{nodeCount} & $b$, each node's bias \\
@@ -59,12 +59,12 @@ Chapter~\ref{c3:ch:nn} (see \secref{c3:sec:nn}) map onto the code you write in \
   $b$ & \code{myBias[i]} \\
   $w_i$ & \code{myWeights[i][j]} \\
   $x_i$ & \code{input[j]} \\
-  $s$ & \code{sum} (also stored in \code{myPreActivationOutput[i]}, see below) \\
+  $s$ & \code{sum} (also stored in \code{myPreActOutput[i]}, see below) \\
   $\sigma(s)$ & \code{actFuncOutput(myActFunc, sum)} \\
   $y$ & \code{myOutput[i]} \\
 \end{narrowtable}
 
-\code{myPreActivationOutput[i]} is needed for backpropagation below, since the activation
+\code{myPreActOutput[i]} is needed for backpropagation below, since the activation
 function's derivative $y_p'$ must be computed from $s$ (the weighted sum before the activation
 function was applied), not from $y$ (the output after the activation function).
 
@@ -80,7 +80,7 @@ function was applied), not from $y$ (the output after the activation function).
   $\yref$ & \code{reference[i]} \\
   $\yp$ & \code{myOutput[i]} \\
   $\delta$ & \code{err} \\
-  $y_p'$ & \code{actFuncDelta(myActFunc, myPreActivationOutput[i])} \\
+  $y_p'$ & \code{actFuncDelta(myActFunc, myPreActOutput[i])} \\
   $\Delta e$ & \code{myError[i]} \\
 \end{narrowtable}
 
@@ -95,7 +95,7 @@ function was applied), not from $y$ (the output after the activation function).
   $\Delta e_i$ (next layer) & \code{nextLayer.error()[j]} \\
   $w_i$ (next layer) & \code{nextLayer.weights()[j][i]} \\
   $\delta$ & \code{err} \\
-  $y_p'$ & \code{actFuncDelta(myActFunc, myPreActivationOutput[i])} \\
+  $y_p'$ & \code{actFuncDelta(myActFunc, myPreActOutput[i])} \\
   $\Delta e$ & \code{myError[i]} \\
 \end{narrowtable}
 
